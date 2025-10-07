@@ -1,0 +1,52 @@
+:root{
+  --bg:#121416; --card:#1e2327; --muted:#9aa9bf;
+}
+* { box-sizing:border-box; }
+body {
+  background:var(--bg); color:#e6eef8; font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial;
+  margin:0; padding:18px; display:flex; flex-direction:column; align-items:center;
+}
+
+/* header */
+.header { width:100%; max-width:980px; display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+.logo-link { display:flex; align-items:center; gap:12px; text-decoration:none; }
+.site-title { flex:1; text-align:center; font-size:1.25rem; margin:0; color:#f7fbff; }
+.header-right { display:flex; gap:10px; align-items:center; }
+
+/* cards */
+.card { background:var(--card); width:100%; max-width:980px; border-radius:12px; padding:18px; margin-bottom:16px; box-shadow:0 8px 24px rgba(0,0,0,0.6); }
+
+/* inputs */
+input, select, button { width:100%; padding:10px 12px; margin-top:8px; border-radius:8px; background:#22272b; color:#eaf2ff; border:0; }
+.row-btns { display:flex; gap:10px; margin-top:12px; }
+.two-cols { display:flex; gap:10px; }
+.two-cols input { flex:1; }
+
+/* activities */
+.activity-container { display:flex; flex-wrap:wrap; gap:12px; margin-top:10px; }
+.activity-btn { flex:0 1 calc(50% - 12px); padding:10px; border-radius:14px; color:#fff; font-weight:600; border:0; cursor:pointer; text-align:center; }
+.activity-btn:hover { transform:scale(1.03); }
+.act-games { background:#9b59b6; } .act-cinema { background:#e74c3c; } .act-restaurant { background:#27ae60; } .act-sport { background:#3498db; }
+
+/* create */
+.create-slot-box { background:#252b30; padding:12px; border-radius:10px; display:flex; align-items:center; gap:10px; cursor:pointer; }
+.create-slot-box:hover{background:#2d3338;}
+#create-slot-form { display:none; margin-top:12px; }
+.current-activity-line { display:flex; gap:10px; align-items:center; margin-top:8px; }
+.pill.muted { background:#1a1f23; padding:6px 10px; border-radius:8px; color:#cfdfee }
+
+/* slots */
+#slots-list { list-style:none; padding:0; margin:0; }
+.slot-item { display:flex; align-items:center; justify-content:space-between; gap:12px; background:#151719; border-radius:10px; padding:10px 12px; margin-bottom:10px; max-width:920px;}
+.slot-info { display:flex; flex-direction:column; min-width:0; gap:3px; }
+.subsub-box{ display:inline-block; padding:4px 8px; border-radius:8px; font-weight:600; font-size:0.85rem; margin-bottom:4px; }
+
+/* actions */
+.actions { display:flex; gap:8px; align-items:center; }
+.ghost-btn { background:transparent; border:1px solid rgba(255,255,255,0.06); padding:8px 10px; color:#dfefff; border-radius:8px; }
+
+/* small screens */
+@media (max-width:640px) {
+  .activity-btn { flex-basis:100%; }
+  .slot-item { flex-direction:column; align-items:stretch; }
+}

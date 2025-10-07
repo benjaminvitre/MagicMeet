@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Profil — Magic Meet!</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header">
+    <a class="logo-link" href="index.html" aria-label="Accueil">
+      <!-- same inline svg -->
+      <svg width="56" height="56" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <rect rx="18" ry="18" width="120" height="120" fill="#0f1417"/>
+        <circle cx="20" cy="18" r="6" fill="#b294f2"/>
+        <circle cx="40" cy="10" r="3" fill="#f6d06f"/>
+        <circle cx="60" cy="16" r="8" fill="#f5b88b"/>
+        <circle cx="88" cy="20" r="5" fill="#9fe3cc"/>
+        <circle cx="18" cy="92" r="6" fill="#f5b0d0"/>
+        <circle cx="36" cy="100" r="3" fill="#c085f5"/>
+        <circle cx="60" cy="98" r="10" fill="#6fb2f2"/>
+        <circle cx="92" cy="94" r="4" fill="#f6d06f"/>
+        <circle cx="100" cy="40" r="5" fill="#f5b88b"/>
+        <circle cx="98" cy="70" r="3" fill="#78d6a4"/>
+        <circle cx="30" cy="30" r="4" fill="#f1a66a"/>
+        <circle cx="80" cy="60" r="6" fill="#b294f2"/>
+        <g transform="translate(12,18)">
+          <text x="0" y="58" font-family="Inter,Arial" font-weight="800" font-size="72" fill="#4da6ff">M</text>
+          <text x="46" y="58" font-family="Inter,Arial" font-weight="800" font-size="72" fill="#48d28a">M</text>
+        </g>
+      </svg>
+    </a>
+
+    <h1 class="site-title">Mon profil</h1>
+
+    <nav class="header-right">
+      <a class="home-link" href="index.html">🏠 Accueil</a>
+      <button id="logout" class="ghost-btn">Se déconnecter</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Mes informations</h2>
+      <label>Pseudo</label>
+      <input id="edit-pseudo" type="text" placeholder="Pseudo" />
+      <label>Email</label>
+      <input id="edit-email" type="email" placeholder="Email" />
+      <label>Téléphone</label>
+      <input id="edit-phone" type="tel" placeholder="Numéro" />
+      <div class="row-btns">
+        <button id="save-profile">Sauvegarder</button>
+        <a class="ghost-btn" href="index.html">Retour</a>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Mes créneaux</h2>
+      <ul id="user-slots"></ul>
+    </section>
+
+    <section class="card" id="admin-tools" style="display:none;">
+      <h2>📦 Sauvegarde / Restauration (Admin)</h2>
+      <button id="export-data">Exporter les données (JSON)</button>
+      <input id="import-data" type="file" accept=".json" />
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+  <script>
+    // profile-specific code (uses functions defined in script.js)
+    document.addEventListener('DOMContentLoaded', () => {
+      const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+      if (!currentUser) { alert('Connecte-toi d’abord'); window.location.href = 'index.html'; return; }
+
+      document.getElementById('edit-pseudo').value = currentUser.pseudo || '';
+      document.getElementById('edit-email').value = currentUser.email || '';
+      document.getElementById('edit-phone').value = currentUser.phone || '';
+
+      // show admin tools
+      if (currentUser.email === "benjamin.vitre@gmail.com") {
+        document.getElementById('admin-tools').style.display = 'block';
+      }
+
+      // populate user slots
+      const all = (typeof getSlots === 'function') ? getSlots() : [];
+      const mine = all.filter(s => s.owner === currentUser.email);
+      const ul = document.getElementById('user-slots');
+      if (!mine.length) ul.innerHTML = '<p>Aucun créneau créé.</p>';
+      else {
+        mine.forEach(s => {
+          const li = document.createElement('li');
+          li.className = 'slot-item';
+          li.innerHTML = `<div class="slot-info"><strong>${s.name}</strong>
+            <div>${s.subsub || s.sub} — 📍 ${s.location}</div>
+            <small>${s.date} ${s.time}</small></div>`;
+          const actions = document.createElement('div'); actions.className='actions';
+          const del = document.createElement('button'); del.textContent='🗑️';
+          del.onclick = () => { if (!confirm('Supprimer ?')) return; const updated = getSlots().filter(x=>x.id!==s.id); saveSlots(updated); li.remove(); };
+          actions.appendChild(del);
+          li.appendChild(actions);
+          ul.appendChild(li);
+        });
+      }
+
+      // admin export/import
+      const exportBtn = document.getElementById('export-data');
+      const importInput = document.getElementById('import-data');
+      if (exportBtn) exportBtn.addEventListener('click', () => {
+        const data = { users: getUsers(), slots: getSlots() };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'magicmeet_backup.json'; a.click();
+      });
+      if (importInput) importInput.addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          try {
+            const d = JSON.parse(ev.target.result);
+            if (d.users) saveUsers(d.users);
+            if (d.slots) saveSlots(d.slots);
+            alert('Importation OK'); location.reload();
+          } catch { alert('Fichier invalide'); }
+        };
+        reader.readAsText(file);
+      });
+    });
+  </script>
+</body>
+</html>
