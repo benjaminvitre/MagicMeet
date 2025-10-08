@@ -1,10 +1,11 @@
 :root{
-  --bg:#121416; --card:#1e2327; --muted:#9aa9bf;
+  --bg:#121416; --card:#1e2327; --muted:#9aa9bf;
+  --green:#2ecc71;
 }
 * { box-sizing:border-box; }
 body {
-  background:var(--bg); color:#e6eef8; font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial;
-  margin:0; padding:18px; display:flex; flex-direction:column; align-items:center;
+  background:var(--bg); color:#e6eef8; font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial;
+  margin:0; padding:18px; display:flex; flex-direction:column; align-items:center;
 }
 
 /* header */
@@ -39,7 +40,25 @@ input, select, button { width:100%; padding:10px 12px; margin-top:8px; border-ra
 #slots-list { list-style:none; padding:0; margin:0; }
 .slot-item { display:flex; align-items:center; justify-content:space-between; gap:12px; background:#151719; border-radius:10px; padding:10px 12px; margin-bottom:10px; max-width:920px;}
 .slot-info { display:flex; flex-direction:column; min-width:0; gap:3px; }
-.subsub-box{ display:inline-block; padding:4px 8px; border-radius:8px; font-weight:600; font-size:0.85rem; margin-bottom:4px; }
+/* Largeur fixe pour les boîtes de sous-sous-activité */
+.subsub-box{ 
+  display:inline-block; 
+  padding:4px 8px; 
+  border-radius:8px; 
+  font-weight:600; 
+  font-size:0.85rem; 
+  margin-bottom:4px;
+  min-width: 120px; /* Largeur minimale pour fixer la taille */
+  text-align:center; /* Centrer le texte pour une meilleure apparence avec une largeur fixe */
+}
+
+/* gauge/participants */
+.participants-box { display:flex; align-items:center; gap:8px; font-size:0.9rem; color:var(--muted); }
+.gauge-bar { width:60px; height:8px; background:#333; border-radius:4px; overflow:hidden; }
+.gauge-fill { height:100%; background:var(--green); transition:width 0.3s; }
+.participants-list { font-size:0.75rem; color:#888; margin-top:4px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.private-slot-lock { font-weight: bold; color: #e74c3c; margin-left: 5px; }
+
 
 /* actions */
 .actions { display:flex; gap:8px; align-items:center; }
@@ -47,6 +66,8 @@ input, select, button { width:100%; padding:10px 12px; margin-top:8px; border-ra
 
 /* small screens */
 @media (max-width:640px) {
-  .activity-btn { flex-basis:100%; }
-  .slot-item { flex-direction:column; align-items:stretch; }
+  .activity-btn { flex-basis:100%; }
+  .slot-item { flex-direction:column; align-items:stretch; }
+  .slot-info { order: -1; } /* Info en haut */
+  .actions { justify-content: flex-end; } /* Actions à droite */
 }
