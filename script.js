@@ -109,6 +109,7 @@ async function saveSlotToDB(slotData, slotId = null) {
 
 /** Récupère les données supplémentaires de l'utilisateur (pseudo, phone) depuis Firestore. */
 async function getUserData(email) {
+    // Utilisation de .where('email', '==', email) car nous n'utilisons pas l'UID comme document ID
     const snapshot = await USERS_COLLECTION.where('email', '==', email).limit(1).get();
     if (snapshot.empty) return null;
     const userData = snapshot.docs[0].data();
@@ -162,8 +163,8 @@ async function updateSlot(slotId, updateFn){
     // 3. Sauvegarde dans la DB (utilisation de set pour réécrire, y compris les participants)
     await SLOTS_COLLECTION.doc(slotId).set(updatedSlot); 
     
-    // Re-render
-    if (typeof loadSlots === 'function' && document.getElementById('slots-list')) await loadSlots(); 
+    // CORRECTION: Assure le rafraîchissement de TOUTES les listes
+    if (document.getElementById('slots-list')) await loadSlots(); 
     if (document.getElementById('user-slots')) await loadUserSlots(); 
     if (document.getElementById('joined-slots')) await loadJoinedSlots(); 
 }
@@ -196,7 +197,6 @@ async function initializeUserSession(email) {
         currentUser = userData; 
     } else {
         // Utilisateur Auth mais pas de doc Firestore (cas d'erreur ou d'inscription incomplète)
-        // Rediriger ou forcer la déconnexion si les données principales manquent
         console.warn("Utilisateur authentifié mais pas de données Firestore. Forcing logout.");
         auth.signOut();
         localStorage.removeItem('currentUserEmail');
@@ -609,7 +609,7 @@ function handleIndexPage() {
                 await SLOTS_COLLECTION.doc(slot.id).delete();
                 
                 // Rechargement des listes asynchrone
-                if (typeof loadSlots === 'function' && document.getElementById('slots-list')) await loadSlots(); 
+                if (document.getElementById('slots-list')) await loadSlots(); 
                 if (document.getElementById('user-slots')) await loadUserSlots(); 
                 if (typeof populateCityFilter === 'function') await populateCityFilter(); 
             };
@@ -650,14 +650,19 @@ function handleIndexPage() {
         li.appendChild(info); 
         
         // Logique pour les actions sur la page de profil
-        if (targetListElement.id === 'joined-slots') {
+        // On vérifie que les actions pour le propriétaire sont bien affichées dans sa liste
+        if (targetListElement.id === 'user-slots') {
+             // Si c'est ma liste, j'ajoute les actions du propriétaire
+             li.appendChild(actions); 
+
+        } else if (targetListElement.id === 'joined-slots') {
             // Ajouter seulement l'action 'Quitter' dans la liste des créneaux rejoints
             if (isParticipant && !isOwner) {
                 const leaveBtn = document.createElement('button');
                 leaveBtn.className = 'action-btn leave-btn'; 
                 leaveBtn.textContent = '❌ Quitter';
-                leaveBtn.style.width = '70px'; // Ajustement taille
-                leaveBtn.onclick = async ()=> { // Fonction asynchrone
+                leaveBtn.style.width = '70px'; 
+                leaveBtn.onclick = async ()=> { 
                     await updateSlot(slot.id, s => {
                         s.participants = s.participants.filter(p => p.email !== currentUserEmail);
                         return s;
@@ -669,7 +674,7 @@ function handleIndexPage() {
                 li.appendChild(actionsJoined);
             }
         } else {
-            // Si index.html ou user-slots sur profile.html, ajouter les actions complètes
+            // Si index.html
             li.appendChild(actions);
         }
         targetListElement.appendChild(li);
@@ -739,7 +744,7 @@ function handleIndexPage() {
 
     // Vérification de l'unicité du pseudo
     if (pseudoInput && signupBtn) {
-        pseudoInput.addEventListener('input', async () => { // Rendre asynchrone
+        pseudoInput.addEventListener('input', async () => { 
             const pseudo = pseudoInput.value.trim();
             if (!pseudo) {
                 pseudoStatus.textContent = '';
@@ -763,7 +768,7 @@ function handleIndexPage() {
     }
 
     // signup/login handlers
-    if (signupBtn) signupBtn.addEventListener('click', async ()=>{ // Rendre asynchrone
+    if (signupBtn) signupBtn.addEventListener('click', async ()=>{ 
         const pseudo = (document.getElementById('pseudo')?.value||'').trim();
         const email = (document.getElementById('email-signup')?.value||'').trim();
         const password = (document.getElementById('password-signup')?.value||'').trim();
@@ -786,7 +791,7 @@ function handleIndexPage() {
                 phone: '',
                 uid: user.uid 
             };
-            await USERS_COLLECTION.add(userData);
+            await USERS_COLLECTION.add(userData); // NOTE: Pour sécurité maximale, utiliser USERS_COLLECTION.doc(user.uid).set(userData)
 
             // 4. Stockage des données pertinentes pour la session
             localStorage.setItem('currentUserEmail', user.email); 
@@ -805,7 +810,7 @@ function handleIndexPage() {
         }
     });
 
-    if (loginBtn) loginBtn.addEventListener('click', async ()=>{ // Rendre asynchrone
+    if (loginBtn) loginBtn.addEventListener('click', async ()=>{ 
         const email = (document.getElementById('email-login')?.value||'').trim();
         const password = (document.getElementById('password-login')?.value||'').trim();
         if (!email || !password) return alert('Remplis tous les champs.');
@@ -913,7 +918,7 @@ function handleIndexPage() {
 
 
     // create slot
-    if (createBtn) createBtn.addEventListener('click', async ()=> { // Rendre asynchrone
+    if (createBtn) createBtn.addEventListener('click', async ()=> { 
         if (!currentUser) return alert('Connecte-toi d’abord');
         
         const activity = selectedActivity || formActivitySelect.value;
@@ -957,7 +962,7 @@ function handleIndexPage() {
 
 
     // handle shared slot in URL
-    (async function checkShared(){ // Rendre asynchrone pour utiliser getSlotsFromDB
+    (async function checkShared(){ 
         const params = new URLSearchParams(window.location.search); const sid = params.get('slot');
         if (!sid) return;
         
@@ -982,13 +987,11 @@ function handleProfilePage() {
     // Charger les informations de profil
     fillProfileFields(currentUser);
 
-    // Charger les créneaux créés et rejoints
-    // ATTENTION: ces fonctions sont asynchrones et appelées plus bas
     
     // Gestion de la modification du profil
     const profileForm = document.getElementById('profile-form');
     if (profileForm) {
-        profileForm.addEventListener('submit', async (e) => { // Rendre asynchrone
+        profileForm.addEventListener('submit', async (e) => { 
             e.preventDefault();
             const newPseudo = document.getElementById('profile-pseudo').value.trim();
             const newPhone = document.getElementById('profile-phone').value.trim();
@@ -996,12 +999,11 @@ function handleProfilePage() {
 
             if (!newPseudo) return alert('Le pseudo est obligatoire.');
 
-            // 1. Vérification de conflit de pseudo (doit être fait dans la DB)
+            // 1. Vérification de conflit de pseudo 
             const pseudoConflictSnapshot = await USERS_COLLECTION
                 .where('pseudo', '==', newPseudo)
                 .get();
                 
-            // S'il y a des documents avec ce pseudo, on doit s'assurer que ce n'est pas le document de l'utilisateur actuel
             const pseudoConflict = pseudoConflictSnapshot.docs.some(doc => doc.data().email !== currentUser.email);
 
             if (pseudoConflict) return alert('Ce pseudo est déjà pris par un autre utilisateur.');
@@ -1019,7 +1021,6 @@ function handleProfilePage() {
                      try {
                          await user.updatePassword(newPassword);
                      } catch(error) {
-                         // Gérer les erreurs (ex: mot de passe trop faible)
                          alert(`Erreur de changement de mot de passe: ${error.message}. Veuillez vous reconnecter et réessayer.`);
                          return;
                      }
@@ -1029,16 +1030,17 @@ function handleProfilePage() {
                  }
             }
 
-            // 4. Mettre à jour les données dans Firestore (où l'ID du doc est stocké dans currentUser.docId)
+            // 4. Mettre à jour les données dans Firestore 
             const success = await updateUserData(currentUser.docId, updateData); 
 
             // 5. Mise à jour de la session locale après succès
             if (success) {
                 // Recharge l'utilisateur mis à jour dans la variable globale
                 await initializeUserSession(currentUser.email); 
-                // Réafficher l'email (non modifiable) au cas où le champ pseudo ait été la seule modification
                 fillProfileFields(currentUser);
                 alert('Profil mis à jour avec succès !');
+                // Réinitialiser le champ mot de passe après succès
+                document.getElementById('profile-password').value = '';
             } else {
                  alert('Échec de la mise à jour du profil.');
             }
@@ -1051,12 +1053,13 @@ function handleProfilePage() {
 }
 
 // Load and render user created slots (Page Profile)
-async function loadUserSlots(){ // Rendre asynchrone
+async function loadUserSlots(){ 
     const list = document.getElementById('user-slots'); if (!list) return; list.innerHTML='';
     if (!currentUser) return;
 
     // UTILISATION FIREBASE: getSlotsFromDB()
     let slots = await getSlotsFromDB();
+    // CORRECTION: Filtrage sur les créneaux dont l'utilisateur est OWNER
     slots = slots.filter(s => s.owner === currentUser.email);
     slots = slots.filter(s => s.date && s.time).sort((a,b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
 
@@ -1068,16 +1071,18 @@ async function loadUserSlots(){ // Rendre asynchrone
         return;
     }
 
+    // Le renderSlotItem gère les actions (supprimer/rappeler/partager) pour l'owner si la targetList est 'user-slots'
     slots.forEach(slot => renderSlotItem(slot, currentUserEmail, currentUserPseudo, list));
 }
 
 // Load and render user joined slots (Page Profile)
-async function loadJoinedSlots(){ // Rendre asynchrone
+async function loadJoinedSlots(){ 
     const list = document.getElementById('joined-slots'); if (!list) return; list.innerHTML='';
     if (!currentUser) return;
 
     // UTILISATION FIREBASE: getSlotsFromDB()
     let slots = await getSlotsFromDB();
+    // CORRECTION: Filtrage sur les créneaux où l'utilisateur est PARTICIPANT mais pas OWNER
     slots = slots.filter(s => s.participants.some(p => p.email === currentUser.email) && s.owner !== currentUser.email);
     slots = slots.filter(s => s.date && s.time).sort((a,b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
 
@@ -1089,5 +1094,6 @@ async function loadJoinedSlots(){ // Rendre asynchrone
         return;
     }
 
+    // Le renderSlotItem gère l'action 'Quitter' si la targetList est 'joined-slots'
     slots.forEach(slot => renderSlotItem(slot, currentUserEmail, currentUserPseudo, list));
 }
