@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mon Profil - MagicMeet!</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css"> 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -26,12 +26,10 @@
 <main id="profile-main">
     
     <div class="profile-container">
-        <h1>⚙️ Mon Profil</h1>
 
         <div class="card profile-card">
-            <h2>Informations Personnelles</h2>
+            <h2>⚙️ Mes Informations</h2>
             <form id="profile-form">
-                
                 <label for="profile-pseudo">Pseudo</label>
                 <input type="text" id="profile-pseudo" required>
                 
@@ -39,38 +37,37 @@
                 <input type="email" id="profile-email" disabled>
 
                 <label for="profile-phone">Téléphone (Optionnel)</label>
-                <input type="tel" id="profile-phone">
+                <input type="tel" id="profile-phone" placeholder="06 XX XX XX XX">
+
+                <label for="profile-password">Nouveau Mot de passe (Laisser vide si pas de changement)</label>
+                <input type="password" id="profile-password" placeholder="6 caractères minimum">
                 
-                <hr>
-
-                <h3>Changer le mot de passe</h3>
-                <small class="muted-text">Laissez vide si vous ne souhaitez pas changer votre mot de passe.</small>
-                <label for="profile-password">Nouveau mot de passe (6 caractères min)</label>
-                <input type="password" id="profile-password">
-
-                <button type="submit" class="action-btn join-btn">Sauvegarder les modifications</button>
+                <button type="submit" class="action-btn join-btn">Mettre à jour le profil</button>
             </form>
         </div>
 
-        <div class="card profile-card">
-            <h2>Créneaux que j'ai créé</h2>
+        <div class="card slots-section">
+            <h2>Créneaux que j'ai créés</h2>
             <ul id="user-slots">
-                </ul>
+                <li>Chargement de vos créneaux...</li>
+            </ul>
         </div>
 
-        <div class="card profile-card">
-            <h2>Créneaux que j'ai rejoint</h2>
+        <div class="card slots-section">
+            <h2>Créneaux que j'ai rejoints</h2>
             <ul id="joined-slots">
-                </ul>
+                <li>Chargement des créneaux rejoints...</li>
+            </ul>
         </div>
+        
     </div>
-    
+
 </main>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-<script src="script.js"></script>
+<script src="script.js"></script> 
 
 </body>
 </html>
