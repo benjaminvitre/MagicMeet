@@ -136,11 +136,28 @@ ul {
     box-shadow: var(--card-shadow);
     margin-bottom: 20px;
 }
-/* POINT 1: Réduction de 25% de la taille de la box "Créer un créneau !" */
-/* Précédemment 36px de padding vertical. Réduction de 25%: 36 * 0.75 = 27px */
+/* MODIFICATION : Réduction de 20% de la taille de la box 'Créer un créneau !' ET Centrage vertical */
 .create-slot-box {
-    padding: 27px 20px; 
+    /* Précédemment 27px, réduction de 20% -> 27 * 0.80 = 21.6px (on arrondit à 22px) */
+    padding: 22px 20px; 
+    /* Nouvelle propriété pour centrer le titre verticalement */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
+
+.toggle-header {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0;
+}
+
+.toggle-header:hover {
+    color: var(--text-accent);
+}
+/* ... (le reste du CSS de la box) ... */
 
 .auth-section {
     display: flex;
