@@ -1,4 +1,4 @@
-/* ===== Configuration & categories (Mise à jour V4) ===== */
+/* ===== Configuration & categories (Mise à jour V5) ===== */
 const ADMIN_EMAIL = "benjamin.vitre@gmail.com";
 
 // Triez les sous-activités
@@ -6,20 +6,20 @@ const sortArray = (arr) => arr.sort((a, b) => a.localeCompare(b, 'fr'));
 
 const ACTIVITIES = {
   "Toutes": [],
-  "Autres": [], // Point 1: Nouvelle activité "Autres" (remplace Restaurant / Bar)
-  "Culture": sortArray(["Cinéma", "Théâtre", "Exposition", "Concert"]), // Point 6
-  "Jeux": sortArray(["Jeux de cartes", "Jeux vidéo", "Jeux de société"]), // Point 2
-  "Sorties": sortArray(["Bar", "Restaurant", "Picnic"]), // Point 7
-  "Sport": sortArray(["Foot", "Padel", "Tennis", "Running", "Badminton"]) // Point 3
+  "Autres": [], 
+  "Culture": sortArray(["Cinéma", "Théâtre", "Exposition", "Concert"]), 
+  "Jeux": sortArray(["Jeux de cartes", "Jeux vidéo", "Jeux de société"]), 
+  "Sorties": sortArray(["Bar", "Restaurant", "Picnic"]), 
+  "Sport": sortArray(["Foot", "Padel", "Tennis", "Running", "Badminton"]) 
 };
 
 // Trie le dictionnaire principal par clé (activité), en gardant 'Toutes' en premier
 const sortedActivityKeys = Object.keys(ACTIVITIES).filter(key => key !== "Toutes").sort((a, b) => a.localeCompare(b, 'fr'));
 const tempActivities = { "Toutes": ACTIVITIES["Toutes"] };
 sortedActivityKeys.forEach(key => tempActivities[key] = ACTIVITIES[key]);
-Object.assign(ACTIVITIES, tempActivities); // Remplace ACTIVITIES par la version triée
+Object.assign(ACTIVITIES, tempActivities); 
 
-// Ajout des emojis (Point 3)
+// Ajout des emojis
 const ACTIVITY_EMOJIS = {
     "Toutes": "🌍",
     "Autres": "❓",
@@ -29,7 +29,6 @@ const ACTIVITY_EMOJIS = {
     "Sport": "⚽"
 };
 
-// Sous-sous-activités (pas de changement dans cette itération, mais on s'assure que les sous-activités liées à l'ancienne caté ne plantent pas)
 const SUBSUB = {
   "Jeux de cartes": ["Magic The Gathering", "Pokémon", "Yu-Gi-Oh!"],
   "Jeux vidéo": [],
@@ -64,7 +63,8 @@ const COLOR_MAP = {
 
 
 const MAX_PARTICIPANTS = 10;
-let currentFilterActivity = "Toutes"; // Pour le point 5
+let currentFilterActivity = "Toutes"; 
+let currentFilterCity = "Toutes"; // Nouvelle variable pour le filtre ville
 
 /* ===== storage helpers robust (tries encrypted then plain JSON) ===== */
 function encrypt(data) {
@@ -118,8 +118,7 @@ function updateSlot(slotId, updateFn){
 }
 
 /**
- * Fonction pour gérer l'ouverture du formulaire de modification.
- * Nécessite que le formulaire existe dans profile.html
+ * Fonction pour gérer l'ouverture du formulaire de modification. (page profile)
  */
 function editSlot(slotId) {
   const slot = getSlots().find(s => s.id === slotId);
@@ -190,11 +189,56 @@ document.addEventListener('DOMContentLoaded', () => {
   const subSelect = document.getElementById('sub-select'), subsubSelect = document.getElementById('subsub-select');
   const formActivitySelect = document.getElementById('form-activity-select');
   const formSubSelect = document.getElementById('sub-select');
-
   const createBtn = document.getElementById('create-slot');
-  let selectedActivity = null; // Activity selected in the main section
 
+  let selectedActivity = null; 
   let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+
+  // Elements pour le filtre ville (Point 3) et le lien Google Maps (Point 1)
+  const cityFilterSelect = document.getElementById('city-filter-select');
+  const locationInput = document.getElementById('slot-location');
+  const locationLink = document.getElementById('location-link');
+
+  // Elements pour l'inscription (Point 9)
+  const pseudoInput = document.getElementById('pseudo');
+  const pseudoStatus = document.getElementById('pseudo-status');
+
+  // Point 9: Vérification de l'unicité du pseudo
+  if (pseudoInput) {
+    pseudoInput.addEventListener('input', () => {
+      const pseudo = pseudoInput.value.trim();
+      if (!pseudo) {
+        pseudoStatus.textContent = '';
+        return;
+      }
+      const isTaken = getUsers().some(u => u.pseudo === pseudo);
+      if (isTaken) {
+        pseudoStatus.textContent = 'Ce pseudo est déjà pris 😞';
+        pseudoStatus.style.color = '#e67c73'; // Rouge
+        signupBtn.disabled = true;
+      } else {
+        pseudoStatus.textContent = 'Pseudo disponible ! 😊';
+        pseudoStatus.style.color = '#78d6a4'; // Vert
+        signupBtn.disabled = false;
+      }
+    });
+  }
+
+  // Point 1: Mise à jour du lien Google Maps
+  if (locationInput) {
+    locationInput.addEventListener('input', () => {
+      const location = locationInput.value.trim();
+      if (location) {
+        // Encodage pour l'URL Google Maps
+        const encodedLocation = encodeURIComponent(location);
+        locationLink.href = `https://www.google.com/maps/search/?api=1&query=${encodedLocation}`;
+        locationLink.style.display = 'inline-block';
+      } else {
+        locationLink.style.display = 'none';
+      }
+    });
+  }
+
 
   // Populate form activity select on load
   function populateFormActivitySelect(){
@@ -202,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
     formActivitySelect.innerHTML = '<option value="">-- Choisis une activité --</option>';
     // Exclure 'Toutes' du formulaire de création
     Object.keys(ACTIVITIES).filter(a=>a!=='Toutes').forEach(act => {
-        const emoji = ACTIVITY_EMOJIS[act] || ''; // Point 3: Ajout de l'emoji
+        const emoji = ACTIVITY_EMOJIS[act] || ''; 
       const o = document.createElement('option'); o.value = act; o.textContent = `${emoji} ${act}`; formActivitySelect.appendChild(o);
     });
     formActivitySelect.value = selectedActivity || '';
@@ -223,11 +267,11 @@ document.addEventListener('DOMContentLoaded', () => {
       
       b.className = 'activity-btn ' + className + (act === currentFilterActivity ? ' active' : '');
       
-        const emoji = ACTIVITY_EMOJIS[act] || ''; // Point 3: Ajout de l'emoji
+        const emoji = ACTIVITY_EMOJIS[act] || ''; 
       b.textContent = `${emoji} ${act}`;
 
       b.addEventListener('click', ()=> {
-        // Point 5: Filtrage des créneaux
+        // Filtrage des créneaux
         currentFilterActivity = act;
         loadSlots(); // Charger les slots filtrés
 
@@ -238,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Gestion de la sélection pour la création de créneau
         if(act !== "Toutes") {
           selectedActivity = act;
-          currentActivityEl.textContent = `${emoji} ${act}`; // Point 3
+          currentActivityEl.textContent = `${emoji} ${act}`; 
           populateSubActivities(act);
           if (formActivitySelect) { 
             formActivitySelect.value = act; 
@@ -292,6 +336,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Point 3: Remplir la liste de villes
+  function populateCityFilter() {
+    cityFilterSelect.innerHTML = '<option value="Toutes">Toutes les villes</option>';
+    const slots = getSlots();
+    // Extraire les villes sans doublons
+    const cities = new Set(slots.map(s => (s.location || '').split(',')[0].trim()).filter(c => c.length > 0));
+    const sortedCities = Array.from(cities).sort((a, b) => a.localeCompare(b, 'fr'));
+
+    sortedCities.forEach(city => {
+      const o = document.createElement('option');
+      o.value = city;
+      o.textContent = city;
+      cityFilterSelect.appendChild(o);
+    });
+
+    cityFilterSelect.value = currentFilterCity;
+    cityFilterSelect.addEventListener('change', () => {
+      currentFilterCity = cityFilterSelect.value;
+      loadSlots();
+    });
+  }
+
+
   // initial render
   renderActivities();
 
@@ -302,6 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderActivities();
     loadSlots();
     fillProfileOnMain();
+    populateCityFilter(); // Remplir le filtre ville au chargement
   }
 
   function fillProfileOnMain(){
@@ -317,13 +385,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // signup/login handlers
   if (signupBtn) signupBtn.addEventListener('click', async ()=>{
+    // Point 9: Pseudo obligatoire
+    const pseudo = (document.getElementById('pseudo')?.value||'').trim();
     const email = (document.getElementById('email')?.value||'').trim();
     const password = (document.getElementById('password')?.value||'').trim();
-    if (!email || !password) return alert('Remplis tous les champs.');
+
+    if (!pseudo || !email || !password) return alert('Remplis tous les champs (y compris le pseudo).');
+    
     const users = getUsers();
-    if (users.find(u=>u.email===email)) return alert('Utilisateur existant');
+    if (users.find(u=>u.email===email)) return alert('Utilisateur existant avec cet email.');
+    if (users.find(u=>u.pseudo===pseudo)) return alert('Ce pseudo est déjà pris. Choisis-en un autre.');
+    
     const hashed = await hashPassword(password);
-    const newUser = { email, password: hashed, pseudo:'', phone:'' };
+    const newUser = { email, password: hashed, pseudo, phone:'' }; // Stocke le pseudo
     users.push(newUser); saveUsers(users);
     localStorage.setItem('currentUser', JSON.stringify(newUser)); currentUser = newUser;
     showMain();
@@ -336,6 +410,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const hashed = await hashPassword(password);
     const user = getUsers().find(u=>u.email===email && u.password===hashed);
     if (!user) return alert('Identifiants invalides');
+
+    // Récupérer le pseudo si l'utilisateur en avait déjà un
+    if (!user.pseudo) {
+        // Logique pour les anciens utilisateurs sans pseudo si nécessaire
+    }
+    
     localStorage.setItem('currentUser', JSON.stringify(user)); currentUser = user; showMain();
   });
 
@@ -362,7 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // keep selects in sync when user chooses activity select manually
   if (formActivitySelect) formActivitySelect.addEventListener('change', ()=>{
     selectedActivity = formActivitySelect.value;
-    const emoji = ACTIVITY_EMOJIS[selectedActivity] || ''; // Point 3
+    const emoji = ACTIVITY_EMOJIS[selectedActivity] || ''; 
     currentActivityEl.textContent = selectedActivity ? `${emoji} ${selectedActivity}` : 'Aucune';
     populateSubActivitiesForForm(selectedActivity);
   });
@@ -395,15 +475,17 @@ document.addEventListener('DOMContentLoaded', () => {
       subsub: subsub || '',
       name, location, date, time, private: isPrivate,
       owner: currentUser.email, 
-      ownerPseudo: currentUser.pseudo || '',
+      ownerPseudo: currentUser.pseudo || currentUser.email.split('@')[0], // Utilisation du pseudo
       participants: [{email: currentUser.email, pseudo: currentUser.pseudo || currentUser.email.split('@')[0]}]
     };
     slots.push(newSlot); saveSlots(slots);
     
     // clear form
     document.getElementById('slot-name').value=''; document.getElementById('slot-location').value=''; document.getElementById('slot-date').value=''; document.getElementById('slot-time').value='';
+    locationLink.style.display = 'none'; // Cache le lien Google Maps
     formSubSelect.value=''; subsubSelect.value=''; formActivitySelect.value=''; selectedActivity = null; currentActivityEl.textContent='Aucune'; createForm.style.display='none'; if (arrow) arrow.style.transform='rotate(0deg)';
     loadSlots();
+    populateCityFilter(); // Mettre à jour les filtres de ville
   });
 
   // Load and render slots
@@ -411,13 +493,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const list = document.getElementById('slots-list'); if (!list) return; list.innerHTML='';
     let slots = getSlots() || [];
     
-    // Filtrage
+    // Filtrage par activité
     if (currentFilterActivity !== "Toutes") {
       slots = slots.filter(s => s.activity === currentFilterActivity);
     }
 
+    // Filtrage par ville (Point 3)
+    if (currentFilterCity !== "Toutes") {
+        slots = slots.filter(s => {
+            const city = (s.location || '').split(',')[0].trim();
+            return city === currentFilterCity;
+        });
+    }
+
     // sort by date+time
-    slots = slots.filter(s => s.date && s.time).sort((a,b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.date));
+    slots = slots.filter(s => s.date && s.time).sort((a,b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
     // limit 10
     slots = slots.slice(0,10);
 
@@ -471,13 +561,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const when = document.createElement('div'); when.textContent = `📍 ${slot.location} — 🗓️ ${formattedDate} à ${slot.time}`;
       
       const owner = document.createElement('small'); 
+      // Point 5: Afficher le pseudo de l'owner
       owner.textContent = `par ${slot.ownerPseudo || slot.owner}`;
       if (slot.private) owner.innerHTML += ' <span class="private-slot-lock">🔒 Privé</span>';
 
       // info.appendChild(pill); 
       info.appendChild(title); info.appendChild(when); 
       
-      // Participants and Gauge (Point 5: "personne(s)")
+      // Participants and Gauge 
       const participantsCount = (slot.participants || []).length;
       const participantsBox = document.createElement('div'); participantsBox.className = 'participants-box';
       participantsBox.innerHTML = `👤 ${participantsCount} personne${participantsCount > 1 ? 's' : ''}`;
@@ -496,6 +587,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (slot.private && slot.owner !== currentUserEmail){
         participantsList.textContent = 'Participants cachés.';
       } else {
+        // Afficher les pseudos des participants
         const pseudos = (slot.participants || []).map(p => p.pseudo || p.email.split('@')[0]);
         participantsList.textContent = 'Membres: ' + pseudos.join(', ');
       }
@@ -503,7 +595,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       info.appendChild(owner); // Owner at the bottom
 
-      const actions = document.createElement('div'); actions.className='actions-box'; // Classe pour le style
+      const actions = document.createElement('div'); actions.className='actions-box'; 
       
       const isParticipant = (slot.participants || []).some(p => p.email === currentUserEmail);
       const isOwner = slot.owner === currentUserEmail;
@@ -511,7 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Bouton Rejoindre / Quitter
       if (current && !isParticipant){
         const joinBtn = document.createElement('button');
-        joinBtn.className = 'action-btn join-btn'; // Nouvelle classe
+        joinBtn.className = 'action-btn join-btn'; 
         joinBtn.textContent = '✅ Rejoindre';
         
         if (!slot.private || isOwner){ 
@@ -548,7 +640,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (isOwner){
         const del = document.createElement('button'); del.textContent='🗑️'; del.title='Supprimer';
         del.className = 'action-btn ghost-action-btn'; 
-        del.onclick = ()=> { if (!confirm('Supprimer ce créneau ?')) return; const remain = getSlots().filter(s=>s.id!==slot.id); saveSlots(remain); loadSlots(); };
+        del.onclick = ()=> { if (!confirm('Supprimer ce créneau ?')) return; const remain = getSlots().filter(s=>s.id!==slot.id); saveSlots(remain); loadSlots(); populateCityFilter(); };
         actions.appendChild(del);
       }
 
