@@ -40,6 +40,8 @@
 
     <section id="auth-section" class="card">
     <h2>Connexion / Inscription</h2>
+        <input id="pseudo" type="text" placeholder="Pseudo (Obligatoire)" required />
+    <div id="pseudo-status" class="status-message"></div>
     <input id="email" type="email" placeholder="Email ou téléphone" />
     <input id="password" type="password" placeholder="Mot de passe" />
     <div class="row-btns">
@@ -50,15 +52,14 @@
 
     <main id="main-section" style="display:none;">
         <section class="card">
-      <h2>Trouver une activité</h2>
-      <div id="activities" class="activity-container">
+      <h2>Trouver une activité 😊</h2>       <div id="activities" class="activity-container">
               </div>
       <div id="subactivities" class="activity-container"></div>
     </section>
 
         <section class="card">
-      <div id="toggle-create-form" class="create-slot-box">
-        <span>➕</span> <strong>Créer un créneau</strong>
+            <div id="toggle-create-form" class="create-slot-box">
+        <h2 class="create-slot-title">➕ &nbsp;&nbsp; Créer un créneau</h2> 
         <span class="arrow" style="margin-left:auto">▶</span>
       </div>
 
@@ -84,10 +85,11 @@
         </select>
 
         <input id="slot-name" type="text" placeholder="Nom du créneau" />
-        <input id="slot-location" type="text" placeholder="Lieu (ex : Café du coin, Paris 11e)" />
+                <input id="slot-location" type="text" placeholder="Lieu (ex : Café du coin, Paris 11e)" />
+        <a id="location-link" href="#" target="_blank" style="display: none; font-size: 0.9em; margin: 5px 0 10px 0;">📍 Voir sur Google Maps</a>
         
         <div class="two-cols">
-                    <label for="slot-date">Date</label>
+          <label for="slot-date">Date</label>
           <input id="slot-date" type="date" title="Afficher le sélecteur de date" />
           <label for="slot-time">Heure</label>
           <input id="slot-time" type="time" title="Afficher le sélecteur d'heure" />
@@ -95,12 +97,20 @@
 
         <label class="inline-label"><input id="private-slot" type="checkbox" /> Privé</label>
 
-        <button id="create-slot">Créer</button>
+                <button id="create-slot">Créer un créneau ! 🎸</button>
       </form>
     </section>
 
         <section class="card">
-      <h2>Créneaux disponibles</h2>
+      <div class="slots-header-line">
+        <h2>Créneaux disponibles</h2>
+                <div class="city-filter-container">
+          <span class="city-filter-title">Filtrer par ville :</span>
+          <select id="city-filter-select">
+            <option value="Toutes">Toutes les villes</option>
+                      </select>
+        </div>
+      </div>
       <ul id="slots-list" aria-live="polite"></ul>
     </section>
   </main>
