@@ -1,4 +1,4 @@
-/* ===== Configuration & categories (Mise à jour V3) ===== */
+/* ===== Configuration & categories (Mise à jour V4) ===== */
 const ADMIN_EMAIL = "benjamin.vitre@gmail.com";
 
 // Triez les sous-activités
@@ -19,6 +19,16 @@ const tempActivities = { "Toutes": ACTIVITIES["Toutes"] };
 sortedActivityKeys.forEach(key => tempActivities[key] = ACTIVITIES[key]);
 Object.assign(ACTIVITIES, tempActivities); // Remplace ACTIVITIES par la version triée
 
+// Ajout des emojis (Point 3)
+const ACTIVITY_EMOJIS = {
+    "Toutes": "🌍",
+    "Autres": "❓",
+    "Culture": "🖼️",
+    "Jeux": "🎮",
+    "Sorties": "🎉",
+    "Sport": "⚽"
+};
+
 // Sous-sous-activités (pas de changement dans cette itération, mais on s'assure que les sous-activités liées à l'ancienne caté ne plantent pas)
 const SUBSUB = {
   "Jeux de cartes": ["Magic The Gathering", "Pokémon", "Yu-Gi-Oh!"],
@@ -35,7 +45,7 @@ Object.keys(SUBSUB).forEach(key => {
 
 // Mappage des couleurs pour les boîtes d'activité/sous-activité
 const COLOR_MAP = {
-  "Autres": "#9aa9bf", 
+  "Autres": "#78d6a4", 
   "Jeux": "#c085f5", 
   "Culture": "#e67c73", 
   "Sport": "#f27a7d", 
@@ -192,13 +202,14 @@ document.addEventListener('DOMContentLoaded', () => {
     formActivitySelect.innerHTML = '<option value="">-- Choisis une activité --</option>';
     // Exclure 'Toutes' du formulaire de création
     Object.keys(ACTIVITIES).filter(a=>a!=='Toutes').forEach(act => {
-      const o = document.createElement('option'); o.value = act; o.textContent = act; formActivitySelect.appendChild(o);
+        const emoji = ACTIVITY_EMOJIS[act] || ''; // Point 3: Ajout de l'emoji
+      const o = document.createElement('option'); o.value = act; o.textContent = `${emoji} ${act}`; formActivitySelect.appendChild(o);
     });
     formActivitySelect.value = selectedActivity || '';
     populateSubActivitiesForForm(formActivitySelect.value);
   }
 
-  // Initial render activity buttons (Point 5 & 6)
+  // Initial render activity buttons
   function renderActivities(){
     activitiesDiv.innerHTML = '';
     Object.keys(ACTIVITIES).forEach(act => {
@@ -211,7 +222,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const className = classNameMap[act] || `act-${act.toLowerCase().replace(/\s|\//g, '-')}`; 
       
       b.className = 'activity-btn ' + className + (act === currentFilterActivity ? ' active' : '');
-      b.textContent = act;
+      
+        const emoji = ACTIVITY_EMOJIS[act] || ''; // Point 3: Ajout de l'emoji
+      b.textContent = `${emoji} ${act}`;
 
       b.addEventListener('click', ()=> {
         // Point 5: Filtrage des créneaux
@@ -225,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Gestion de la sélection pour la création de créneau
         if(act !== "Toutes") {
           selectedActivity = act;
-          currentActivityEl.textContent = act;
+          currentActivityEl.textContent = `${emoji} ${act}`; // Point 3
           populateSubActivities(act);
           if (formActivitySelect) { 
             formActivitySelect.value = act; 
@@ -349,7 +362,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // keep selects in sync when user chooses activity select manually
   if (formActivitySelect) formActivitySelect.addEventListener('change', ()=>{
     selectedActivity = formActivitySelect.value;
-    currentActivityEl.textContent = selectedActivity || 'Aucune';
+    const emoji = ACTIVITY_EMOJIS[selectedActivity] || ''; // Point 3
+    currentActivityEl.textContent = selectedActivity ? `${emoji} ${selectedActivity}` : 'Aucune';
     populateSubActivitiesForForm(selectedActivity);
   });
 
@@ -392,18 +406,18 @@ document.addEventListener('DOMContentLoaded', () => {
     loadSlots();
   });
 
-  // Load and render slots (Point 3 & 5)
+  // Load and render slots
   function loadSlots(){
     const list = document.getElementById('slots-list'); if (!list) return; list.innerHTML='';
     let slots = getSlots() || [];
     
-    // Point 5: Filtrage
+    // Filtrage
     if (currentFilterActivity !== "Toutes") {
       slots = slots.filter(s => s.activity === currentFilterActivity);
     }
 
     // sort by date+time
-    slots = slots.filter(s => s.date && s.time).sort((a,b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
+    slots = slots.filter(s => s.date && s.time).sort((a,b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.date));
     // limit 10
     slots = slots.slice(0,10);
 
@@ -416,7 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const li = document.createElement('li'); li.className='slot-item';
       const info = document.createElement('div'); info.className='slot-info';
 
-      // Point 3: Affichage des boîtes de sous-activité/sous-sous-activité
+      // Affichage des boîtes de sous-activité/sous-sous-activité
       const activityLine = document.createElement('div'); activityLine.className = 'subsub-line';
 
       // 1. Activité principale
@@ -460,13 +474,13 @@ document.addEventListener('DOMContentLoaded', () => {
       owner.textContent = `par ${slot.ownerPseudo || slot.owner}`;
       if (slot.private) owner.innerHTML += ' <span class="private-slot-lock">🔒 Privé</span>';
 
-      // info.appendChild(pill); // Remplacé par activityLine
+      // info.appendChild(pill); 
       info.appendChild(title); info.appendChild(when); 
       
-      // Participants and Gauge
+      // Participants and Gauge (Point 5: "personne(s)")
       const participantsCount = (slot.participants || []).length;
       const participantsBox = document.createElement('div'); participantsBox.className = 'participants-box';
-      participantsBox.innerHTML = `👤 ${participantsCount} personnes`;
+      participantsBox.innerHTML = `👤 ${participantsCount} personne${participantsCount > 1 ? 's' : ''}`;
 
       const gaugeBar = document.createElement('div'); gaugeBar.className = 'gauge-bar';
       const gaugeFill = document.createElement('div'); gaugeFill.className = 'gauge-fill';
@@ -518,7 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } else if (isParticipant && !isOwner) {
         const leaveBtn = document.createElement('button');
-        leaveBtn.className = 'action-btn leave-btn'; // Nouvelle classe
+        leaveBtn.className = 'action-btn leave-btn'; 
         leaveBtn.textContent = '❌ Quitter';
         leaveBtn.onclick = ()=> {
           updateSlot(slot.id, s => {
@@ -533,15 +547,15 @@ document.addEventListener('DOMContentLoaded', () => {
       
       if (isOwner){
         const del = document.createElement('button'); del.textContent='🗑️'; del.title='Supprimer';
-        del.className = 'action-btn ghost-action-btn'; // Point 4
+        del.className = 'action-btn ghost-action-btn'; 
         del.onclick = ()=> { if (!confirm('Supprimer ce créneau ?')) return; const remain = getSlots().filter(s=>s.id!==slot.id); saveSlots(remain); loadSlots(); };
         actions.appendChild(del);
       }
 
-      // Rappel pour le propriétaire (Point 4)
+      // Rappel pour le propriétaire 
       if (isOwner){
         const rem = document.createElement('button'); rem.textContent='⏰'; rem.title='Rappel';
-        rem.className = 'action-btn ghost-action-btn'; // Point 4
+        rem.className = 'action-btn ghost-action-btn'; 
         rem.onclick = ()=> {
           const notifTime = new Date(slot.date + 'T' + slot.time); const delay = notifTime - new Date();
           if (delay>0){ alert('Rappel programmé (simple notification navigateur)'); setTimeout(()=>{ if (Notification.permission==='granted') new Notification(`Rappel : ${slot.name}`); else alert(`Rappel : ${slot.name}`); }, delay); }
@@ -550,9 +564,9 @@ document.addEventListener('DOMContentLoaded', () => {
         actions.appendChild(rem);
       }
 
-      // Partager pour tous (Point 4)
+      // Partager pour tous 
       const share = document.createElement('button'); share.textContent='🔗'; share.title='Partager';
-      share.className = 'action-btn ghost-action-btn'; // Point 4
+      share.className = 'action-btn ghost-action-btn'; 
       share.onclick = ()=> { const link = `${window.location.origin}${window.location.pathname}?slot=${slot.id}`; navigator.clipboard.writeText(link).then(()=>alert('Lien copié !')); };
       actions.appendChild(share);
 
