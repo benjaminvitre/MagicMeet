@@ -1,4 +1,4 @@
-/* ===== Configuration & categories (Mise à jour V7) ===== */
+/* ===== Configuration & categories (Mise à jour V8) ===== */
 const ADMIN_EMAIL = "benjamin.vitre@gmail.com";
 
 // Triez les sous-activités
@@ -64,9 +64,9 @@ const COLOR_MAP = {
 
 const MAX_PARTICIPANTS = 10;
 let currentFilterActivity = "Toutes"; 
-let currentFilterSub = "Toutes"; // Nouveau filtre pour la sous-activité (Point 1)
+let currentFilterSub = "Toutes"; 
 let currentFilterCity = "Toutes"; 
-let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null'); // Initialise l'utilisateur
+let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null'); 
 
 /* ===== storage helpers robust (tries encrypted then plain JSON) ===== */
 function encrypt(data) {
@@ -294,7 +294,7 @@ function handleIndexPage() {
         }
     }
 
-    // populate subactivities area (Point 1: Rendu et filtre de sous-activité)
+    // populate subactivities area 
     function populateSubActivities(act){
         subDiv.innerHTML = '';
         
@@ -335,7 +335,7 @@ function handleIndexPage() {
 
             btn.textContent = s;
             
-            // Logique de Filtrage (Point 1)
+            // Logique de Filtrage 
             btn.addEventListener('click', ()=> {
                 // Pour la création : remplissage du formulaire
                 formSubSelect.value = s;
@@ -609,7 +609,7 @@ function handleIndexPage() {
             slots = slots.filter(s => s.activity === currentFilterActivity);
         }
         
-        // Filtrage par sous-activité (Point 1)
+        // Filtrage par sous-activité 
         if (currentFilterSub !== "Toutes") {
             slots = slots.filter(s => s.sub === currentFilterSub);
         }
@@ -879,7 +879,12 @@ function handleProfilePage() {
             const userIndex = users.findIndex(u => u.email === currentUser.email);
             if (userIndex === -1) return alert('Erreur utilisateur non trouvé.');
 
-            const pseudoConflict = users.some((u, index) => u.pseudo === newPseudo && index !== userIndex);
+            // POINT 4: Correction de la vérification de conflit de pseudo
+            // Permet de sauvegarder si le pseudo est inchangé (car il ne sera plus considéré en conflit avec lui-même)
+            const pseudoConflict = users.some((u, index) => 
+                u.pseudo === newPseudo && index !== userIndex
+            );
+
             if (pseudoConflict) return alert('Ce pseudo est déjà pris par un autre utilisateur.');
 
             users[userIndex].pseudo = newPseudo;
@@ -903,7 +908,7 @@ function loadUserSlots(){
     const list = document.getElementById('user-slots'); if (!list) return; list.innerHTML='';
     if (!currentUser) return;
 
-    // Point 3: Correction - filtrer uniquement par owner, et trier
+    // POINT 2: Affichage des créneaux créés (déjà corrigé)
     let slots = getSlots().filter(s => s.owner === currentUser.email);
     slots = slots.filter(s => s.date && s.time).sort((a,b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
 
