@@ -115,8 +115,9 @@ function updateSlot(slotId, updateFn){
   if (index !== -1){
     slots[index] = updateFn(slots[index]);
     saveSlots(slots);
-    if (typeof loadSlots === 'function') loadSlots(); // Re-render the list if on index
-    // Pour la page de profil
+    // Re-render the list if loadSlots is available (index page)
+    if (typeof loadSlots === 'function' && document.getElementById('slots-list')) loadSlots(); 
+    // Re-render the profile page lists
     if (document.getElementById('user-slots')) loadUserSlots(); 
     if (document.getElementById('joined-slots')) loadJoinedSlots(); 
   }
@@ -267,7 +268,7 @@ function handleIndexPage() {
                 currentFilterSub = "Toutes"; // Réinitialise le filtre sous-activité lors du changement d'activité principale
                 loadSlots(); 
 
-                document.querySelectorAll('.activity-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.activity-buttons > .activity-btn').forEach(btn => btn.classList.remove('active'));
                 b.classList.add('active');
 
                 if(act !== "Toutes") {
@@ -301,8 +302,9 @@ function handleIndexPage() {
         const resetBtn = document.createElement('button');
         resetBtn.className = 'activity-btn';
         resetBtn.textContent = '❌ Toutes les sous-activités';
-        resetBtn.style.borderColor = COLOR_MAP[act]; // Couleur de l'activité principale
-        resetBtn.style.color = COLOR_MAP[act];
+        const actColor = COLOR_MAP[act] || '#9aa9bf';
+        resetBtn.style.borderColor = actColor; // Couleur de l'activité principale
+        resetBtn.style.color = actColor;
         if (currentFilterSub === "Toutes") {
              resetBtn.classList.add('active');
              resetBtn.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
@@ -387,7 +389,7 @@ function handleIndexPage() {
         };
     }
 
-    // Fonction centrale pour le rendu d'un slot (utilisée par loadSlots, loadUserSlots, loadJoinedSlots)
+    // Fonction centrale pour le rendu d'un slot
     function renderSlotItem(slot, currentUserEmail, currentUserPseudo, targetListElement) {
         const li = document.createElement('li'); li.className='slot-item';
         const info = document.createElement('div'); info.className='slot-info';
@@ -530,8 +532,8 @@ function handleIndexPage() {
                 if (!confirm('Supprimer ce créneau ?')) return; 
                 const remain = getSlots().filter(s=>s.id!==slot.id); 
                 saveSlots(remain); 
-                if (typeof loadSlots === 'function') loadSlots(); // Refresh index
-                if (document.getElementById('user-slots')) loadUserSlots(); // Refresh profile
+                if (typeof loadSlots === 'function' && document.getElementById('slots-list')) loadSlots(); 
+                if (document.getElementById('user-slots')) loadUserSlots(); 
                 if (typeof populateCityFilter === 'function') populateCityFilter(); 
             };
             actions.appendChild(del);
@@ -733,7 +735,7 @@ function handleIndexPage() {
     // keep selects in sync when user chooses sub-select manually
     formSubSelect.addEventListener('change', ()=> populateSubSub(formSubSelect.value));
 
-    /* --- Point 3: Suggestion d'adresse et Lien Google Maps (Intelligente) --- */
+    /* --- Suggestion d'adresse et Lien Google Maps (Intelligente) --- */
     if (locationInput) {
         locationInput.addEventListener('input', () => {
             const location = locationInput.value.trim();
