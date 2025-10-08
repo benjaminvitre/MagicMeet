@@ -4,12 +4,12 @@
 
 // ⚠️ REMPLACER PAR VOTRE PROPRE CONFIGURATION FIREBASE
 const firebaseConfig = {
- apiKey: "AIzaSyB0U_y6sMU8_vYriCK17H-Y5uPUb2ewPRw",
-  authDomain: "magicmeet--app.firebaseapp.com",
-  projectId: "magicmeet--app",
-  storageBucket: "magicmeet--app.firebasestorage.app",
-  messagingSenderId: "168285202241",
-  appId: "1:168285202241:web:6284051ec3884cfd81a3c0",
+    apiKey: "VOTRE_API_KEY",
+    authDomain: "VOTRE_AUTH_DOMAIN",
+    projectId: "VOTRE_PROJECT_ID",
+    storageBucket: "VOTRE_STORAGE_BUCKET",
+    messagingSenderId: "VOTRE_MESSAGING_SENDER_ID",
+    appId: "VOTRE_APP_ID"
 };
 
 // Initialisation de Firebase
@@ -74,8 +74,6 @@ const activitiesData = {
 
 /**
  * Affiche une notification toast.
- * @param {string} message - Le message à afficher.
- * @param {boolean} isSuccess - Vrai pour succès (vert), faux pour erreur (rouge).
  */
 function showToast(message, isSuccess = true) {
     const toastContainer = document.getElementById('toast-container') || document.createElement('div');
@@ -90,7 +88,6 @@ function showToast(message, isSuccess = true) {
     
     toastContainer.appendChild(toast);
     
-    // Animation et suppression
     setTimeout(() => {
         toast.classList.add('fade-out');
         toast.addEventListener('transitionend', () => toast.remove());
@@ -102,21 +99,22 @@ function showToast(message, isSuccess = true) {
  */
 function updateHeaderDisplay() {
     const profileLink = document.getElementById('profile-link');
-    const logoutBtn = document.getElementById('logout') || document.getElementById('logout-profile');
+    const logoutBtnIndex = document.getElementById('logout');
+    const logoutBtnProfile = document.getElementById('logout-profile');
 
     if (auth.currentUser) {
         if (profileLink) profileLink.style.display = 'block';
-        if (logoutBtn) logoutBtn.style.display = 'block';
+        if (logoutBtnIndex) logoutBtnIndex.style.display = 'block';
+        if (logoutBtnProfile) logoutBtnProfile.style.display = 'block';
     } else {
         if (profileLink) profileLink.style.display = 'none';
-        if (logoutBtn) logoutBtn.style.display = 'none';
+        if (logoutBtnIndex) logoutBtnIndex.style.display = 'none';
+        if (logoutBtnProfile) logoutBtnProfile.style.display = 'none';
     }
 }
 
 /**
  * Normalise et formate une chaîne de caractères (pour les comparaisons).
- * @param {string} str 
- * @returns {string}
  */
 function normalizeString(str) {
     if (!str) return '';
@@ -125,13 +123,9 @@ function normalizeString(str) {
 
 
 /* ========================================================================= */
-/* 4. FONCTIONS DE RENDU (Pour index.html et profile.html) */
-/* (Déplacées ici pour être accessibles par showMain) */
+/* 4. FONCTIONS DE RENDU (accessibles globalement pour showMain) */
 /* ========================================================================= */
 
-/**
- * Remplit le sélecteur d'activité du formulaire de création de créneau.
- */
 function populateFormActivitySelect() {
     const select = document.getElementById('form-activity-select');
     if (!select) return;
@@ -145,10 +139,6 @@ function populateFormActivitySelect() {
     }
 }
 
-/**
- * Remplit le sélecteur de sous-activité du formulaire de création de créneau.
- * @param {string} activity - L'activité principale sélectionnée.
- */
 function populateSubActivitiesForForm(activity) {
     const subSelect = document.getElementById('sub-select');
     const subsubSelect = document.getElementById('subsub-select');
@@ -167,11 +157,6 @@ function populateSubActivitiesForForm(activity) {
     }
 }
 
-/**
- * Remplit le troisième niveau de sélection (sous-sous-activité).
- * @param {string} activity - L'activité principale sélectionnée.
- * @param {string} subActivity - La sous-activité sélectionnée.
- */
 function populateSubSub(activity, subActivity) {
     const subsubSelect = document.getElementById('subsub-select');
     if (!subsubSelect) return;
@@ -181,7 +166,6 @@ function populateSubSub(activity, subActivity) {
     if (activity && subActivity && activitiesData[activity] && activitiesData[activity].sub && activitiesData[activity].sub[subActivity]) {
         const subSub = activitiesData[activity].sub[subActivity];
         
-        // S'il s'agit d'un objet (liste de sous-sous-activités)
         if (typeof subSub === 'object') {
              for (const key in subSub) {
                 const option = document.createElement('option');
@@ -193,12 +177,9 @@ function populateSubSub(activity, subActivity) {
     }
 }
 
-/**
- * Affiche les boutons de filtre pour les activités principales.
- */
 function renderActivities() {
     const activityContainer = document.getElementById('activities');
-    if (!activityContainer) return; // Non pertinent si on n'est pas sur index.html
+    if (!activityContainer) return; 
 
     activityContainer.innerHTML = '';
     
@@ -206,12 +187,12 @@ function renderActivities() {
     const allBtn = document.createElement('button');
     allBtn.className = `activity-btn ${currentFilterActivity === 'All' ? 'selected' : ''}`;
     allBtn.textContent = 'Tout voir';
-    allBtn.style.backgroundColor = '#6c757d'; // Gris
+    allBtn.style.backgroundColor = '#6c757d'; 
     allBtn.addEventListener('click', () => {
         currentFilterActivity = 'All';
         currentFilterSubActivity = '';
-        renderActivities(); // Re-render pour la sélection
-        populateSubActivities('All'); // Vide les sous-activités
+        renderActivities(); 
+        populateSubActivities('All'); 
         loadSlots();
     });
     activityContainer.appendChild(allBtn);
@@ -233,10 +214,6 @@ function renderActivities() {
     }
 }
 
-/**
- * Affiche les boutons de filtre pour les sous-activités.
- * @param {string} activity - L'activité principale sélectionnée.
- */
 function populateSubActivities(activity) {
     const subActivityContainer = document.getElementById('subactivities');
     if (!subActivityContainer) return;
@@ -271,7 +248,7 @@ function populateSubActivities(activity) {
         btn.style.backgroundColor = color;
         btn.addEventListener('click', () => {
             currentFilterSubActivity = subActivity;
-            populateSubActivities(activity); // Re-render pour la sélection
+            populateSubActivities(activity); 
             loadSlots();
         });
         subActivityContainer.appendChild(btn);
@@ -279,14 +256,10 @@ function populateSubActivities(activity) {
 }
 
 
-/**
- * Remplit le filtre des villes à partir de toutes les entrées de créneaux.
- */
 async function populateCityFilter() {
     const select = document.getElementById('city-filter-select');
     if (!select) return;
 
-    // Récupérer toutes les villes uniques
     const snapshot = await db.collection('slots').get();
     const cities = new Set();
     
@@ -297,7 +270,6 @@ async function populateCityFilter() {
         }
     });
 
-    // Remplir le sélecteur
     select.innerHTML = '';
     
     const allOption = document.createElement('option');
@@ -314,7 +286,6 @@ async function populateCityFilter() {
         select.appendChild(option);
     });
 
-    // Événement de changement
     select.value = currentFilterCity;
     select.addEventListener('change', (e) => {
         currentFilterCity = e.target.value;
@@ -324,40 +295,34 @@ async function populateCityFilter() {
 
 /**
  * Crée l'élément HTML pour un créneau.
- * @param {object} slot - Les données du créneau.
- * @param {string} currentUserEmail - L'email de l'utilisateur actuel.
- * @param {string} currentUserPseudo - Le pseudo de l'utilisateur actuel.
- * @param {HTMLElement} targetListElement - L'élément <ul> où insérer le créneau.
+ * Cette fonction est rendue plus robuste pour gérer les utilisateurs déconnectés.
  */
 function renderSlotItem(slot, currentUserEmail, currentUserPseudo, targetListElement) {
-    // Vérification de sécurité avant d'utiliser currentUserEmail/Pseudo
-    if (!currentUserEmail || !currentUserPseudo) return;
-    
     if (!targetListElement) return;
+
+    const isUserLoggedIn = !!currentUserEmail;
     
-    const isJoined = slot.participants.some(p => p.email === currentUserEmail);
-    const isCreator = slot.creator.email === currentUserEmail;
+    const isJoined = isUserLoggedIn && slot.participants.some(p => p.email === currentUserEmail);
+    const isCreator = isUserLoggedIn && slot.creator.email === currentUserEmail;
     const canJoin = slot.maxParticipants === null || slot.participants.length < slot.maxParticipants;
     const activityColor = activitiesData[slot.activity]?.color || '#808080';
     const isPrivate = slot.isPrivate;
-    const isOwnerView = targetListElement.id === 'user-slots'; // Indique si on est dans la section "Mes Créneaux"
+    const isOwnerView = targetListElement.id === 'user-slots'; 
 
     const li = document.createElement('li');
     li.className = 'slot-item';
     li.style.borderLeftColor = activityColor;
 
-    // --- Info du créneau ---
     let participantsText = isPrivate && !isOwnerView ? `Participants: ${slot.participants.length} / ${slot.maxParticipants || '∞'} (Privé)` : `Participants: ${slot.participants.length} / ${slot.maxParticipants || '∞'}`;
     let participantsListHTML = '';
 
     if (!isPrivate || isOwnerView) {
         const participantsNames = slot.participants.map(p => 
-            p.email === currentUserEmail ? `<span style="font-weight: bold; color: ${activityColor};">${p.pseudo} (Vous)</span>` : p.pseudo
+            (isUserLoggedIn && p.email === currentUserEmail) ? `<span style="font-weight: bold; color: ${activityColor};">${p.pseudo} (Vous)</span>` : p.pseudo
         ).join(', ');
         participantsListHTML = `<p class="participants-list">Membres : ${participantsNames}</p>`;
     }
 
-    // Calcul de la jauge
     const currentCount = slot.participants.length;
     const maxCount = slot.maxParticipants;
     const gaugeWidth = maxCount ? (currentCount / maxCount) * 100 : 0;
@@ -390,66 +355,68 @@ function renderSlotItem(slot, currentUserEmail, currentUserPseudo, targetListEle
 
     const actionsBox = li.querySelector('.actions-box');
 
-    // --- Boutons d'action ---
+    if (isUserLoggedIn) {
+        if (isCreator) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'action-btn leave-btn';
+            deleteBtn.textContent = 'Supprimer';
+            deleteBtn.addEventListener('click', () => {
+                if (confirm(`Êtes-vous sûr de vouloir supprimer le créneau "${slot.name}" ?`)) {
+                    db.collection('slots').doc(slot.id).delete()
+                        .then(() => {
+                            showToast(`Créneau "${slot.name}" supprimé.`, true);
+                            loadSlots(); 
+                        })
+                        .catch(error => showToast(`Erreur lors de la suppression : ${error.message}`, false));
+                }
+            });
+            actionsBox.appendChild(deleteBtn);
 
-    if (isCreator) {
-        // Bouton de suppression (visible uniquement par le créateur)
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'action-btn leave-btn';
-        deleteBtn.textContent = 'Supprimer';
-        deleteBtn.addEventListener('click', () => {
-            if (confirm(`Êtes-vous sûr de vouloir supprimer le créneau "${slot.name}" ?`)) {
-                db.collection('slots').doc(slot.id).delete()
+        } else if (isJoined) {
+            const leaveBtn = document.createElement('button');
+            leaveBtn.className = 'action-btn leave-btn';
+            leaveBtn.textContent = 'Quitter';
+            leaveBtn.addEventListener('click', () => {
+                const newParticipants = slot.participants.filter(p => p.email !== currentUserEmail);
+                db.collection('slots').doc(slot.id).update({ participants: newParticipants })
                     .then(() => {
-                        showToast(`Créneau "${slot.name}" supprimé.`, true);
-                        loadSlots(); // Recharge les créneaux
+                        showToast(`Vous avez quitté le créneau "${slot.name}".`, true);
+                        loadSlots();
                     })
-                    .catch(error => showToast(`Erreur lors de la suppression : ${error.message}`, false));
-            }
-        });
-        actionsBox.appendChild(deleteBtn);
-
-    } else if (isJoined) {
-        // Bouton de désinscription
-        const leaveBtn = document.createElement('button');
-        leaveBtn.className = 'action-btn leave-btn';
-        leaveBtn.textContent = 'Quitter';
-        leaveBtn.addEventListener('click', () => {
-            const newParticipants = slot.participants.filter(p => p.email !== currentUserEmail);
-            db.collection('slots').doc(slot.id).update({ participants: newParticipants })
+                    .catch(error => showToast(`Erreur : ${error.message}`, false));
+            });
+            actionsBox.appendChild(leaveBtn);
+            
+        } else if (canJoin) {
+            const joinBtn = document.createElement('button');
+            joinBtn.className = 'action-btn join-btn';
+            joinBtn.textContent = 'Rejoindre';
+            joinBtn.addEventListener('click', () => {
+                const newParticipant = { email: currentUserEmail, pseudo: currentUserPseudo };
+                db.collection('slots').doc(slot.id).update({
+                    participants: firebase.firestore.FieldValue.arrayUnion(newParticipant)
+                })
                 .then(() => {
-                    showToast(`Vous avez quitté le créneau "${slot.name}".`, true);
+                    showToast(`Vous avez rejoint le créneau "${slot.name}" !`, true);
                     loadSlots();
                 })
                 .catch(error => showToast(`Erreur : ${error.message}`, false));
-        });
-        actionsBox.appendChild(leaveBtn);
-        
-    } else if (canJoin) {
-        // Bouton d'inscription
-        const joinBtn = document.createElement('button');
-        joinBtn.className = 'action-btn join-btn';
-        joinBtn.textContent = 'Rejoindre';
-        joinBtn.addEventListener('click', () => {
-            const newParticipant = { email: currentUserEmail, pseudo: currentUserPseudo };
-            db.collection('slots').doc(slot.id).update({
-                participants: firebase.firestore.FieldValue.arrayUnion(newParticipant)
-            })
-            .then(() => {
-                showToast(`Vous avez rejoint le créneau "${slot.name}" !`, true);
-                loadSlots();
-            })
-            .catch(error => showToast(`Erreur : ${error.message}`, false));
-        });
-        actionsBox.appendChild(joinBtn);
-        
+            });
+            actionsBox.appendChild(joinBtn);
+            
+        } else {
+            const fullSpan = document.createElement('span');
+            fullSpan.textContent = 'Complet';
+            fullSpan.style.color = 'var(--danger-color)';
+            fullSpan.style.fontWeight = 'bold';
+            actionsBox.appendChild(fullSpan);
+        }
     } else {
-        // Créneau complet
-        const fullSpan = document.createElement('span');
-        fullSpan.textContent = 'Complet';
-        fullSpan.style.color = 'var(--danger-color)';
-        fullSpan.style.fontWeight = 'bold';
-        actionsBox.appendChild(fullSpan);
+        const loginSpan = document.createElement('span');
+        loginSpan.textContent = 'Connectez-vous pour agir';
+        loginSpan.style.fontSize = '0.9em';
+        loginSpan.style.color = 'var(--muted-text)';
+        actionsBox.appendChild(loginSpan);
     }
 
 
@@ -457,42 +424,31 @@ function renderSlotItem(slot, currentUserEmail, currentUserPseudo, targetListEle
 }
 
 
-/**
- * Charge les créneaux depuis Firestore et les affiche.
- */
 async function loadSlots() {
     const slotsList = document.getElementById('slots-list');
     if (!slotsList) return; 
 
     slotsList.innerHTML = '<li>Chargement des créneaux...</li>';
 
-    // 🛑 CORRECTION CRITIQUE: Vérifier que l'utilisateur et ses données sont chargés.
-    if (!auth.currentUser || !currentUserData || !currentUserData.pseudo) {
-        slotsList.innerHTML = '<li>Veuillez vous connecter pour voir les créneaux.</li>';
-        return; 
-    }
+    // Rendu plus robuste : définit les variables d'utilisateur, même s'il est déconnecté
+    const isConnected = !!auth.currentUser && !!currentUserData && !!currentUserData.pseudo;
+    const currentUserEmail = isConnected ? auth.currentUser.email : null;
+    const currentUserPseudo = isConnected ? currentUserData.pseudo : null;
     
-    const currentUserEmail = auth.currentUser.email;
-    const currentUserPseudo = currentUserData.pseudo;
-
     try {
         let query = db.collection('slots');
-        const now = new Date().toISOString().slice(0, 10); // Date du jour YYYY-MM-DD
+        const now = new Date().toISOString().slice(0, 10); 
         
-        // 1. Filtrer par date (uniquement les créneaux futurs ou d'aujourd'hui)
         query = query.where('date', '>=', now).orderBy('date', 'asc');
 
-        // 2. Filtrer par activité
         if (currentFilterActivity !== 'All') {
             query = query.where('activity', '==', currentFilterActivity);
         }
 
-        // 3. Filtrer par sous-activité
         if (currentFilterSubActivity !== '') {
             query = query.where('subActivity', '==', currentFilterSubActivity);
         }
 
-        // 4. Filtrer par ville
         if (currentFilterCity !== 'All') {
             query = query.where('city', '==', currentFilterCity);
         }
@@ -505,12 +461,11 @@ async function loadSlots() {
             return;
         }
 
-        // Convertir et trier par heure (l'heure n'est pas triée par Firestore si on filtre par date)
         const sortedSlots = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a, b) => {
             if (a.date === b.date) {
                 return a.time.localeCompare(b.time);
             }
-            return 0; // Le tri par date a déjà été fait par Firestore
+            return 0; 
         });
 
         sortedSlots.forEach(slot => {
@@ -528,16 +483,12 @@ async function loadSlots() {
 /* 5. LOGIQUE D'AFFICHAGE DES PAGES (AUTH vs MAIN) */
 /* ========================================================================= */
 
-/**
- * Affiche la section d'authentification et cache la section principale.
- */
 function showAuth() {
     const authSection = document.getElementById('auth-section');
     const mainSection = document.getElementById('main-section');
     if (authSection) authSection.style.display = 'flex';
     if (mainSection) mainSection.style.display = 'none';
     
-    // Si on est sur la page de profil, rediriger vers l'accueil si déconnecté
     if (window.location.pathname.includes('profile.html')) {
          window.location.href = 'index.html';
     }
@@ -545,10 +496,6 @@ function showAuth() {
     updateHeaderDisplay();
 }
 
-/**
- * Affiche la section principale et cache la section d'authentification.
- * Appelle les fonctions de rendu.
- */
 async function showMain() {
     const authSection = document.getElementById('auth-section');
     const mainSection = document.getElementById('main-section');
@@ -557,7 +504,7 @@ async function showMain() {
 
     updateHeaderDisplay();
     
-    // Ces fonctions sont maintenant dans la portée globale !
+    // Ces fonctions sont désormais accessibles globalement
     renderActivities();
     await loadSlots();
     await populateCityFilter();
@@ -587,25 +534,24 @@ function handleIndexPageLogic() {
     const toggleCreateForm = document.getElementById('toggle-create-form');
     const createSlotForm = document.getElementById('create-slot-form');
     
-    if (!loginBtn) return; // Si on n'est pas sur index.html, on arrête.
+    if (!loginBtn) return; // Stop si on n'est pas sur index.html
 
     // ----------------------------------------------------
     // --- UTILS INDEX PAGE ---
     // ----------------------------------------------------
 
-    /** Met à jour le lien Google Maps */
     function updateMapLink() {
-        if (slotLocationInput.value.length > 5) {
+        if (slotLocationInput.value.length > 5 && locationLinkA) {
             const query = encodeURIComponent(slotLocationInput.value);
+            // Assurez-vous que l'URL est correcte (simple lien Google Maps)
             const url = `https://www.google.com/maps/search/?api=1&query=${query}`;
             locationLinkA.href = url;
             locationLinkP.style.display = 'block';
-        } else {
+        } else if (locationLinkP) {
             locationLinkP.style.display = 'none';
         }
     }
 
-    /** Vérifie la validité du formulaire d'inscription */
     function checkSignupValidity() {
         const passwordSignup = document.getElementById('password-signup').value;
         const passwordConfirm = passwordConfirmInput.value;
@@ -673,7 +619,6 @@ function handleIndexPageLogic() {
         try {
             const userCredential = await auth.createUserWithEmailAndPassword(email, password);
             
-            // Ajouter les données utilisateur à Firestore
             await db.collection('users').doc(userCredential.user.uid).set({
                 pseudo: pseudo,
                 email: email,
@@ -692,7 +637,6 @@ function handleIndexPageLogic() {
         }
     });
 
-    // Écouteurs pour l'inscription
     pseudoInput.addEventListener('input', checkSignupValidity);
     passwordConfirmInput.addEventListener('input', checkSignupValidity);
     document.getElementById('password-signup').addEventListener('input', checkSignupValidity);
@@ -702,7 +646,6 @@ function handleIndexPageLogic() {
     // --- FORMULAIRE DE CRÉATION DE CRÉNEAU ---
     // ----------------------------------------------------
 
-    // Toggle de la visibilité du formulaire de création
     if (toggleCreateForm && createSlotForm) {
         toggleCreateForm.addEventListener('click', () => {
             const isVisible = createSlotForm.style.display === 'block';
@@ -711,10 +654,8 @@ function handleIndexPageLogic() {
         });
     }
 
-    // Initialisation du sélecteur d'activité du formulaire
     populateFormActivitySelect();
 
-    // Gestion du changement d'activité principale
     if (formActivitySelect) {
         formActivitySelect.addEventListener('change', (e) => {
             const selectedActivity = e.target.value;
@@ -724,7 +665,6 @@ function handleIndexPageLogic() {
         });
     }
     
-    // Gestion du changement de sous-activité
     if (subSelect) {
         subSelect.addEventListener('change', (e) => {
             const selectedSub = e.target.value;
@@ -733,12 +673,10 @@ function handleIndexPageLogic() {
         });
     }
 
-    // Gestion de l'input de localisation
     if (slotLocationInput) {
         slotLocationInput.addEventListener('input', updateMapLink);
     }
     
-    // Logique de création
     if (createSlotBtn) {
         createSlotBtn.addEventListener('click', async () => {
             if (!auth.currentUser || !currentUserData) {
@@ -761,7 +699,7 @@ function handleIndexPageLogic() {
                 return;
             }
             
-            // Simuler l'extraction de la ville (première partie de l'adresse après virgule)
+            // Extraction de la ville
             const parts = location.split(',').map(p => p.trim());
             const city = parts.length > 1 ? parts[parts.length - 1] : parts[0];
 
@@ -773,7 +711,7 @@ function handleIndexPageLogic() {
                     subActivity,
                     subSubActivity,
                     location,
-                    city: city, // Ajout de la ville pour le filtre
+                    city: city, 
                     date,
                     time,
                     isPrivate,
@@ -783,7 +721,7 @@ function handleIndexPageLogic() {
                         email: auth.currentUser.email,
                         pseudo: currentUserData.pseudo 
                     },
-                    participants: [{ // Le créateur est le premier participant
+                    participants: [{ 
                         email: auth.currentUser.email,
                         pseudo: currentUserData.pseudo 
                     }],
@@ -793,8 +731,8 @@ function handleIndexPageLogic() {
                 await db.collection('slots').add(newSlot);
                 showToast(`Créneau "${name}" créé avec succès ! ✅`, true);
                 document.getElementById('create-slot-form').reset();
-                updateMapLink(); // Cache le lien de la carte
-                loadSlots(); // Recharge les créneaux pour afficher le nouveau
+                updateMapLink(); 
+                loadSlots(); 
             } catch (error) {
                 showToast(`Erreur lors de la création du créneau: ${error.message}`, false);
             }
@@ -836,20 +774,56 @@ function handleIndexPageLogic() {
 /* 7. LOGIQUE DE LA PAGE DE PROFIL (profile.html) */
 /* ========================================================================= */
 
+async function loadUserSlots() {
+    const userSlotsList = document.getElementById('user-slots');
+    const joinedSlotsList = document.getElementById('joined-slots');
+
+    if (!userSlotsList || !joinedSlotsList || !auth.currentUser || !currentUserData) return;
+
+    const slotsSnapshot = await db.collection('slots').get();
+    
+    userSlotsList.innerHTML = '';
+    joinedSlotsList.innerHTML = '';
+
+    let createdCount = 0;
+    let joinedCount = 0;
+
+    slotsSnapshot.forEach(doc => {
+        const slot = { id: doc.id, ...doc.data() };
+        const isCreator = slot.creator.email === auth.currentUser.email;
+        const isJoined = slot.participants.some(p => p.email === auth.currentUser.email);
+
+        if (isCreator) {
+            renderSlotItem(slot, auth.currentUser.email, currentUserData.pseudo, userSlotsList);
+            createdCount++;
+        } else if (isJoined && !isCreator) {
+            renderSlotItem(slot, auth.currentUser.email, currentUserData.pseudo, joinedSlotsList);
+            joinedCount++;
+        }
+    });
+
+    if (createdCount === 0) {
+        userSlotsList.innerHTML = '<li>Vous n\'avez créé aucun créneau.</li>';
+    }
+    if (joinedCount === 0) {
+        joinedSlotsList.innerHTML = '<li>Vous n\'avez rejoint aucun créneau.</li>';
+    }
+}
+
+
 async function handleProfilePageLogic() {
     const profileMain = document.getElementById('profile-main');
-    if (!profileMain || !auth.currentUser) return; // Si on n'est pas sur profile.html ou pas connecté
+    if (!profileMain || !auth.currentUser || !currentUserData) {
+        // Redirection gérée par onAuthStateChanged si non connecté
+        return; 
+    }
 
     const profilePseudoInput = document.getElementById('profile-pseudo');
     const profileEmailInput = document.getElementById('profile-email');
     const profilePhoneInput = document.getElementById('profile-phone');
     const profilePasswordInput = document.getElementById('profile-password');
     const profileForm = document.getElementById('profile-form');
-    const userSlotsList = document.getElementById('user-slots');
-    const joinedSlotsList = document.getElementById('joined-slots');
     
-    // Le contrôle de l'existence de currentUserData est fait dans onAuthStateChanged
-
     // --- Chargement des données utilisateur ---
     profileEmailInput.value = auth.currentUser.email;
     profilePseudoInput.value = currentUserData.pseudo;
@@ -870,32 +844,26 @@ async function handleProfilePageLogic() {
         }
 
         try {
-            // 1. Mise à jour de Firestore (Pseudo et Téléphone)
             await db.collection('users').doc(auth.currentUser.uid).update({
                 pseudo: newPseudo,
                 phone: newPhone
             });
             
-            // Mettre à jour la variable globale et le champ si nécessaire
             currentUserData.pseudo = newPseudo;
             currentUserData.phone = newPhone;
 
-            // 2. Mise à jour du mot de passe si un nouveau est fourni
             if (newPassword) {
                 if (newPassword.length < 6) {
                      showToast("Le nouveau mot de passe doit contenir au moins 6 caractères. Veuillez réessayer.", false);
                      return;
                 }
                 await auth.currentUser.updatePassword(newPassword);
-                profilePasswordInput.value = ''; // Vider le champ après succès
+                profilePasswordInput.value = ''; 
             }
 
             showToast("Profil mis à jour avec succès ! ✨", true);
-
-            // Pour s'assurer que le header est à jour si le pseudo était utilisé quelque part
             updateHeaderDisplay(); 
         } catch (error) {
-            // Un cas fréquent : 'auth/requires-recent-login'
             if (error.code === 'auth/requires-recent-login') {
                 showToast("Pour changer votre mot de passe, veuillez vous déconnecter puis vous reconnecter, et réessayer.", false);
             } else {
@@ -904,38 +872,7 @@ async function handleProfilePageLogic() {
         }
     });
 
-    // --- Chargement et affichage des créneaux de l'utilisateur ---
-    async function loadUserSlots() {
-        const slotsSnapshot = await db.collection('slots').get();
-        
-        userSlotsList.innerHTML = '';
-        joinedSlotsList.innerHTML = '';
-
-        let createdCount = 0;
-        let joinedCount = 0;
-
-        slotsSnapshot.forEach(doc => {
-            const slot = { id: doc.id, ...doc.data() };
-            const isCreator = slot.creator.email === auth.currentUser.email;
-            const isJoined = slot.participants.some(p => p.email === auth.currentUser.email);
-
-            if (isCreator) {
-                renderSlotItem(slot, auth.currentUser.email, currentUserData.pseudo, userSlotsList);
-                createdCount++;
-            } else if (isJoined) {
-                renderSlotItem(slot, auth.currentUser.email, currentUserData.pseudo, joinedSlotsList);
-                joinedCount++;
-            }
-        });
-
-        if (createdCount === 0) {
-            userSlotsList.innerHTML = '<li>Vous n\'avez créé aucun créneau.</li>';
-        }
-        if (joinedCount === 0) {
-            joinedSlotsList.innerHTML = '<li>Vous n\'avez rejoint aucun créneau.</li>';
-        }
-    }
-
+    // --- Chargement des créneaux de l'utilisateur ---
     loadUserSlots();
 
     // --- Logique de déconnexion sur la page de profil ---
@@ -944,7 +881,6 @@ async function handleProfilePageLogic() {
         logoutBtnProfile.addEventListener('click', async () => {
             await auth.signOut();
             showToast("Déconnexion réussie.", true);
-            // La redirection vers index.html sera gérée par l'écouteur d'état d'authentification (showAuth)
         });
     }
 }
@@ -956,38 +892,37 @@ async function handleProfilePageLogic() {
 
 auth.onAuthStateChanged(async (user) => {
     if (user) {
-        // Utilisateur connecté
         try {
             const userDoc = await db.collection('users').doc(user.uid).get();
             if (userDoc.exists) {
                 currentUserData = userDoc.data();
             } else {
-                // Créer une entrée utilisateur minimale si elle n'existe pas (cas rare)
                 currentUserData = { pseudo: 'Utilisateur Inconnu', email: user.email, phone: '' };
             }
             
-            // Gérer l'affichage en fonction de la page
             if (window.location.pathname.includes('profile.html')) {
                 handleProfilePageLogic();
             } else {
+                // S'assurer que les listeners de la page d'accueil sont setup
+                handleIndexPageLogic(); 
                 showMain();
-                handleIndexPageLogic(); // Pour setup les écouteurs d'événements
             }
             
         } catch (error) {
-            // Afficher le message d'erreur SANS faire planter l'interface
             showToast(`Erreur de chargement des données utilisateur: ${error.message}`, false);
             showAuth(); 
         }
     } else {
-        // Utilisateur déconnecté
         currentUserData = null;
         showAuth();
-        // Le code de handleIndexPageLogic doit être appelé pour setup les écouteurs de login/signup
+        
+        // Exécuter la logique de la page d'accueil pour setup login/signup et afficher les créneaux (sans actions)
         if (!window.location.pathname.includes('profile.html')) {
             handleIndexPageLogic();
-            // Appeler loadSlots ici permettrait de voir les créneaux même déconnecté,
-            // mais on garde la logique actuelle qui demande la connexion.
+            // Appeler showMain même déconnecté pour afficher les créneaux publics
+            if (document.getElementById('main-section')) {
+                 showMain();
+            }
         }
     }
 });
