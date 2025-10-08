@@ -1,240 +1,75 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Profil — Magic Meet!</title>
-  <link rel="stylesheet" href="style.css" />
-  <style>
-    /* style spécifique pour la liste admin */
-    #admin-users-list { list-style: none; padding: 0; }
-    #admin-users-list li { background: #1a1f23; padding: 8px 10px; border-radius: 6px; margin-bottom: 5px; font-size: 0.9rem; }
-  </style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Mon Profil - Magic Meet!</title>
+    <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="header">
-    <a class="logo-link" href="index.html" aria-label="Accueil">
-            <svg width="56" height="56" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-        <rect rx="18" ry="18" width="120" height="120" fill="#0f1417"/>
-        <circle cx="20" cy="18" r="6" fill="#b294f2"/>
-        <circle cx="40" cy="10" r="3" fill="#f6d06f"/>
-        <circle cx="60" cy="16" r="8" fill="#f5b88b"/>
-        <circle cx="88" cy="20" r="5" fill="#9fe3cc"/>
-        <circle cx="18" cy="92" r="6" fill="#f5b0d0"/>
-        <circle cx="36" cy="100" r="3" fill="#c085f5"/>
-        <circle cx="60" cy="98" r="10" fill="#6fb2f2"/>
-        <circle cx="92" cy="94" r="4" fill="#f6d06f"/>
-        <circle cx="100" cy="40" r="5" fill="#f5b88b"/>
-        <circle cx="98" cy="70" r="3" fill="#78d6a4"/>
-        <circle cx="30" cy="30" r="4" fill="#f1a66a"/>
-        <circle cx="80" cy="60" r="6" fill="#b294f2"/>
-        <g transform="translate(12,18)">
-          <text x="0" y="58" font-family="Inter,Arial" font-weight="800" font-size="72" fill="#4da6ff">M</text>
-          <text x="46" y="58" font-family="Inter,Arial" font-weight="800" font-size="72" fill="#48d28a">M</text>
-        </g>
-      </svg>
-    </a>
+    <header class="header">
+        <a class="logo-link" href="index.html" aria-label="Accueil">
+            <svg width="56" height="56" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img">
+                <rect rx="18" ry="18" width="120" height="120" fill="#0f1417"/>
+                <circle cx="20" cy="18" r="6" fill="#b294f2"/>
+                <circle cx="40" cy="10" r="3" fill="#f6d06f"/>
+                <circle cx="60" cy="16" r="8" fill="#f5b88b"/>
+                <circle cx="88" cy="20" r="5" fill="#9fe3cc"/>
+                <circle cx="18" cy="92" r="6" fill="#f5b0d0"/>
+                <circle cx="36" cy="100" r="3" fill="#c085f5"/>
+                <circle cx="60" cy="98" r="10" fill="#6fb2f2"/>
+                <circle cx="92" cy="94" r="4" fill="#f6d06f"/>
+                <circle cx="100" cy="40" r="5" fill="#f5b88b"/>
+                <circle cx="98" cy="70" r="3" fill="#78d6a4"/>
+                <circle cx="30" cy="30" r="4" fill="#f1a66a"/>
+                <circle cx="80" cy="60" r="6" fill="#b294f2"/>
+                <g transform="translate(12,18)" fill="#ffffff">
+                    <text x="0" y="58" font-family="Inter,Arial" font-weight="800" font-size="72" fill="#4da6ff" style="letter-spacing:-4px">M</text>
+                    <text x="46" y="58" font-family="Inter,Arial" font-weight="800" font-size="72" fill="#48d28a" style="letter-spacing:-4px">M</text>
+                </g>
+            </svg>
+        </a>
+        <a class="home-link" href="index.html">🏠 Accueil</a>
+        <h1 class="site-title">Mon Profil</h1>
+        <nav class="header-right">
+            <button id="logout-profile" class="ghost-btn">Se déconnecter</button>
+        </nav>
+    </header>
 
-    <h1 class="site-title">Mon profil</h1>
+    <main id="profile-main">
+        <section class="card">
+            <h2>Mes informations</h2>
+            <form id="profile-form">
+                <label for="profile-pseudo">Pseudo</label>
+                <input id="profile-pseudo" type="text" placeholder="Pseudo" required />
 
-    <nav class="header-right">
-      <a class="home-link" href="index.html">🏠 Accueil</a>
-      <button id="logout" class="ghost-btn">Se déconnecter</button>
-    </nav>
-  </header>
+                <label for="profile-email">Email</label>
+                <input id="profile-email" type="email" placeholder="Email (non modifiable)" disabled />
 
-  <main>
-        <section class="card" id="edit-slot-container" style="display:none;">
-      <h2>Modifier le créneau</h2>
-      <form id="edit-slot-form" onsubmit="return false;">
-        <input type="hidden" id="edit-slot-id" />
+                <label for="profile-phone">Téléphone</label>
+                <input id="profile-phone" type="tel" placeholder="Numéro de téléphone" />
 
-        <label for="edit-activity-select">Activité</label>
-        <select id="edit-activity-select"></select>
+                <label for="profile-password">Nouveau Mot de passe (laisser vide pour ne pas changer)</label>
+                <input id="profile-password" type="password" placeholder="Nouveau mot de passe" />
 
-        <label for="edit-sub-select">Sous-activité</label>
-        <select id="edit-sub-select"></select>
+                <button id="save-profile-btn" type="submit">Enregistrer les modifications</button>
+            </form>
+        </section>
 
-        <label for="edit-subsub-select">Sous-sous-activité (optionnel)</label>
-        <select id="edit-subsub-select"></select>
+        <section class="card">
+            <h2>Mes créneaux créés 🎸</h2>
+            <ul id="user-slots">
+                </ul>
+        </section>
+        
+        <section class="card">
+            <h2>Mes créneaux rejoints ✅</h2>
+            <ul id="joined-slots">
+                </ul>
+        </section>
 
-        <input id="edit-slot-name" type="text" placeholder="Nom du créneau" required />
-        <input id="edit-slot-location" type="text" placeholder="Lieu" required />
-        <div class="two-cols">
-          <input id="edit-slot-date" type="date" required />
-          <input id="edit-slot-time" type="time" required />
-        </div>
+    </main>
 
-        <label class="inline-label"><input id="edit-private-slot" type="checkbox" /> Privé</label>
-
-        <div class="row-btns">
-          <button id="save-slot-changes">Sauvegarder les modifications</button>
-          <button id="cancel-slot-edit" type="button" class="ghost-btn">Annuler</button>
-        </div>
-      </form>
-    </section>
-        
-    <section class="card">
-      <h2>Mes informations</h2>
-      <label>Pseudo</label>
-      <input id="edit-pseudo" type="text" placeholder="Pseudo" />
-      <label>Email</label>
-      <input id="edit-email" type="email" placeholder="Email" readonly disabled />
-      <label>Téléphone</label>
-      <input id="edit-phone" type="tel" placeholder="Numéro" />
-      <div class="row-btns">
-        <button id="save-profile">Sauvegarder</button>
-        <a class="ghost-btn" href="index.html">Retour</a>
-      </div>
-    </section>
-    
-        <section class="card">
-      <h2>Danger Zone</h2>
-      <button id="delete-account" style="background:#e74c3c; color:#fff;">Supprimer mon compte</button>
-    </section>
-
-    <section class="card">
-      <h2>Mes créneaux</h2>
-      <ul id="user-slots"></ul>
-    </section>
-    
-        <section class="card" id="admin-users" style="display:none;">
-      <h2>👥 Utilisateurs enregistrés (Admin)</h2>
-      <ul id="admin-users-list"></ul>
-    </section>
-
-    <section class="card" id="admin-tools" style="display:none;">
-      <h2>📦 Sauvegarde / Restauration (Admin)</h2>
-      <button id="export-data">Exporter les données (JSON)</button>
-      <input id="import-data" type="file" accept=".json" />
-    </section>
-  </main>
-
-  <script src="script.js"></script>
-  <script>
-    // profile-specific code (uses functions defined in script.js)
-    document.addEventListener('DOMContentLoaded', () => {
-      const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-      if (!currentUser) { alert('Connecte-toi d’abord'); window.location.href = 'index.html'; return; }
-      
-      // --- Logique d'édition de créneau (ajout) ---
-      const editContainer = document.getElementById('edit-slot-container');
-      const editActSelect = document.getElementById('edit-activity-select');
-      const editSubSelect = document.getElementById('edit-sub-select');
-
-      // Mettre à jour les sous-activités quand l'activité principale change dans le formulaire d'édition
-      if (editActSelect && typeof populateEditSubActivities === 'function') {
-        editActSelect.addEventListener('change', () => {
-          populateEditSubActivities(editActSelect.value);
-        });
-      }
-      
-      // Mettre à jour les sous-sous-activités quand la sous-activité change
-      if (editSubSelect && typeof populateEditSubSub === 'function') {
-        editSubSelect.addEventListener('change', () => {
-          populateEditSubSub(editSubSelect.value);
-        });
-      }
-
-      // Gestion de la sauvegarde des modifications
-      document.getElementById('save-slot-changes')?.addEventListener('click', () => {
-        const slotId = parseInt(document.getElementById('edit-slot-id').value);
-        const newName = document.getElementById('edit-slot-name').value.trim();
-        const newLocation = document.getElementById('edit-slot-location').value.trim();
-        const newDate = document.getElementById('edit-slot-date').value.trim();
-        const newTime = document.getElementById('edit-slot-time').value.trim();
-        const newPrivate = document.getElementById('edit-private-slot').checked;
-        const newActivity = editActSelect.value;
-        const newSub = editSubSelect.value;
-        const newSubSub = document.getElementById('edit-subsub-select').value;
-        
-        if (!newName || !newLocation || !newDate || !newTime || !newActivity) {
-          return alert("Veuillez remplir tous les champs obligatoires (Nom, Lieu, Date, Heure, Activité).");
-        }
-
-        if (typeof updateSlot === 'function') {
-          updateSlot(slotId, slot => ({
-            ...slot,
-            name: newName,
-            location: newLocation,
-            date: newDate,
-            time: newTime,
-            private: newPrivate,
-            activity: newActivity,
-            sub: newSub,
-            subsub: newSubSub
-          }));
-          alert("Créneau mis à jour !");
-          editContainer.style.display = 'none'; // Cacher le formulaire
-          loadUserSlots(); // Recharger les créneaux
-        }
-      });
-
-      // Gestion de l'annulation
-      document.getElementById('cancel-slot-edit')?.addEventListener('click', () => {
-        editContainer.style.display = 'none';
-      });
-      // --- Fin Logique d'édition de créneau ---
-
-
-      const userEmailField = document.getElementById('edit-email');
-      document.getElementById('edit-pseudo').value = currentUser.pseudo || '';
-      userEmailField.value = currentUser.email || '';
-      document.getElementById('edit-phone').value = currentUser.phone || '';
-
-      // Sauvegarde du profil... (le code est déjà présent)
-      
-      // Suppression de compte... (le code est déjà présent)
-
-      // Fonction pour peupler les créneaux de l'utilisateur
-      function loadUserSlots(){
-        const all = (typeof getSlots === 'function') ? getSlots() : [];
-        const mine = all.filter(s => s.owner === currentUser.email);
-        const ul = document.getElementById('user-slots');
-        ul.innerHTML = '';
-        
-        if (!mine.length) ul.innerHTML = '<p>Aucun créneau créé.</p>';
-        else {
-          mine.forEach(s => {
-            const li = document.createElement('li');
-            li.className = 'slot-item';
-            const formattedDate = (typeof formatDateToWords === 'function') ? formatDateToWords(s.date) : s.date;
-            const participantsCount = (s.participants || []).length;
-
-            li.innerHTML = `<div class="slot-info">
-              <strong>${s.name} ${s.private ? '🔒' : ''}</strong>
-              <div>${s.subsub || s.sub} — 📍 ${s.location}</div>
-              <small>🗓️ ${formattedDate} ${s.time} - 👤 ${participantsCount} participants</small>
-            </div>`;
-            
-            const actions = document.createElement('div'); actions.className='actions';
-            
-            // Bouton Modifier (ajout)
-            const editBtn = document.createElement('button'); editBtn.textContent = '✏️'; editBtn.title = 'Modifier';
-            editBtn.onclick = () => { if (typeof editSlot === 'function') editSlot(s.id); };
-            actions.appendChild(editBtn);
-
-            // Bouton Supprimer
-            const del = document.createElement('button'); del.textContent='🗑️'; del.title='Supprimer';
-            del.onclick = () => { 
-              if (!confirm('Supprimer ?')) return; 
-              const updated = (typeof getSlots === 'function') ? getSlots().filter(x=>x.id!==s.id) : []; 
-              if (typeof saveSlots === 'function') saveSlots(updated); 
-              loadUserSlots(); // Recharger la liste
-            };
-            actions.appendChild(del);
-            
-            li.appendChild(actions);
-            ul.appendChild(li);
-          });
-        }
-      }
-      loadUserSlots(); // Appel initial
-
-      // show admin tools & admin users list (le code est déjà présent)
-      
-      // admin export/import (le code est déjà présent)
-    });
-  </script>
+    <script src="script.js"></script>
 </body>
 </html>
