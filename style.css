@@ -1,466 +1,494 @@
 /*
 ====================================
-1. BASE & THEME SOMBRE
+0. CUSTOM PROPERTIES (VARIABLES)
 ====================================
 */
 :root {
-    /* Couleurs pour le thème sombre */
-    --bg-color: #0f1417; 
-    --card-bg: #1a1f23;
-    --text-color: #e5e5e5; 
-    --link-color: #4da6ff;
-    --border-color: #333;
-    --btn-primary-bg: #4da6ff;
-    --btn-primary-text: #000;
-    --btn-ghost-color: #9aa9bf;
-    --input-bg: #2d333b;
+    --bg-primary: #0f1417;
+    --bg-secondary: #1a2024;
+    --text-primary: #e6e8eb;
+    --text-accent: #4da6ff;
     --muted-text: #9aa9bf;
+    --border-color: #2b353e;
+    --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --hover-bg: #2b353e;
+    --focus-ring: 0 0 0 3px rgba(77, 166, 255, 0.5);
+    
+    /* Couleurs Activités (Pastels sur sombre) */
+    --act-autres: #78d6a4; /* Vert menthe */
+    --act-jeux: #c085f5; /* Violet */
+    --act-culture: #e67c73; /* Corail */
+    --act-sport: #f27a7d; /* Rouge pastel */
+    --act-sorties: #f1a66a; /* Orange */
+    --act-toutes: #9aa9bf; /* Gris-bleu */
+}
 
-    /* Couleur pour les boutons d'action gris clair */
-    --action-ghost-bg: #2d333b;
-    --action-ghost-hover: #3a4149; 
-
-    /* Couleurs d'activité */
-    --act-jeux: #c085f5; 
-    --act-culture: #e67c73;
-    --act-autres: #78d6a4; 
-    --act-sport: #f27a7d;
-    --act-sorties: #f1a66a; 
-    --act-toutes: #9aa9bf;
+/*
+====================================
+1. BASE & THEME SOMBRE
+====================================
+*/
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-    margin: 0;
-    padding: 0;
-    background: var(--bg-color); 
-    color: var(--text-color);
+    font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
     line-height: 1.6;
 }
 
-/* Point 8: Réduction de l'écart entre le header et le main (60% de 15px) */
-main {
+/* Point 2: Réduction de l'écart entre le header et le main (6px au lieu de 15px) */
+main, .auth-section {
     max-width: 900px;
-    margin: 6px auto; 
+    margin: 6px auto; /* Anciennement margin: 15px auto; */
     padding: 0 15px;
 }
 
-/* --- Header --- */
+a {
+    color: var(--text-accent);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: var(--text-primary);
+}
+
+h1, h2, h3 {
+    margin-bottom: 15px;
+    color: var(--text-primary);
+}
+
+ul {
+    list-style: none;
+}
+
+/*
+====================================
+2. HEADER & NAVIGATION
+====================================
+*/
 .header {
-    background: var(--card-bg);
-    padding: 10px 15px;
     display: flex;
+    justify-content: space-between;
     align-items: center;
+    padding: 10px 15px;
+    background-color: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 1000;
+}
+
+.logo-link {
+    display: flex;
+    align-items: center;
+    width: 56px;
+    height: 56px;
+    margin-right: 15px;
 }
 
 .site-title {
-    font-size: 1.5rem;
+    flex-grow: 1;
+    font-size: 1.5em;
     font-weight: 800;
-    margin: 0 15px;
-    color: var(--text-color);
+    margin-bottom: 0;
+    color: var(--text-primary);
 }
 
 .header-right {
-    margin-left: auto;
     display: flex;
     gap: 10px;
 }
 
-/* --- Links & Navigation --- */
-a {
-    color: var(--link-color);
-    text-decoration: none;
-}
-.profile-link, .home-link {
-    color: var(--text-color);
-    padding: 8px 12px;
+.home-link {
+    font-size: 0.9em;
+    margin-right: 10px;
+    padding: 8px 10px;
     border-radius: 6px;
-    transition: background 0.2s;
+    transition: background-color 0.2s;
 }
-.profile-link:hover, .home-link:hover {
-    background: rgba(255, 255, 255, 0.1);
-    text-decoration: none;
+
+.home-link:hover {
+    background-color: var(--hover-bg);
 }
 
 
 /*
 ====================================
-2. CARDS & FORMS
+3. CARDS & FORMS
 ====================================
 */
 .card {
-    background: var(--card-bg);
-    /* Point 8: Réduit la marge entre les boîtes de 6px (anc. 15px) */
+    background-color: var(--bg-secondary);
     padding: 20px;
     border-radius: 12px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    margin-bottom: 6px; 
+    box-shadow: var(--card-shadow);
+    margin-bottom: 20px;
 }
 
-/* Point 7: Réduction de la hauteur de la box (padding et marge) */
-.compact-form-card {
-    padding: 10px 20px; /* Réduit le padding vertical de la carte pour réduire la hauteur */
-}
-
-
-/* Point 1: Réduction de la taille de la police des titres H2 (15%) */
-.section-title {
-    font-size: 1.6rem; /* Ancienne taille 1.9rem ou plus, réduite à ~1.6rem */
-}
-.card h2 {
-    color: var(--text-color);
-    margin-top: 0;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-/* Point 5: Conteneur des titres et du filtre ville */
-.slots-header-line {
+.auth-section {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border-color);
-    margin-top: 0;
-}
-.slots-header-line h2 {
-    border-bottom: none; 
-    padding-bottom: 0;
-}
-.city-filter-container {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-.city-filter-title {
-    font-size: 0.95rem;
-    color: var(--muted-text);
-    white-space: nowrap;
-}
-#city-filter-select {
-    width: auto;
-    padding: 5px 10px;
-    font-size: 0.9rem;
-    margin: 0;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 50px;
 }
 
-/* Point 9: Message de statut du pseudo */
-.status-message {
-    font-size: 0.9rem;
-    padding: 5px 0;
-    min-height: 1.6em; 
-}
-
-/* --- Inputs & Labels --- */
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="tel"],
-select {
-    width: calc(100% - 20px);
-    padding: 10px;
-    /* Point 3: Aligné avec les autres boxes (marge uniforme) */
-    margin: 4px 0 8px 0; 
-    box-sizing: border-box;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    background: var(--input-bg);
-    color: var(--text-color);
-}
-/* Réduire l'écart après le champ Lieu (pour laisser de la place au lien Google Maps) */
-input[id="slot-location"] {
-    margin-bottom: 4px; 
-}
-input:focus, select:focus {
-    border-color: var(--link-color);
-    outline: none;
+.auth-card {
+    width: 100%;
+    max-width: 400px;
 }
 
 label {
     display: block;
-    /* Point 2: Réduction de la marge supérieure des labels */
-    margin-top: 5px; 
-    font-size: 0.95rem;
-    font-weight: 600;
-    margin-bottom: 4px; /* Rapproche le titre du champ */
+    margin-top: 10px;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+    color: var(--muted-text);
 }
 
-/* Pour les éléments juste après l'ouverture du formulaire (Point 2) */
-.form-compact > * {
-    margin-top: 5px; /* S'assure qu'ils sont rapprochés du haut */
-}
-.form-compact .current-activity-line label {
-    margin-top: 0; /* Pour la première ligne d'activité sélectionnée */
-}
-
-
-/* Organisation en deux colonnes pour Date/Heure */
-.two-cols {
-    display: flex;
-    gap: 10px;
-    flex-wrap: nowrap; 
-    margin-top: 4px; 
-}
-
-/* Conteneurs pour date et heure */
-.date-col, .time-col {
-    display: flex;
-    flex-direction: column;
-    flex: 0 0 calc(75% - 5px); 
-}
-.time-col {
-    flex: 0 0 calc(25% - 5px); 
-}
-
-
-.two-cols input {
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="date"],
+input[type="time"],
+select {
     width: 100%;
-    margin: 0;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-/* Style Thème Sombre pour les sélecteurs de date/heure */
-input[type="date"], input[type="time"] {
-    background: var(--input-bg); 
-    color: var(--text-color); 
-    font-weight: normal;
-    border-color: var(--border-color);
-    width: 100%; 
-    padding-right: 0; 
-    text-align: center; 
-    padding-left: 5px; 
+input:focus, select:focus {
+    border-color: var(--text-accent);
+    outline: none;
+    box-shadow: var(--focus-ring);
 }
 
-/* S'assurer que les indicateurs de calendrier sont visibles sur fond sombre */
-input[type="date"]::-webkit-calendar-picker-indicator,
-input[type="time"]::-webkit-calendar-picker-indicator {
-    filter: invert(0.8);
-    cursor: pointer;
-}
-
-/* --- Buttons --- */
-button {
+/*
+====================================
+4. BUTTONS
+====================================
+*/
+.action-btn {
     padding: 10px 15px;
     border: none;
     border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
-    margin: 5px 0;
-    transition: background 0.2s;
-    
-    background: var(--btn-primary-bg);
-    color: var(--btn-primary-text);
-}
-button:hover:not(:disabled) {
-    background: var(--link-color);
-    opacity: 0.9;
+    transition: background-color 0.2s, opacity 0.2s;
 }
 
-.ghost-btn {
-    background: transparent;
-    color: var(--btn-ghost-color);
-    border: 1px solid var(--btn-ghost-color);
-}
-.ghost-btn:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-color);
-    border-color: var(--text-color);
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
-.row-btns {
-    display: flex;
-    gap: 10px;
-    margin-top: 15px;
-}
-.row-btns button {
-    flex-grow: 1;
+/* Primary actions (Join, Create) */
+.join-btn, #create-slot, #signup, #login, #save-profile-btn {
+    background-color: var(--text-accent);
+    color: var(--bg-primary);
+    width: 100%;
 }
 
-/* --- Activity Buttons --- */
-.activity-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding-bottom: 15px;
+.join-btn:hover:not(:disabled), #create-slot:hover:not(:disabled), #signup:hover:not(:disabled), #login:hover:not(:disabled), #save-profile-btn:hover:not(:disabled) {
+    background-color: #6fb2f2;
 }
 
-.activity-btn {
-    background: var(--input-bg);
-    color: var(--text-color);
-    border: 1px solid var(--muted-text);
-    padding: 8px 12px;
-    margin: 0;
-    transition: all 0.2s;
-    font-weight: normal; 
-}
-.activity-btn:hover:not(:disabled), .activity-btn.active {
-    background: var(--link-color);
-    color: var(--btn-primary-text);
-    border-color: var(--link-color);
+/* Secondary actions (Leave, Ghost) */
+.leave-btn, .ghost-btn {
+    background-color: var(--hover-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
 }
 
-/* Couleurs spécifiques aux catégories */
-.act-toutes { border-color: var(--act-toutes); color: var(--act-toutes); }
-.act-jeux { border-color: var(--act-jeux); color: var(--act-jeux); }
-.act-culture { border-color: var(--act-culture); color: var(--act-culture); }
-.act-autres { border-color: var(--act-autres); color: var(--act-autres); } 
-.act-sport { border-color: var(--act-sport); color: var(--act-sport); }
-.act-sorties { border-color: var(--act-sorties); color: var(--act-sorties); }
+.leave-btn:hover:not(:disabled), .ghost-btn:hover:not(:disabled) {
+    background-color: var(--border-color);
+}
+
+.ghost-action-btn {
+    background: none;
+    color: var(--muted-text);
+    border: none;
+    padding: 5px;
+    font-size: 1.2em;
+}
+
+.ghost-action-btn:hover {
+    color: var(--text-accent);
+    background-color: transparent;
+}
 
 
 /*
 ====================================
-3. SLOTS LIST & ACTION BUTTONS
+5. INDEX SPECIFIC
 ====================================
 */
-#slots-list, #user-slots {
-    list-style: none;
-    padding: 0;
+.muted-text {
+    color: var(--muted-text);
+}
+
+.filter-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.filter-controls select {
+    width: auto;
+    max-width: 250px;
+    margin-bottom: 0;
+}
+
+.toggle-header {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0;
+}
+
+.toggle-header:hover {
+    color: var(--text-accent);
+}
+
+.arrow {
+    transition: transform 0.2s;
+    font-size: 1.5em;
+    line-height: 1;
+}
+
+.inline-fields {
+    display: flex;
+    gap: 15px;
+}
+
+.inline-fields > div {
+    flex: 1;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    margin-top: -5px;
+    margin-bottom: 15px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+}
+
+.checkbox-group label {
+    margin: 0;
+    font-size: 1em;
+    color: var(--text-primary);
+}
+
+/* Activity Buttons (Filtering) */
+.activity-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.activity-btn {
+    padding: 6px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    background-color: transparent;
+    color: var(--muted-text);
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.activity-btn.active, .activity-btn:hover {
+    background-color: var(--hover-bg);
+    border-color: var(--text-accent);
+    color: var(--text-primary);
+}
+
+/* Specific colors for filtering boxes (using the custom properties) */
+.activity-btn.act-jeux { border-color: var(--act-jeux); color: var(--act-jeux); }
+.activity-btn.act-culture { border-color: var(--act-culture); color: var(--act-culture); }
+.activity-btn.act-sport { border-color: var(--act-sport); color: var(--act-sport); }
+.activity-btn.act-sorties { border-color: var(--act-sorties); color: var(--act-sorties); }
+.activity-btn.act-autres { border-color: var(--act-autres); color: var(--act-autres); }
+.activity-btn.act-toutes { border-color: var(--act-toutes); color: var(--act-toutes); }
+
+.activity-btn.act-jeux.active, .activity-btn.act-jeux:hover { background-color: rgba(192, 133, 245, 0.2); }
+.activity-btn.act-culture.active, .activity-btn.act-culture:hover { background-color: rgba(230, 124, 115, 0.2); }
+.activity-btn.act-sport.active, .activity-btn.act-sport:hover { background-color: rgba(242, 122, 125, 0.2); }
+.activity-btn.act-sorties.active, .activity-btn.act-sorties:hover { background-color: rgba(241, 166, 106, 0.2); }
+.activity-btn.act-autres.active, .activity-btn.act-autres:hover { background-color: rgba(120, 214, 164, 0.2); }
+
+
+/* Slot List */
+.slot-list-card h2 {
+    margin-bottom: 5px;
 }
 
 .slot-item {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start; 
-    padding: 10px 0;
+    align-items: center;
+    padding: 15px 0;
     border-bottom: 1px solid var(--border-color);
 }
+
 .slot-item:last-child {
     border-bottom: none;
 }
+
 .slot-info {
     flex-grow: 1;
+    margin-right: 15px;
 }
-
-/* Conteneur pour les actions (boutons) */
-.actions-box { 
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    margin-left: 10px;
-    flex-shrink: 0;
-}
-
-/* Styles pour tous les boutons d'action dans la liste */
-.action-btn {
-    width: 40px; 
-    height: 40px; 
-    padding: 0;
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: normal;
-    display: flex; 
-    align-items: center;
-    justify-content: center;
-}
-
-/* Style spécifique aux boutons Supprimer/Rappel/Partager (gris clair) */
-.ghost-action-btn {
-    background: var(--action-ghost-bg);
-    color: var(--text-color);
-}
-.ghost-action-btn:hover:not(:disabled) {
-    background: var(--action-ghost-hover);
-    opacity: 1;
-}
-
-/* Style Rejoindre / Quitter */
-.join-btn, .leave-btn {
-    width: 100px; 
-    height: auto;
-    font-size: 0.9rem;
-    padding: 5px 10px;
-    background: var(--link-color);
-    color: var(--btn-primary-text);
-}
-.leave-btn {
-    background: var(--input-bg);
-    border: 1px solid var(--muted-text);
-    color: var(--muted-text);
-}
-
 
 .slot-info strong {
     display: block;
-    font-size: 1.1rem;
-    margin-bottom: 4px;
+    font-size: 1.1em;
+    margin-bottom: 5px;
 }
+
 .slot-info small {
     display: block;
     color: var(--muted-text);
-}
-
-/* Style des boîtes sous-activité/sous-sous-activité */
-.subsub-box {
-    display: inline-block;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    margin-right: 8px;
-    margin-bottom: 5px;
-    text-transform: uppercase;
-    background: var(--input-bg); 
-}
-.subsub-line {
-    display: block;
-    margin-bottom: 5px;
-}
-
-/* --- Misc --- */
-.pill {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 999px;
-    font-size: 0.8rem;
-}
-
-/* Alignement et taille du titre "Créer un créneau" */
-.create-slot-box {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    padding: 0; 
-    margin-bottom: 5px; /* Réduction de la marge */
-}
-.create-slot-title {
-    font-size: 1.6rem; /* Point 1: Taille de police réduite */
-    font-weight: 800;
-    margin: 0; 
-}
-.arrow {
-    font-size: 1.1rem;
-    transition: transform 0.3s;
-}
-
-.form-compact {
-    display: none;
-    padding-top: 5px; /* Réduit le padding supérieur */
-    border-top: 1px solid var(--border-color);
-}
-
-.participants-box {
-    font-size: 0.9rem;
-    color: var(--muted-text);
-    margin: 5px 0;
-}
-.participants-list {
-    font-size: 0.85rem;
-    color: var(--muted-text);
+    font-size: 0.8em;
     margin-top: 5px;
 }
+
+.slot-info a {
+    color: var(--text-primary);
+    text-decoration: underline;
+}
+
+.slot-info a:hover {
+    color: var(--text-accent);
+}
+
+.private-slot-lock {
+    color: var(--text-accent);
+    font-size: 0.9em;
+}
+
+.actions-box {
+    display: flex;
+    gap: 5px;
+}
+
+/* Participants Gauge */
+.participants-box {
+    margin-top: 8px;
+    margin-bottom: 5px;
+}
+
 .gauge-bar {
     height: 6px;
-    background-color: var(--input-bg);
+    background-color: var(--bg-primary);
     border-radius: 3px;
     margin-top: 5px;
     overflow: hidden;
 }
+
 .gauge-fill {
     height: 100%;
-    background-color: var(--link-color);
+    background-color: var(--text-accent);
     transition: width 0.3s;
+}
+
+.participants-list {
+    font-size: 0.85em;
+    color: var(--muted-text);
+    margin-bottom: 5px;
+}
+
+.suggestion-box {
+    padding: 8px;
+    margin-top: -10px;
+    margin-bottom: 15px;
+    background-color: var(--hover-bg);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.subsub-line {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.subsub-box {
+    font-size: 0.75em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid;
+    font-weight: 500;
+}
+
+
+/*
+====================================
+6. MOBILE RESPONSIVE
+====================================
+*/
+@media (max-width: 600px) {
+    .header {
+        flex-wrap: wrap;
+    }
+    .site-title {
+        order: 1;
+        width: 100%;
+        margin-top: 5px;
+        text-align: center;
+    }
+    .header-right {
+        order: 2;
+        margin-left: auto;
+    }
+    .logo-link {
+        order: 0;
+    }
+    .home-link {
+        display: none; /* Cache le lien Accueil sur mobile pour la compacité */
+    }
+    .auth-section {
+        flex-direction: column;
+        margin-top: 20px;
+    }
+    .inline-fields {
+        flex-direction: column;
+    }
+    .slot-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .slot-info {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    .actions-box {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    .ghost-action-btn {
+        padding: 5px 10px;
+    }
 }
