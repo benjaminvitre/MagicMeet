@@ -4,12 +4,12 @@
 
 // ⚠️ REMPLACER PAR VOTRE PROPRE CONFIGURATION FIREBASE
 const firebaseConfig = {
-  apiKey: "AIzaSyB0U_y6sMU8_vYriCK17H-Y5uPUb2ewPRw",
-  authDomain: "magicmeet--app.firebaseapp.com",
-  projectId: "magicmeet--app",
-  storageBucket: "magicmeet--app.firebasestorage.app",
-  messagingSenderId: "168285202241",
-  appId: "1:168285202241:web:6284051ec3884cfd81a3c0",
+    apiKey: "VOTRE_API_KEY",
+    authDomain: "VOTRE_AUTH_DOMAIN",
+    projectId: "VOTRE_PROJECT_ID",
+    storageBucket: "VOTRE_STORAGE_BUCKET",
+    messagingSenderId: "VOTRE_MESSAGING_SENDER_ID",
+    appId: "VOTRE_APP_ID"
 };
 
 // Initialisation de Firebase
@@ -330,6 +330,9 @@ async function populateCityFilter() {
  * @param {HTMLElement} targetListElement - L'élément <ul> où insérer le créneau.
  */
 function renderSlotItem(slot, currentUserEmail, currentUserPseudo, targetListElement) {
+    // Vérification de sécurité avant d'utiliser currentUserEmail/Pseudo
+    if (!currentUserEmail || !currentUserPseudo) return;
+    
     if (!targetListElement) return;
     
     const isJoined = slot.participants.some(p => p.email === currentUserEmail);
@@ -463,6 +466,15 @@ async function loadSlots() {
 
     slotsList.innerHTML = '<li>Chargement des créneaux...</li>';
 
+    // 🛑 CORRECTION CRITIQUE: Vérifier que l'utilisateur et ses données sont chargés.
+    if (!auth.currentUser || !currentUserData || !currentUserData.pseudo) {
+        slotsList.innerHTML = '<li>Veuillez vous connecter pour voir les créneaux.</li>';
+        return; 
+    }
+    
+    const currentUserEmail = auth.currentUser.email;
+    const currentUserPseudo = currentUserData.pseudo;
+
     try {
         let query = db.collection('slots');
         const now = new Date().toISOString().slice(0, 10); // Date du jour YYYY-MM-DD
@@ -502,7 +514,7 @@ async function loadSlots() {
         });
 
         sortedSlots.forEach(slot => {
-            renderSlotItem(slot, auth.currentUser.email, currentUserData.pseudo, slotsList);
+            renderSlotItem(slot, currentUserEmail, currentUserPseudo, slotsList);
         });
 
     } catch (error) {
@@ -545,7 +557,7 @@ async function showMain() {
 
     updateHeaderDisplay();
     
-    // Ces fonctions sont maintenant dans la portée globale et accessibles !
+    // Ces fonctions sont maintenant dans la portée globale !
     renderActivities();
     await loadSlots();
     await populateCityFilter();
@@ -557,7 +569,6 @@ async function showMain() {
 /* ========================================================================= */
 
 function handleIndexPageLogic() {
-    // Les sélecteurs DOM restent ici, car ils ne sont utilisés que par les handlers de cette page
     const loginBtn = document.getElementById('login');
     const signupBtn = document.getElementById('signup');
     const createSlotBtn = document.getElementById('create-slot');
@@ -730,6 +741,11 @@ function handleIndexPageLogic() {
     // Logique de création
     if (createSlotBtn) {
         createSlotBtn.addEventListener('click', async () => {
+            if (!auth.currentUser || !currentUserData) {
+                showToast("Vous devez être connecté pour créer un créneau.", false);
+                return;
+            }
+
             const name = document.getElementById('slot-name').value.trim();
             const activity = formActivitySelect.value;
             const subActivity = subSelect.value || null;
@@ -746,7 +762,6 @@ function handleIndexPageLogic() {
             }
             
             // Simuler l'extraction de la ville (première partie de l'adresse après virgule)
-            // C'est une simplification qui devrait être améliorée par une API de géocodage
             const parts = location.split(',').map(p => p.trim());
             const city = parts.length > 1 ? parts[parts.length - 1] : parts[0];
 
@@ -832,6 +847,8 @@ async function handleProfilePageLogic() {
     const profileForm = document.getElementById('profile-form');
     const userSlotsList = document.getElementById('user-slots');
     const joinedSlotsList = document.getElementById('joined-slots');
+    
+    // Le contrôle de l'existence de currentUserData est fait dans onAuthStateChanged
 
     // --- Chargement des données utilisateur ---
     profileEmailInput.value = auth.currentUser.email;
@@ -958,8 +975,9 @@ auth.onAuthStateChanged(async (user) => {
             }
             
         } catch (error) {
+            // Afficher le message d'erreur SANS faire planter l'interface
             showToast(`Erreur de chargement des données utilisateur: ${error.message}`, false);
-            showAuth(); // Afficher l'authentification en cas d'erreur critique
+            showAuth(); 
         }
     } else {
         // Utilisateur déconnecté
@@ -968,6 +986,8 @@ auth.onAuthStateChanged(async (user) => {
         // Le code de handleIndexPageLogic doit être appelé pour setup les écouteurs de login/signup
         if (!window.location.pathname.includes('profile.html')) {
             handleIndexPageLogic();
+            // Appeler loadSlots ici permettrait de voir les créneaux même déconnecté,
+            // mais on garde la logique actuelle qui demande la connexion.
         }
     }
 });
