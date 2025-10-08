@@ -1,1088 +1,973 @@
-/* ===== CONFIGURATION DES DONNÉES ET DE FIREBASE ===== */
+/* ========================================================================= */
+/* 1. CONFIGURATION ET INITIALISATION FIREBASE */
+/* ========================================================================= */
 
-// VOS CLÉS FIREBASE INSÉRÉES ICI
+// ⚠️ REMPLACER PAR VOTRE PROPRE CONFIGURATION FIREBASE
 const firebaseConfig = {
-    apiKey: "AIzaSyB0U_y6sMU8_vYriCK17H-Y5uPUb2ewPRw",
-    authDomain: "magicmeet--app.firebaseapp.com",
-    projectId: "magicmeet--app",
-    storageBucket: "magicmeet--app.firebasestorage.app",
-    messagingSenderId: "168285202241",
-    appId: "1:168285202241:web:6284051ec3884cfd81a3c0",
-    measurementId: "G-VGHYDK5B7R"
+    apiKey: "VOTRE_API_KEY",
+    authDomain: "VOTRE_AUTH_DOMAIN",
+    projectId: "VOTRE_PROJECT_ID",
+    storageBucket: "VOTRE_STORAGE_BUCKET",
+    messagingSenderId: "VOTRE_MESSAGING_SENDER_ID",
+    appId: "VOTRE_APP_ID"
 };
 
 // Initialisation de Firebase
-// NOTE: Assurez-vous d'avoir bien importé les SDK dans le HTML AVANT ce script !
 const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-const USERS_COLLECTION = db.collection('users');
-const SLOTS_COLLECTION = db.collection('slots');
+/* ========================================================================= */
+/* 2. DONNÉES GLOBALES ET VARIABLES D'ÉTAT */
+/* ========================================================================= */
 
-const ADMIN_EMAIL = "benjamin.vitre@gmail.com";
+let currentUserData = null;
+let currentFilterActivity = 'All';
+let currentFilterSubActivity = '';
+let currentFilterCity = 'All';
 
-// Triez les sous-activités
-const sortArray = (arr) => arr.sort((a, b) => a.localeCompare(b, 'fr'));
-
-const ACTIVITIES = {
-  "Toutes": [],
-  "Autres": [], 
-  "Culture": sortArray(["Cinéma", "Théâtre", "Exposition", "Concert"]), 
-  "Jeux": sortArray(["Jeux de cartes", "Jeux vidéo", "Jeux de société"]), 
-  "Sorties": sortArray(["Bar", "Restaurant", "Picnic"]), 
-  "Sport": sortArray(["Foot", "Padel", "Tennis", "Running", "Badminton"]) 
-};
-
-const sortedActivityKeys = Object.keys(ACTIVITIES).filter(key => key !== "Toutes").sort((a, b) => a.localeCompare(b, 'fr'));
-const tempActivities = { "Toutes": ACTIVITIES["Toutes"] };
-sortedActivityKeys.forEach(key => tempActivities[key] = ACTIVITIES[key]);
-Object.assign(ACTIVITIES, tempActivities); 
-
-const ACTIVITY_EMOJIS = {
-    "Toutes": "🌍",
-    "Autres": "❓",
-    "Culture": "🖼️",
-    "Jeux": "🎮",
-    "Sorties": "🎉",
-    "Sport": "⚽"
-};
-
-const SUBSUB = {
-  "Jeux de cartes": ["Magic The Gathering", "Pokémon", "Yu-Gi-Oh!"],
-  "Jeux vidéo": [],
-  "Jeux de société": []
-};
-Object.keys(SUBSUB).forEach(key => {
-  if (SUBSUB[key].length > 0) {
-    SUBSUB[key] = sortArray(SUBSUB[key]);
-  }
-});
-
-
-const COLOR_MAP = {
-  "Autres": "#78d6a4", 
-  "Jeux": "#c085f5", 
-  "Culture": "#e67c73", 
-  "Sport": "#f27a7d", 
-  "Sorties": "#f1a66a", 
-  "Toutes": "#9aa9bf",
-  
-  "Jeux de cartes": "#c085f5", "Jeux vidéo": "#6fb2f2", "Jeux de société": "#64e3be",
-  "Cinéma": "#e67c73", "Théâtre": "#cc5a4f", "Exposition": "#e39791", "Concert": "#f1b6b3",
-  "Foot": "#f27a7d", "Padel": "#cc5a5e", "Tennis": "#e39799", "Running": "#f1b6b7", "Badminton": "#78d6a4",
-  "Bar": "#f1a66a", "Restaurant": "#d68e4a", "Picnic": "#f5c399",
-  
-  "Magic The Gathering": "#b294f2", "Pokémon": "#f6d06f", "Yu-Gi-Oh!": "#f1a66a",
-};
-
-
-const MAX_PARTICIPANTS = 10;
-let currentFilterActivity = "Toutes"; 
-let currentFilterSub = "Toutes"; 
-let currentFilterCity = "Toutes"; 
-let currentUser = null; 
-
-/* ===== NOUVEAUX HELPERS DE DONNÉES FIREBASE ===== */
-
-async function getSlotsFromDB() {
-    try {
-        const snapshot = await SLOTS_COLLECTION.get();
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    } catch (error) {
-        console.error("Erreur de récupération des créneaux:", error);
-        return [];
-    }
-}
-
-async function saveSlotToDB(slotData, slotId = null) {
-    try {
-        if (slotId) {
-            await SLOTS_COLLECTION.doc(slotId).update(slotData);
-        } else {
-            const newDoc = await SLOTS_COLLECTION.add(slotData);
-            slotData.id = newDoc.id; 
+const activitiesData = {
+    'Sport': {
+        color: '#4da6ff',
+        sub: {
+            'Ballon': {
+                'Football': 'Football',
+                'Basketball': 'Basketball',
+                'Volley': 'Volley',
+                'Handball': 'Handball'
+            },
+            'Raquette': {
+                'Tennis': 'Tennis',
+                'Padel': 'Padel',
+                'Badminton': 'Badminton'
+            },
+            'Course': {
+                'Running': 'Running',
+                'Trail': 'Trail'
+            },
+            'Autres Sports': null
         }
-        return true;
-    } catch (error) {
-        console.error("Erreur de sauvegarde du créneau:", error);
-        return false;
+    },
+    'Culture': {
+        color: '#78d6a4',
+        sub: {
+            'Musée': null,
+            'Concert': null,
+            'Exposition': null,
+            'Théâtre': null
+        }
+    },
+    'Loisir': {
+        color: '#f0ad4e',
+        sub: {
+            'Jeux de société': null,
+            'Cinéma': null,
+            'Balade': null,
+            'Cuisine': null
+        }
     }
-}
+};
 
-async function getUserData(email) {
-    const snapshot = await USERS_COLLECTION.where('email', '==', email).limit(1).get();
-    if (snapshot.empty) return null;
-    const userData = snapshot.docs[0].data();
-    userData.docId = snapshot.docs[0].id; 
-    return userData;
-}
+/* ========================================================================= */
+/* 3. FONCTIONS UTILITAIRES */
+/* ========================================================================= */
 
-async function updateUserData(docId, data) {
-    try {
-        await USERS_COLLECTION.doc(docId).update(data);
-        return true;
-    } catch (error) {
-        console.error("Erreur de mise à jour de l'utilisateur:", error);
-        return false;
+/**
+ * Affiche une notification toast.
+ * @param {string} message - Le message à afficher.
+ * @param {boolean} isSuccess - Vrai pour succès (vert), faux pour erreur (rouge).
+ */
+function showToast(message, isSuccess = true) {
+    const toastContainer = document.getElementById('toast-container') || document.createElement('div');
+    toastContainer.id = 'toast-container';
+    if (!document.body.contains(toastContainer)) {
+        document.body.appendChild(toastContainer);
     }
-}
-
-async function getAllUserPseudos() {
-    try {
-        const snapshot = await USERS_COLLECTION.get();
-        return snapshot.docs.map(doc => doc.data().pseudo).filter(p => p);
-    } catch (error) {
-        console.error("Erreur de récupération des pseudos:", error);
-        return [];
-    }
-}
-
-/* --- Fonctions de logiques persistantes --- */
-
-function formatDateToWords(dateString){
-  const date = new Date(dateString + 'T00:00:00'); 
-  if (isNaN(date)) return dateString;
-  const options = { day: 'numeric', month: 'long' };
-  return date.toLocaleDateString('fr-FR', options);
-}
-
-async function updateSlot(slotId, updateFn){
-    const currentSlotDoc = await SLOTS_COLLECTION.doc(slotId).get();
-    if (!currentSlotDoc.exists) return;
-
-    let slot = { id: currentSlotDoc.id, ...currentSlotDoc.data() };
-
-    let updatedSlot = updateFn(slot);
-
-    await SLOTS_COLLECTION.doc(slotId).set(updatedSlot); 
     
-    // Assure le rafraîchissement de TOUTES les listes (si elles existent)
-    if (document.getElementById('slots-list')) await loadSlots(); 
-    if (document.getElementById('user-slots')) await loadUserSlots(); 
-    if (document.getElementById('joined-slots')) await loadJoinedSlots(); 
+    const toast = document.createElement('div');
+    toast.className = `toast ${isSuccess ? 'success' : 'error'}`;
+    toast.textContent = message;
+    
+    toastContainer.appendChild(toast);
+    
+    // Animation et suppression
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        toast.addEventListener('transitionend', () => toast.remove());
+    }, 3000);
 }
 
-function extractCity(locationText) {
-    if (!locationText) return '';
-    const parts = locationText.split(',').map(p => p.trim());
-    if (parts.length > 1) {
-        const lastPart = parts[parts.length - 1];
-        if (lastPart.match(/\d{5}\s/)) { 
-            return lastPart.replace(/\d{5}\s*/, '').trim(); 
-        }
-        return lastPart; 
-    }
-    return locationText.split(' ').pop(); 
-}
-
-/* ===== CORE DOM INIT & HELPERS ===== */
-
-async function initializeUserSession(email) {
-    if (!email) {
-        currentUser = null;
-        return;
-    }
-    const userData = await getUserData(email);
-    if (userData) {
-        currentUser = userData; 
-    } else {
-        console.warn("Utilisateur authentifié mais pas de données Firestore. Forcing logout.");
-        auth.signOut();
-        localStorage.removeItem('currentUserEmail');
-        currentUser = null;
-    }
-}
-
+/**
+ * Met à jour l'affichage des liens dans le header (Profil et Déconnexion).
+ */
 function updateHeaderDisplay() {
     const profileLink = document.getElementById('profile-link');
-    const logoutBtn = document.getElementById('logout');
-    const logoutProfileBtn = document.getElementById('logout-profile');
+    const logoutBtn = document.getElementById('logout') || document.getElementById('logout-profile');
 
-    if (currentUser) {
-        if (profileLink) profileLink.style.display = 'inline-block';
-        if (logoutBtn) logoutBtn.style.display = 'inline-block';
-        if (logoutProfileBtn) logoutProfileBtn.style.display = 'inline-block';
-        
+    if (auth.currentUser) {
+        if (profileLink) profileLink.style.display = 'block';
+        if (logoutBtn) logoutBtn.style.display = 'block';
     } else {
         if (profileLink) profileLink.style.display = 'none';
         if (logoutBtn) logoutBtn.style.display = 'none';
-        if (logoutProfileBtn) logoutProfileBtn.style.display = 'none';
     }
 }
 
-function fillProfileFields(user) {
-    if (!user) return;
-    
-    const profilePseudo = document.getElementById('profile-pseudo');
-    const profileEmail = document.getElementById('profile-email');
-    const profilePhone = document.getElementById('profile-phone');
-
-    if (profilePseudo) profilePseudo.value = user.pseudo || '';
-    if (profileEmail) profileEmail.value = user.email || '';
-    if (profilePhone) profilePhone.value = user.phone || '';
+/**
+ * Normalise et formate une chaîne de caractères (pour les comparaisons).
+ * @param {string} str 
+ * @returns {string}
+ */
+function normalizeString(str) {
+    if (!str) return '';
+    return str.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-function logout() {
-    auth.signOut(); 
-    localStorage.removeItem('currentUserEmail'); 
-    currentUser = null;
-    window.location.href = 'index.html'; 
+
+/* ========================================================================= */
+/* 4. FONCTIONS DE RENDU (Pour index.html et profile.html) */
+/* (Déplacées ici pour être accessibles par showMain) */
+/* ========================================================================= */
+
+/**
+ * Remplit le sélecteur d'activité du formulaire de création de créneau.
+ */
+function populateFormActivitySelect() {
+    const select = document.getElementById('form-activity-select');
+    if (!select) return;
+
+    select.innerHTML = '<option value="">-- Choisis une activité --</option>';
+    for (const activity in activitiesData) {
+        const option = document.createElement('option');
+        option.value = activity;
+        option.textContent = activity;
+        select.appendChild(option);
+    }
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-    
-    // --- Gestion de l'affichage du mot de passe (Point 3) ---
-    const setupPasswordToggle = (checkboxId, ...inputIds) => {
-        const checkbox = document.getElementById(checkboxId);
-        const inputs = inputIds.map(id => document.getElementById(id)).filter(el => el);
+/**
+ * Remplit le sélecteur de sous-activité du formulaire de création de créneau.
+ * @param {string} activity - L'activité principale sélectionnée.
+ */
+function populateSubActivitiesForForm(activity) {
+    const subSelect = document.getElementById('sub-select');
+    const subsubSelect = document.getElementById('subsub-select');
+    if (!subSelect || !subsubSelect) return;
+
+    subSelect.innerHTML = '<option value="">-- Choisis une sous-activité --</option>';
+    subsubSelect.innerHTML = '<option value="">-- Optionnel --</option>';
+
+    if (activity && activitiesData[activity] && activitiesData[activity].sub) {
+        for (const subActivity in activitiesData[activity].sub) {
+            const option = document.createElement('option');
+            option.value = subActivity;
+            option.textContent = subActivity;
+            subSelect.appendChild(option);
+        }
+    }
+}
+
+/**
+ * Remplit le troisième niveau de sélection (sous-sous-activité).
+ * @param {string} activity - L'activité principale sélectionnée.
+ * @param {string} subActivity - La sous-activité sélectionnée.
+ */
+function populateSubSub(activity, subActivity) {
+    const subsubSelect = document.getElementById('subsub-select');
+    if (!subsubSelect) return;
+
+    subsubSelect.innerHTML = '<option value="">-- Optionnel --</option>';
+
+    if (activity && subActivity && activitiesData[activity] && activitiesData[activity].sub && activitiesData[activity].sub[subActivity]) {
+        const subSub = activitiesData[activity].sub[subActivity];
         
-        if (checkbox && inputs.length > 0) {
-            checkbox.addEventListener('change', () => {
-                const newType = checkbox.checked ? 'text' : 'password';
-                inputs.forEach(input => input.type = newType);
-            });
-        }
-    };
-
-    setupPasswordToggle('show-password-login', 'password-login');
-    setupPasswordToggle('show-password-signup', 'password-signup', 'password-confirm');
-    // --- Fin Point 3 ---
-
-
-    // *************************************************************
-    // NOUVEAU: Utilisation de onAuthStateChanged pour une gestion de session fiable
-    // *************************************************************
-    auth.onAuthStateChanged(async (user) => {
-        if (user) {
-            localStorage.setItem('currentUserEmail', user.email); 
-            await initializeUserSession(user.email); 
-        } else {
-            localStorage.removeItem('currentUserEmail'); 
-            currentUser = null;
-        }
-
-        updateHeaderDisplay(); 
-
-        if (document.getElementById('profile-main')) {
-            // Sur la page de profil
-            if (currentUser) {
-                handleProfilePage();
-            } else {
-                window.location.href = 'index.html'; // Redirection si déconnecté
+        // S'il s'agit d'un objet (liste de sous-sous-activités)
+        if (typeof subSub === 'object') {
+             for (const key in subSub) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = subSub[key];
+                subsubSelect.appendChild(option);
             }
-        } 
-        else if (document.getElementById('main-section')) {
-            // Sur la page d'accueil
-            if (currentUser) {
-                showMain();
-            } else {
-                showAuth();
-            }
-            handleIndexPageLogic(); // Contient toute la logique des écouteurs de bouton
+        }
+    }
+}
+
+/**
+ * Affiche les boutons de filtre pour les activités principales.
+ */
+function renderActivities() {
+    const activityContainer = document.getElementById('activities');
+    if (!activityContainer) return; // Non pertinent si on n'est pas sur index.html
+
+    activityContainer.innerHTML = '';
+    
+    // Bouton "Tout voir"
+    const allBtn = document.createElement('button');
+    allBtn.className = `activity-btn ${currentFilterActivity === 'All' ? 'selected' : ''}`;
+    allBtn.textContent = 'Tout voir';
+    allBtn.style.backgroundColor = '#6c757d'; // Gris
+    allBtn.addEventListener('click', () => {
+        currentFilterActivity = 'All';
+        currentFilterSubActivity = '';
+        renderActivities(); // Re-render pour la sélection
+        populateSubActivities('All'); // Vide les sous-activités
+        loadSlots();
+    });
+    activityContainer.appendChild(allBtn);
+
+    for (const activity in activitiesData) {
+        const data = activitiesData[activity];
+        const btn = document.createElement('button');
+        btn.className = `activity-btn ${currentFilterActivity === activity ? 'selected' : ''}`;
+        btn.textContent = activity;
+        btn.style.backgroundColor = data.color;
+        btn.addEventListener('click', () => {
+            currentFilterActivity = activity;
+            currentFilterSubActivity = '';
+            renderActivities();
+            populateSubActivities(activity);
+            loadSlots();
+        });
+        activityContainer.appendChild(btn);
+    }
+}
+
+/**
+ * Affiche les boutons de filtre pour les sous-activités.
+ * @param {string} activity - L'activité principale sélectionnée.
+ */
+function populateSubActivities(activity) {
+    const subActivityContainer = document.getElementById('subactivities');
+    if (!subActivityContainer) return;
+
+    subActivityContainer.innerHTML = '';
+
+    if (activity === 'All' || !activitiesData[activity]) {
+        subActivityContainer.style.display = 'none';
+        return;
+    }
+
+    subActivityContainer.style.display = 'flex';
+    const subActivities = activitiesData[activity].sub;
+    const color = activitiesData[activity].color;
+
+    // Bouton "Toutes les sous-activités"
+    const allSubBtn = document.createElement('button');
+    allSubBtn.className = `activity-btn ${currentFilterSubActivity === '' ? 'selected' : ''}`;
+    allSubBtn.textContent = `Toutes les ${activity}`;
+    allSubBtn.style.backgroundColor = color;
+    allSubBtn.addEventListener('click', () => {
+        currentFilterSubActivity = '';
+        populateSubActivities(activity);
+        loadSlots();
+    });
+    subActivityContainer.appendChild(allSubBtn);
+
+    for (const subActivity in subActivities) {
+        const btn = document.createElement('button');
+        btn.className = `activity-btn ${currentFilterSubActivity === subActivity ? 'selected' : ''}`;
+        btn.textContent = subActivity;
+        btn.style.backgroundColor = color;
+        btn.addEventListener('click', () => {
+            currentFilterSubActivity = subActivity;
+            populateSubActivities(activity); // Re-render pour la sélection
+            loadSlots();
+        });
+        subActivityContainer.appendChild(btn);
+    }
+}
+
+
+/**
+ * Remplit le filtre des villes à partir de toutes les entrées de créneaux.
+ */
+async function populateCityFilter() {
+    const select = document.getElementById('city-filter-select');
+    if (!select) return;
+
+    // Récupérer toutes les villes uniques
+    const snapshot = await db.collection('slots').get();
+    const cities = new Set();
+    
+    snapshot.forEach(doc => {
+        const slot = doc.data();
+        if (slot.city) {
+            cities.add(slot.city);
         }
     });
 
-    // Événements de déconnexion pour les deux pages
-    const logoutIndex = document.getElementById('logout');
-    const logoutProfile = document.getElementById('logout-profile');
-    if (logoutIndex) logoutIndex.addEventListener('click', logout);
-    if (logoutProfile) logoutProfile.addEventListener('click', logout);
-});
+    // Remplir le sélecteur
+    select.innerHTML = '';
+    
+    const allOption = document.createElement('option');
+    allOption.value = 'All';
+    allOption.textContent = 'Toutes les villes';
+    select.appendChild(allOption);
+
+    const sortedCities = Array.from(cities).sort((a, b) => normalizeString(a).localeCompare(normalizeString(b)));
+
+    sortedCities.forEach(city => {
+        const option = document.createElement('option');
+        option.value = city;
+        option.textContent = city;
+        select.appendChild(option);
+    });
+
+    // Événement de changement
+    select.value = currentFilterCity;
+    select.addEventListener('change', (e) => {
+        currentFilterCity = e.target.value;
+        loadSlots();
+    });
+}
+
+/**
+ * Crée l'élément HTML pour un créneau.
+ * @param {object} slot - Les données du créneau.
+ * @param {string} currentUserEmail - L'email de l'utilisateur actuel.
+ * @param {string} currentUserPseudo - Le pseudo de l'utilisateur actuel.
+ * @param {HTMLElement} targetListElement - L'élément <ul> où insérer le créneau.
+ */
+function renderSlotItem(slot, currentUserEmail, currentUserPseudo, targetListElement) {
+    if (!targetListElement) return;
+    
+    const isJoined = slot.participants.some(p => p.email === currentUserEmail);
+    const isCreator = slot.creator.email === currentUserEmail;
+    const canJoin = slot.maxParticipants === null || slot.participants.length < slot.maxParticipants;
+    const activityColor = activitiesData[slot.activity]?.color || '#808080';
+    const isPrivate = slot.isPrivate;
+    const isOwnerView = targetListElement.id === 'user-slots'; // Indique si on est dans la section "Mes Créneaux"
+
+    const li = document.createElement('li');
+    li.className = 'slot-item';
+    li.style.borderLeftColor = activityColor;
+
+    // --- Info du créneau ---
+    let participantsText = isPrivate && !isOwnerView ? `Participants: ${slot.participants.length} / ${slot.maxParticipants || '∞'} (Privé)` : `Participants: ${slot.participants.length} / ${slot.maxParticipants || '∞'}`;
+    let participantsListHTML = '';
+
+    if (!isPrivate || isOwnerView) {
+        const participantsNames = slot.participants.map(p => 
+            p.email === currentUserEmail ? `<span style="font-weight: bold; color: ${activityColor};">${p.pseudo} (Vous)</span>` : p.pseudo
+        ).join(', ');
+        participantsListHTML = `<p class="participants-list">Membres : ${participantsNames}</p>`;
+    }
+
+    // Calcul de la jauge
+    const currentCount = slot.participants.length;
+    const maxCount = slot.maxParticipants;
+    const gaugeWidth = maxCount ? (currentCount / maxCount) * 100 : 0;
+
+    li.innerHTML = `
+        <div class="slot-info">
+            <strong style="color:${activityColor};">${slot.name}</strong>
+            <p class="subsub-line">
+                <span class="subsub-box" style="background-color: ${activityColor}; color: white;">${slot.activity}</span>
+                <span class="subsub-box" style="background-color: ${activityColor}50; color: ${activityColor};">${slot.subActivity || slot.activity}</span>
+                ${slot.subSubActivity ? `<span class="subsub-box" style="background-color: ${activityColor}30; color: ${activityColor};">${slot.subSubActivity}</span>` : ''}
+            </p>
+            <p>📍 ${slot.location} (${slot.city})</p>
+            <p>📅 ${new Date(slot.date).toLocaleDateString('fr-FR', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })} à ${slot.time}</p>
+            <p>Créateur : ${slot.creator.pseudo}</p>
+            
+            <div class="participants-box">
+                <span>${participantsText}</span>
+                ${maxCount ? `
+                    <div class="gauge-bar">
+                        <div class="gauge-fill" style="width: ${gaugeWidth}%;"></div>
+                    </div>
+                ` : ''}
+            </div>
+            ${participantsListHTML}
+        </div>
+        <div class="actions-box">
+            </div>
+    `;
+
+    const actionsBox = li.querySelector('.actions-box');
+
+    // --- Boutons d'action ---
+
+    if (isCreator) {
+        // Bouton de suppression (visible uniquement par le créateur)
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'action-btn leave-btn';
+        deleteBtn.textContent = 'Supprimer';
+        deleteBtn.addEventListener('click', () => {
+            if (confirm(`Êtes-vous sûr de vouloir supprimer le créneau "${slot.name}" ?`)) {
+                db.collection('slots').doc(slot.id).delete()
+                    .then(() => {
+                        showToast(`Créneau "${slot.name}" supprimé.`, true);
+                        loadSlots(); // Recharge les créneaux
+                    })
+                    .catch(error => showToast(`Erreur lors de la suppression : ${error.message}`, false));
+            }
+        });
+        actionsBox.appendChild(deleteBtn);
+
+    } else if (isJoined) {
+        // Bouton de désinscription
+        const leaveBtn = document.createElement('button');
+        leaveBtn.className = 'action-btn leave-btn';
+        leaveBtn.textContent = 'Quitter';
+        leaveBtn.addEventListener('click', () => {
+            const newParticipants = slot.participants.filter(p => p.email !== currentUserEmail);
+            db.collection('slots').doc(slot.id).update({ participants: newParticipants })
+                .then(() => {
+                    showToast(`Vous avez quitté le créneau "${slot.name}".`, true);
+                    loadSlots();
+                })
+                .catch(error => showToast(`Erreur : ${error.message}`, false));
+        });
+        actionsBox.appendChild(leaveBtn);
+        
+    } else if (canJoin) {
+        // Bouton d'inscription
+        const joinBtn = document.createElement('button');
+        joinBtn.className = 'action-btn join-btn';
+        joinBtn.textContent = 'Rejoindre';
+        joinBtn.addEventListener('click', () => {
+            const newParticipant = { email: currentUserEmail, pseudo: currentUserPseudo };
+            db.collection('slots').doc(slot.id).update({
+                participants: firebase.firestore.FieldValue.arrayUnion(newParticipant)
+            })
+            .then(() => {
+                showToast(`Vous avez rejoint le créneau "${slot.name}" !`, true);
+                loadSlots();
+            })
+            .catch(error => showToast(`Erreur : ${error.message}`, false));
+        });
+        actionsBox.appendChild(joinBtn);
+        
+    } else {
+        // Créneau complet
+        const fullSpan = document.createElement('span');
+        fullSpan.textContent = 'Complet';
+        fullSpan.style.color = 'var(--danger-color)';
+        fullSpan.style.fontWeight = 'bold';
+        actionsBox.appendChild(fullSpan);
+    }
 
 
-/* --- Fonctions d'affichage --- */
+    targetListElement.appendChild(li);
+}
 
-function showAuth(){
+
+/**
+ * Charge les créneaux depuis Firestore et les affiche.
+ */
+async function loadSlots() {
+    const slotsList = document.getElementById('slots-list');
+    if (!slotsList) return; 
+
+    slotsList.innerHTML = '<li>Chargement des créneaux...</li>';
+
+    try {
+        let query = db.collection('slots');
+        const now = new Date().toISOString().slice(0, 10); // Date du jour YYYY-MM-DD
+        
+        // 1. Filtrer par date (uniquement les créneaux futurs ou d'aujourd'hui)
+        query = query.where('date', '>=', now).orderBy('date', 'asc');
+
+        // 2. Filtrer par activité
+        if (currentFilterActivity !== 'All') {
+            query = query.where('activity', '==', currentFilterActivity);
+        }
+
+        // 3. Filtrer par sous-activité
+        if (currentFilterSubActivity !== '') {
+            query = query.where('subActivity', '==', currentFilterSubActivity);
+        }
+
+        // 4. Filtrer par ville
+        if (currentFilterCity !== 'All') {
+            query = query.where('city', '==', currentFilterCity);
+        }
+
+        const snapshot = await query.get();
+        slotsList.innerHTML = '';
+        
+        if (snapshot.empty) {
+            slotsList.innerHTML = `<li>Aucun créneau trouvé pour les filtres sélectionnés.</li>`;
+            return;
+        }
+
+        // Convertir et trier par heure (l'heure n'est pas triée par Firestore si on filtre par date)
+        const sortedSlots = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a, b) => {
+            if (a.date === b.date) {
+                return a.time.localeCompare(b.time);
+            }
+            return 0; // Le tri par date a déjà été fait par Firestore
+        });
+
+        sortedSlots.forEach(slot => {
+            renderSlotItem(slot, auth.currentUser.email, currentUserData.pseudo, slotsList);
+        });
+
+    } catch (error) {
+        showToast(`Erreur lors du chargement des créneaux: ${error.message}`, false);
+        slotsList.innerHTML = '<li>Erreur de chargement. Veuillez vérifier la console.</li>';
+    }
+}
+
+
+/* ========================================================================= */
+/* 5. LOGIQUE D'AFFICHAGE DES PAGES (AUTH vs MAIN) */
+/* ========================================================================= */
+
+/**
+ * Affiche la section d'authentification et cache la section principale.
+ */
+function showAuth() {
     const authSection = document.getElementById('auth-section');
     const mainSection = document.getElementById('main-section');
     if (authSection) authSection.style.display = 'flex';
     if (mainSection) mainSection.style.display = 'none';
+    
+    // Si on est sur la page de profil, rediriger vers l'accueil si déconnecté
+    if (window.location.pathname.includes('profile.html')) {
+         window.location.href = 'index.html';
+    }
+
+    updateHeaderDisplay();
 }
 
-async function showMain(){
+/**
+ * Affiche la section principale et cache la section d'authentification.
+ * Appelle les fonctions de rendu.
+ */
+async function showMain() {
     const authSection = document.getElementById('auth-section');
     const mainSection = document.getElementById('main-section');
     if (authSection) authSection.style.display = 'none';
     if (mainSection) mainSection.style.display = 'block';
 
     updateHeaderDisplay();
-    // Les fonctions de chargement sont appelées ici
+    
+    // Ces fonctions sont maintenant dans la portée globale et accessibles !
     renderActivities();
-    await loadSlots(); 
-    await populateCityFilter(); 
+    await loadSlots();
+    await populateCityFilter();
 }
 
 
-/* ===== LOGIQUE DE LA PAGE D'ACCUEIL (index.html) ===== */
+/* ========================================================================= */
+/* 6. LOGIQUE DE LA PAGE D'ACCUEIL (index.html) */
+/* ========================================================================= */
 
 function handleIndexPageLogic() {
-    const signupBtn = document.getElementById('signup');
+    // Les sélecteurs DOM restent ici, car ils ne sont utilisés que par les handlers de cette page
     const loginBtn = document.getElementById('login');
-    const toggleCreate = document.getElementById('toggle-create-form');
-    const createForm = document.getElementById('create-slot-form');
-    const arrow = document.querySelector('.arrow');
-    const activitiesDiv = document.getElementById('activities');
-    const subDiv = document.getElementById('subactivities');
-    const currentActivityEl = document.getElementById('current-activity');
-    const formActivitySelect = document.getElementById('form-activity-select');
-    const formSubSelect = document.getElementById('sub-select');
-    const subsubSelect = document.getElementById('subsub-select');
-    const createBtn = document.getElementById('create-slot');
-    const cityFilterSelect = document.getElementById('city-filter-select');
-    const locationInput = document.getElementById('slot-location');
-    const locationLink = document.getElementById('location-link');
-    const locationSuggestionBox = document.getElementById('location-suggestion-box');
+    const signupBtn = document.getElementById('signup');
+    const createSlotBtn = document.getElementById('create-slot');
+    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
     const pseudoInput = document.getElementById('pseudo');
-    const pseudoStatus = document.getElementById('pseudo-status');
-    // Point 4: Nouveaux éléments
-    const passwordSignup = document.getElementById('password-signup');
-    const passwordConfirm = document.getElementById('password-confirm');
+    const passwordConfirmInput = document.getElementById('password-confirm');
     const passwordMatchStatus = document.getElementById('password-match-status');
+    const formActivitySelect = document.getElementById('form-activity-select');
+    const subSelect = document.getElementById('sub-select');
+    const subsubSelect = document.getElementById('subsub-select');
+    const currentActivitySpan = document.getElementById('current-activity');
+    const slotLocationInput = document.getElementById('slot-location');
+    const locationLinkP = document.getElementById('location-link');
+    const locationLinkA = locationLinkP ? locationLinkP.querySelector('a') : null;
+    const toggleCreateForm = document.getElementById('toggle-create-form');
+    const createSlotForm = document.getElementById('create-slot-form');
     
-    let selectedActivity = null; 
-    let suggestedAddress = ''; 
+    if (!loginBtn) return; // Si on n'est pas sur index.html, on arrête.
 
-    const addressCache = {
-        '1 rue de la roquet': '1 rue de la Roquette, 75011 Paris',
-        'cafe du coin': '4 rue des Canettes, 75006 Paris',
-        'tour eiffel': 'Champ de Mars, 5 Av. Anatole France, 75007 Paris',
-        '10 rue de lappe': '10 Rue de Lappe, 75011 Paris',
-        'liberty': 'Le Liberty, 11 Rue de la Tonnellerie, 28000 Chartres'
-    };
+    // ----------------------------------------------------
+    // --- UTILS INDEX PAGE ---
+    // ----------------------------------------------------
 
-    /* --- Fonctions de rendu et de filtrage --- */
-
-    function populateFormActivitySelect() {
-        if (!formActivitySelect) return;
-        formActivitySelect.innerHTML = '<option value="">-- Choisis une activité --</option>';
-        Object.keys(ACTIVITIES).filter(a => a !== "Toutes").forEach(activity => {
-            const option = document.createElement('option');
-            option.value = activity;
-            option.textContent = `${ACTIVITY_EMOJIS[activity] || ''} ${activity}`;
-            formActivitySelect.appendChild(option);
-        });
-    }
-
-    function populateSubActivitiesForForm(activity) {
-        if (!formSubSelect) return;
-        formSubSelect.innerHTML = '<option value="">-- Choisis une sous-activité --</option>';
-        if (ACTIVITIES[activity] && ACTIVITIES[activity].length > 0) {
-            ACTIVITIES[activity].forEach(sub => {
-                const option = document.createElement('option');
-                option.value = sub;
-                option.textContent = sub;
-                formSubSelect.appendChild(option);
-            });
-        }
-        // Réinitialise la sous-sous-activité
-        populateSubSub(''); 
-    }
-
-    function populateSubSub(subActivity) {
-        if (!subsubSelect) return;
-        subsubSelect.innerHTML = '<option value="">-- Optionnel --</option>';
-        if (SUBSUB[subActivity] && SUBSUB[subActivity].length > 0) {
-            SUBSUB[subActivity].forEach(subsub => {
-                const option = document.createElement('option');
-                option.value = subsub;
-                option.textContent = subsub;
-                subsubSelect.appendChild(option);
-            });
-        }
-    }
-
-    function renderActivities() {
-        if (!activitiesDiv) return;
-        activitiesDiv.innerHTML = '';
-        Object.keys(ACTIVITIES).forEach(activity => {
-            const btn = document.createElement('button');
-            btn.className = 'activity-btn';
-            btn.textContent = `${ACTIVITY_EMOJIS[activity] || ''} ${activity}`;
-            btn.style.backgroundColor = COLOR_MAP[activity] || '#9aa9bf';
-            
-            if (activity === currentFilterActivity) {
-                btn.classList.add('selected');
-            }
-
-            btn.onclick = () => {
-                currentFilterActivity = activity;
-                currentFilterSub = 'Toutes'; 
-                renderActivities(); // Re-render les activités
-                populateSubActivities(activity); // Affiche les sous-activités
-                loadSlots(); // Recharge les créneaux
-            };
-            activitiesDiv.appendChild(btn);
-        });
-        
-        // Assure que les sous-activités sont à jour avec le filtre principal
-        populateSubActivities(currentFilterActivity); 
-    }
-
-    function populateSubActivities(activity) {
-        if (!subDiv) return;
-        subDiv.innerHTML = '';
-        subDiv.style.display = 'none';
-
-        if (activity === "Toutes" || !ACTIVITIES[activity] || ACTIVITIES[activity].length === 0) {
-            return;
-        }
-        
-        // Ajout du bouton "Toutes" pour les sous-catégories
-        const allBtn = document.createElement('button');
-        allBtn.className = 'activity-btn sub-activity-btn';
-        allBtn.textContent = `Tous (${activity})`;
-        allBtn.style.backgroundColor = '#9aa9bf'; 
-        if (currentFilterSub === 'Toutes') allBtn.classList.add('selected');
-
-        allBtn.onclick = () => {
-            currentFilterSub = 'Toutes';
-            populateSubActivities(activity); 
-            loadSlots();
-        };
-        subDiv.appendChild(allBtn);
-
-        // Ajout des sous-activités spécifiques
-        ACTIVITIES[activity].forEach(sub => {
-            const btn = document.createElement('button');
-            btn.className = 'activity-btn sub-activity-btn';
-            btn.textContent = sub;
-            btn.style.backgroundColor = COLOR_MAP[sub] || COLOR_MAP[activity]; 
-
-            if (sub === currentFilterSub) {
-                btn.classList.add('selected');
-            }
-
-            btn.onclick = () => {
-                currentFilterSub = sub;
-                populateSubActivities(activity); 
-                loadSlots();
-            };
-            subDiv.appendChild(btn);
-        });
-        
-        subDiv.style.display = 'flex';
-    }
-
-    async function populateCityFilter() {
-        if (!cityFilterSelect) return;
-        // UTILISATION FIREBASE: Récupère les slots
-        const allSlots = await getSlotsFromDB();
-        
-        let cities = allSlots
-            .map(s => extractCity(s.location))
-            .filter(c => c && c.length > 1); 
-            
-        // Dédupliquer et trier
-        cities = Array.from(new Set(cities)).sort((a, b) => a.localeCompare(b, 'fr'));
-
-        // Remplir le select
-        cityFilterSelect.innerHTML = `<option value="Toutes">Toutes les villes</option>`;
-        cities.forEach(city => {
-            const option = document.createElement('option');
-            option.value = city;
-            option.textContent = city;
-            if (city === currentFilterCity) option.selected = true;
-            cityFilterSelect.appendChild(option);
-        });
-
-        cityFilterSelect.onchange = () => {
-            currentFilterCity = cityFilterSelect.value;
-            loadSlots();
-        };
-    }
-
-    function renderSlotItem(slot, currentUserEmail, currentUserPseudo, targetListElement) {
-        const li = document.createElement('li'); li.className='slot-item';
-        const info = document.createElement('div'); info.className='slot-info';
-        const isOwner = slot.owner === currentUserEmail;
-        
-        // Activity/Sub activity line
-        const activityLine = document.createElement('div'); activityLine.className = 'subsub-line';
-        let actPill = document.createElement('span'); 
-        actPill.className = 'subsub-box';
-        actPill.textContent = slot.activity;
-        actPill.style.border = `1px solid ${COLOR_MAP[slot.activity] || '#9aa9bf'}`; 
-        actPill.style.color = COLOR_MAP[slot.activity] || '#9aa9bf';
-        activityLine.appendChild(actPill);
-
-        if (slot.sub) {
-            let subPill = document.createElement('span'); 
-            subPill.className = 'subsub-box';
-            subPill.textContent = slot.sub;
-            subPill.style.border = `1px solid ${COLOR_MAP[slot.sub] || COLOR_MAP[slot.activity] || '#9aa9bf'}`; 
-            subPill.style.color = COLOR_MAP[slot.sub] || COLOR_MAP[slot.activity] || '#9aa9bf';
-            activityLine.appendChild(subPill);
-        }
-
-        if (slot.subsub) {
-            let subsubPill = document.createElement('span'); 
-            subsubPill.className = 'subsub-box';
-            subsubPill.textContent = slot.subsub;
-            subsubPill.style.border = `1px solid ${COLOR_MAP[slot.subsub] || COLOR_MAP[slot.sub] || COLOR_MAP[slot.activity] || '#9aa9bf'}`; 
-            subsubPill.style.color = COLOR_MAP[slot.subsub] || COLOR_MAP[slot.sub] || COLOR_MAP[slot.activity] || '#9aa9bf';
-            activityLine.appendChild(subsubPill);
-        }
-
-        info.appendChild(activityLine);
-
-
-        const title = document.createElement('strong'); title.textContent = slot.name;
-        const formattedDate = formatDateToWords(slot.date);
-        
-        const when = document.createElement('div');
-        
-        if (slot.location) {
-            if (slot.location.match(/\d+\s(rue|avenue|boul|place|impasse|allée|quai)/i)) {
-                const locationLinkList = document.createElement('a');
-                const encodedLocation = encodeURIComponent(slot.location);
-                locationLinkList.href = `https://www.google.com/maps/search/?api=1&query=${encodedLocation}`;
-                locationLinkList.target = '_blank';
-                locationLinkList.textContent = `📍 ${slot.location}`;
-                when.appendChild(locationLinkList);
-            } else {
-                when.textContent = `📍 ${slot.location}`;
-            }
-        }
-
-        when.innerHTML += ` — 🗓️ ${formattedDate} à ${slot.time}`;
-        
-        const owner = document.createElement('small'); 
-        owner.textContent = `par ${slot.ownerPseudo || slot.owner}`;
-        if (slot.private) owner.innerHTML += ' <span class="private-slot-lock">🔒 Privé</span>';
-
-        info.appendChild(title); info.appendChild(when); 
-        
-        // Participants and Gauge 
-        const participantsCount = (slot.participants || []).length;
-        const participantsBox = document.createElement('div'); participantsBox.className = 'participants-box';
-        participantsBox.innerHTML = `👤 ${participantsCount} personne${participantsCount > 1 ? 's' : ''}`;
-
-        const gaugeBar = document.createElement('div'); gaugeBar.className = 'gauge-bar';
-        const gaugeFill = document.createElement('div'); gaugeFill.className = 'gauge-fill';
-        const fillPercent = Math.min(100, (participantsCount / MAX_PARTICIPANTS) * 100);
-        gaugeFill.style.width = `${fillPercent}%`;
-        gaugeBar.appendChild(gaugeFill);
-        participantsBox.appendChild(gaugeFill);
-        
-        info.appendChild(participantsBox);
-        
-        // Liste des participants 
-        const participantsList = document.createElement('div'); participantsList.className = 'participants-list';
-        const isParticipant = (slot.participants || []).some(p => p.email === currentUserEmail);
-        
-        if (slot.private && slot.owner !== currentUserEmail){
-            participantsList.textContent = 'Participants cachés.';
+    /** Met à jour le lien Google Maps */
+    function updateMapLink() {
+        if (slotLocationInput.value.length > 5) {
+            const query = encodeURIComponent(slotLocationInput.value);
+            const url = `https://www.google.com/maps/search/?api=1&query=${query}`;
+            locationLinkA.href = url;
+            locationLinkP.style.display = 'block';
         } else {
-            const pseudos = (slot.participants || []).map(p => p.pseudo || p.email.split('@')[0]);
-            participantsList.textContent = 'Membres: ' + pseudos.join(', ');
+            locationLinkP.style.display = 'none';
         }
-        info.appendChild(participantsList);
-        
-        info.appendChild(owner); 
-
-        const actions = document.createElement('div'); actions.className='actions-box'; 
-        
-        // Bouton Rejoindre / Quitter (pour la page index.html)
-        if (targetListElement.id === 'slots-list' && currentUser) {
-            if (!isParticipant){
-                const joinBtn = document.createElement('button');
-                joinBtn.className = 'action-btn join-btn'; 
-                joinBtn.textContent = '✅ Rejoindre';
-                
-                if (!slot.private || isOwner){ 
-                    joinBtn.onclick = async ()=> {
-                        if (participantsCount >= MAX_PARTICIPANTS) return alert('Désolé, ce créneau est complet.');
-                        
-                        await updateSlot(slot.id, s => {
-                            s.participants = s.participants || []; 
-                            s.participants.push({ email: currentUserEmail, pseudo: currentUserPseudo });
-                            return s;
-                        });
-                        alert('Cool ! Créneau rejoint 😃');
-                    };
-                    actions.appendChild(joinBtn);
-                } else {
-                    joinBtn.textContent = '🔒 Privé';
-                    joinBtn.disabled = true;
-                    actions.appendChild(joinBtn);
-                }
-            } else if (isParticipant && !isOwner) {
-                const leaveBtn = document.createElement('button');
-                leaveBtn.className = 'action-btn leave-btn'; 
-                leaveBtn.textContent = '❌ Quitter';
-                leaveBtn.onclick = async ()=> {
-                    await updateSlot(slot.id, s => {
-                        s.participants = s.participants.filter(p => p.email !== currentUserEmail);
-                        return s;
-                    });
-                };
-                actions.appendChild(leaveBtn);
-            }
-        }
-        
-        // Boutons d'action pour le propriétaire (index.html ET profile.html) 
-        if (isOwner){
-            const del = document.createElement('button'); del.textContent='🗑️'; del.title='Supprimer';
-            del.className = 'action-btn ghost-action-btn'; 
-            del.onclick = async ()=> { 
-                if (!confirm('Supprimer ce créneau ?')) return; 
-                await SLOTS_COLLECTION.doc(slot.id).delete();
-                if (document.getElementById('slots-list')) await loadSlots(); 
-                if (document.getElementById('user-slots')) await loadUserSlots(); 
-                if (typeof populateCityFilter === 'function') await populateCityFilter(); 
-            };
-            actions.appendChild(del);
-
-            const rem = document.createElement('button'); rem.textContent='⏰'; rem.title='Rappel';
-            rem.className = 'action-btn ghost-action-btn'; 
-            rem.onclick = ()=> {
-                const notifTime = new Date(slot.date + 'T' + slot.time); const delay = notifTime - new Date();
-                if (delay>0){ alert('Rappel programmé (simple notification navigateur)'); 
-                if (Notification.permission === 'granted') {
-                    new Notification(`Rappel : ${slot.name}`);
-                } else if (Notification.permission !== 'denied') {
-                    Notification.requestPermission().then(permission => {
-                        if (permission === 'granted') new Notification(`Rappel : ${slot.name}`);
-                        else alert(`Rappel : ${slot.name}`);
-                    });
-                } else {
-                    alert(`Rappel : ${slot.name}`);
-                }
-                 }
-                else alert('Ce créneau est déjà passé.');
-            };
-            actions.appendChild(rem);
-        }
-
-        const share = document.createElement('button'); share.textContent='🔗'; share.title='Partager';
-        share.className = 'action-btn ghost-action-btn'; 
-        share.onclick = ()=> { 
-            const link = `${window.location.origin}${window.location.pathname}?slot=${slot.id}`; 
-            navigator.clipboard.writeText(link).then(()=>alert('Lien copié !')); 
-        };
-        actions.appendChild(share);
-
-
-        li.appendChild(info); 
-        
-        if (targetListElement.id === 'user-slots') {
-             li.appendChild(actions); 
-
-        } else if (targetListElement.id === 'joined-slots') {
-            if (isParticipant && !isOwner) {
-                const leaveBtn = document.createElement('button');
-                leaveBtn.className = 'action-btn leave-btn'; 
-                leaveBtn.textContent = '❌ Quitter';
-                leaveBtn.style.width = '70px'; 
-                leaveBtn.onclick = async ()=> { 
-                    await updateSlot(slot.id, s => {
-                        s.participants = s.participants.filter(p => p.email !== currentUserEmail);
-                        return s;
-                    });
-                };
-                const actionsJoined = document.createElement('div'); 
-                actionsJoined.className='actions-box';
-                actionsJoined.appendChild(leaveBtn);
-                li.appendChild(actionsJoined);
-            }
-        } else {
-            li.appendChild(actions);
-        }
-        targetListElement.appendChild(li);
-    }
-    
-    async function loadSlots(){
-        const list = document.getElementById('slots-list'); if (!list) return; list.innerHTML='';
-        let slots = await getSlotsFromDB() || []; 
-        
-        if (currentFilterActivity !== "Toutes") {
-            slots = slots.filter(s => s.activity === currentFilterActivity);
-        }
-        
-        if (currentFilterSub !== "Toutes") {
-            slots = slots.filter(s => s.sub === currentFilterSub);
-        }
-
-        if (currentFilterCity !== "Toutes") {
-            slots = slots.filter(s => {
-                const city = extractCity(s.location);
-                return city === currentFilterCity;
-            });
-        }
-
-        slots = slots.filter(s => s.date && s.time).sort((a,b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
-        slots = slots.slice(0,10);
-
-        
-        const currentUserEmail = currentUser ? currentUser.email : null;
-        const currentUserPseudo = currentUser ? currentUser.pseudo || currentUser.email.split('@')[0] : '';
-        
-        if (slots.length === 0) {
-            list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Aucun créneau ne correspond à vos filtres.</li>';
-            return;
-        }
-
-        slots.forEach(slot => renderSlotItem(slot, currentUserEmail, currentUserPseudo, list));
     }
 
-
-    /* --- Gestion de l'Authentification et des formulaires --- */
-    
-    // Vérification de l'unicité du pseudo et de la confirmation du mot de passe
+    /** Vérifie la validité du formulaire d'inscription */
     function checkSignupValidity() {
-        let isValid = true;
-        const pseudoValid = pseudoStatus.textContent === 'Pseudo disponible ! 😊';
+        const passwordSignup = document.getElementById('password-signup').value;
+        const passwordConfirm = passwordConfirmInput.value;
+        const pseudo = pseudoInput.value;
         
-        // Point 4: Validation du mot de passe
-        if (passwordSignup.value && passwordConfirm.value) {
-            if (passwordSignup.value === passwordConfirm.value) {
-                passwordMatchStatus.textContent = 'Mots de passe correspondent ✅';
-                passwordMatchStatus.style.color = '#78d6a4'; 
-            } else {
-                passwordMatchStatus.textContent = 'Les mots de passe ne correspondent pas ❌';
-                passwordMatchStatus.style.color = '#e67c73'; 
-                isValid = false;
-            }
+        const passwordsMatch = passwordSignup === passwordConfirm && passwordSignup.length >= 6;
+        const pseudoValid = pseudo.length >= 2;
+
+        if (passwordConfirm.length > 0) {
+            passwordMatchStatus.textContent = passwordsMatch ? 'Mots de passe correspondent.' : 'Mots de passe ne correspondent pas.';
+            passwordMatchStatus.style.color = passwordsMatch ? 'var(--success-color)' : 'var(--danger-color)';
         } else {
             passwordMatchStatus.textContent = '';
-            isValid = false; // Ne valide pas si un champ est vide
         }
 
-        if (!pseudoValid) isValid = false;
-        if (passwordSignup.value.length < 6) isValid = false;
-        
-        if (signupBtn) signupBtn.disabled = !isValid;
+        if (pseudo.length > 0) {
+            pseudoInput.style.borderColor = pseudoValid ? 'var(--success-color)' : 'var(--danger-color)';
+            document.getElementById('pseudo-status').textContent = pseudoValid ? '' : '2 caractères minimum.';
+        } else {
+            pseudoInput.style.borderColor = '#ccc';
+            document.getElementById('pseudo-status').textContent = '';
+        }
+
+        signupBtn.disabled = !(passwordsMatch && pseudoValid);
     }
+    
+    // ----------------------------------------------------
+    // --- FORMULAIRE D'AUTHENTIFICATION ---
+    // ----------------------------------------------------
 
-
-    if (pseudoInput && signupBtn) {
-        pseudoInput.addEventListener('input', async () => { 
-            const pseudo = pseudoInput.value.trim();
-            if (!pseudo) {
-                pseudoStatus.textContent = '';
-                if (signupBtn) signupBtn.disabled = true; 
-                return;
-            }
-            const allPseudos = await getAllUserPseudos();
-            const isTaken = allPseudos.some(p => p === pseudo);
-            
-            if (isTaken) {
-                pseudoStatus.textContent = 'Ce pseudo est déjà pris 😞';
-                pseudoStatus.style.color = '#e67c73'; 
-            } else {
-                pseudoStatus.textContent = 'Pseudo disponible ! 😊';
-                pseudoStatus.style.color = '#78d6a4'; 
-            }
-            checkSignupValidity();
-        });
+    loginBtn.addEventListener('click', async () => {
+        const email = document.getElementById('email-login').value;
+        const password = document.getElementById('password-login').value;
         
-        if (passwordSignup) passwordSignup.addEventListener('input', checkSignupValidity);
-        if (passwordConfirm) passwordConfirm.addEventListener('input', checkSignupValidity);
-    }
-
-
-    // signup handler (Point 2 - Connexion sécurisée)
-    if (signupBtn) signupBtn.addEventListener('click', async ()=>{ 
-        const pseudo = (document.getElementById('pseudo')?.value||'').trim();
-        const email = (document.getElementById('email-signup')?.value||'').trim();
-        const password = (document.getElementById('password-signup')?.value||'').trim();
-        const confirmPassword = (document.getElementById('password-confirm')?.value||'').trim();
-
-        if (!pseudo || !email || !password || !confirmPassword) return alert('Remplis tous les champs.');
-        if (password !== confirmPassword) return alert('Les mots de passe ne correspondent pas.');
-        if (password.length < 6) return alert('Le mot de passe doit contenir au moins 6 caractères.');
+        if (!email || !password) {
+            showToast("Veuillez remplir tous les champs de connexion.", false);
+            return;
+        }
 
         try {
-            const allPseudos = await getAllUserPseudos();
-            if (allPseudos.some(p => p === pseudo)) return alert('Ce pseudo est déjà pris. Choisis-en un autre.');
-            
-            // Création du compte Firebase Auth
+            await auth.signInWithEmailAndPassword(email, password);
+            showToast("Connexion réussie ! 👋", true);
+            loginForm.reset();
+        } catch (error) {
+            let message = "Erreur de connexion. Vérifiez votre email et mot de passe.";
+            if (error.code === 'auth/wrong-password') {
+                message = "Mot de passe incorrect.";
+            } else if (error.code === 'auth/user-not-found') {
+                message = "Aucun compte trouvé avec cet email.";
+            }
+            showToast(message, false);
+        }
+    });
+
+    signupBtn.addEventListener('click', async () => {
+        const email = document.getElementById('email-signup').value;
+        const password = document.getElementById('password-signup').value;
+        const pseudo = pseudoInput.value;
+
+        if (!email || !password || !pseudo || password !== passwordConfirmInput.value) {
+            showToast("Veuillez corriger le formulaire d'inscription.", false);
+            return;
+        }
+
+        try {
             const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-            const user = userCredential.user;
-
-            // Création du document utilisateur dans Firestore
-            const userData = {
-                email: user.email,
-                pseudo: pseudo,
-                phone: '',
-                uid: user.uid 
-            };
-            await USERS_COLLECTION.add(userData); 
-
-            localStorage.setItem('currentUserEmail', user.email); 
             
-            // Re-lance la vérification d'état (qui appellera showMain après initialisation)
-            await initializeUserSession(user.email); 
-            showMain();
+            // Ajouter les données utilisateur à Firestore
+            await db.collection('users').doc(userCredential.user.uid).set({
+                pseudo: pseudo,
+                email: email,
+                phone: '',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
 
-        } catch(error) {
+            showToast(`Bienvenue ${pseudo} ! Votre compte est créé. 🎉`, true);
+            signupForm.reset();
+        } catch (error) {
             let message = "Erreur lors de l'inscription.";
             if (error.code === 'auth/email-already-in-use') {
-                message = "Cet email est déjà utilisé."; 
-            } else if (error.code === 'auth/weak-password') {
-                message = "Le mot de passe doit contenir au moins 6 caractères.";
+                message = "Cet email est déjà utilisé par un autre compte.";
             }
-            alert(message + " " + error.message);
+            showToast(message, false);
         }
     });
 
-    // login handler (Point 2 - Connexion sécurisée)
-    if (loginBtn) loginBtn.addEventListener('click', async ()=>{ 
-        const email = (document.getElementById('email-login')?.value||'').trim();
-        const password = (document.getElementById('password-login')?.value||'').trim();
-        if (!email || !password) return alert('Remplis tous les champs.');
+    // Écouteurs pour l'inscription
+    pseudoInput.addEventListener('input', checkSignupValidity);
+    passwordConfirmInput.addEventListener('input', checkSignupValidity);
+    document.getElementById('password-signup').addEventListener('input', checkSignupValidity);
+
+
+    // ----------------------------------------------------
+    // --- FORMULAIRE DE CRÉATION DE CRÉNEAU ---
+    // ----------------------------------------------------
+
+    // Toggle de la visibilité du formulaire de création
+    if (toggleCreateForm && createSlotForm) {
+        toggleCreateForm.addEventListener('click', () => {
+            const isVisible = createSlotForm.style.display === 'block';
+            createSlotForm.style.display = isVisible ? 'none' : 'block';
+            toggleCreateForm.querySelector('.arrow').style.transform = isVisible ? 'rotate(0deg)' : 'rotate(90deg)';
+        });
+    }
+
+    // Initialisation du sélecteur d'activité du formulaire
+    populateFormActivitySelect();
+
+    // Gestion du changement d'activité principale
+    if (formActivitySelect) {
+        formActivitySelect.addEventListener('change', (e) => {
+            const selectedActivity = e.target.value;
+            currentActivitySpan.textContent = selectedActivity || 'Aucune';
+            currentActivitySpan.style.color = activitiesData[selectedActivity]?.color || 'var(--text-color)';
+            populateSubActivitiesForForm(selectedActivity);
+        });
+    }
+    
+    // Gestion du changement de sous-activité
+    if (subSelect) {
+        subSelect.addEventListener('change', (e) => {
+            const selectedSub = e.target.value;
+            const selectedActivity = formActivitySelect.value;
+            populateSubSub(selectedActivity, selectedSub);
+        });
+    }
+
+    // Gestion de l'input de localisation
+    if (slotLocationInput) {
+        slotLocationInput.addEventListener('input', updateMapLink);
+    }
+    
+    // Logique de création
+    if (createSlotBtn) {
+        createSlotBtn.addEventListener('click', async () => {
+            const name = document.getElementById('slot-name').value.trim();
+            const activity = formActivitySelect.value;
+            const subActivity = subSelect.value || null;
+            const subSubActivity = subsubSelect.value || null;
+            const location = slotLocationInput.value.trim();
+            const date = document.getElementById('slot-date').value;
+            const time = document.getElementById('slot-time').value;
+            const isPrivate = document.getElementById('private-slot').checked;
+            const maxParticipants = null; // Simplifié pour l'instant
+
+            if (!name || !activity || !location || !date || !time) {
+                showToast("Veuillez remplir tous les champs obligatoires (Nom, Activité, Lieu, Date, Heure).", false);
+                return;
+            }
+            
+            // Simuler l'extraction de la ville (première partie de l'adresse après virgule)
+            // C'est une simplification qui devrait être améliorée par une API de géocodage
+            const parts = location.split(',').map(p => p.trim());
+            const city = parts.length > 1 ? parts[parts.length - 1] : parts[0];
+
+
+            try {
+                const newSlot = {
+                    name,
+                    activity,
+                    subActivity,
+                    subSubActivity,
+                    location,
+                    city: city, // Ajout de la ville pour le filtre
+                    date,
+                    time,
+                    isPrivate,
+                    maxParticipants,
+                    creator: {
+                        uid: auth.currentUser.uid,
+                        email: auth.currentUser.email,
+                        pseudo: currentUserData.pseudo 
+                    },
+                    participants: [{ // Le créateur est le premier participant
+                        email: auth.currentUser.email,
+                        pseudo: currentUserData.pseudo 
+                    }],
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                await db.collection('slots').add(newSlot);
+                showToast(`Créneau "${name}" créé avec succès ! ✅`, true);
+                document.getElementById('create-slot-form').reset();
+                updateMapLink(); // Cache le lien de la carte
+                loadSlots(); // Recharge les créneaux pour afficher le nouveau
+            } catch (error) {
+                showToast(`Erreur lors de la création du créneau: ${error.message}`, false);
+            }
+        });
+    }
+
+    // ----------------------------------------------------
+    // --- LOGIQUE DE DÉCONNEXION ---
+    // ----------------------------------------------------
+
+    const logoutBtnIndex = document.getElementById('logout');
+    if (logoutBtnIndex) {
+        logoutBtnIndex.addEventListener('click', async () => {
+            try {
+                await auth.signOut();
+                showToast("Déconnexion réussie. À bientôt !", true);
+            } catch (error) {
+                showToast(`Erreur de déconnexion: ${error.message}`, false);
+            }
+        });
+    }
+
+    // Afficher/Cacher mot de passe
+    function setupPasswordVisibilityToggle(checkboxId, passwordFieldId) {
+        const checkbox = document.getElementById(checkboxId);
+        const passwordField = document.getElementById(passwordFieldId);
+        if (checkbox && passwordField) {
+            checkbox.addEventListener('change', () => {
+                passwordField.type = checkbox.checked ? 'text' : 'password';
+            });
+        }
+    }
+    setupPasswordVisibilityToggle('show-password-login', 'password-login');
+    setupPasswordVisibilityToggle('show-password-signup', 'password-signup');
+}
+
+
+/* ========================================================================= */
+/* 7. LOGIQUE DE LA PAGE DE PROFIL (profile.html) */
+/* ========================================================================= */
+
+async function handleProfilePageLogic() {
+    const profileMain = document.getElementById('profile-main');
+    if (!profileMain || !auth.currentUser) return; // Si on n'est pas sur profile.html ou pas connecté
+
+    const profilePseudoInput = document.getElementById('profile-pseudo');
+    const profileEmailInput = document.getElementById('profile-email');
+    const profilePhoneInput = document.getElementById('profile-phone');
+    const profilePasswordInput = document.getElementById('profile-password');
+    const profileForm = document.getElementById('profile-form');
+    const userSlotsList = document.getElementById('user-slots');
+    const joinedSlotsList = document.getElementById('joined-slots');
+
+    // --- Chargement des données utilisateur ---
+    profileEmailInput.value = auth.currentUser.email;
+    profilePseudoInput.value = currentUserData.pseudo;
+    profilePhoneInput.value = currentUserData.phone || '';
+
+
+    // --- Logique de mise à jour du profil ---
+    profileForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const newPseudo = profilePseudoInput.value.trim();
+        const newPhone = profilePhoneInput.value.trim();
+        const newPassword = profilePasswordInput.value.trim();
+        
+        if (newPseudo.length < 2) {
+            showToast("Le pseudo doit contenir au moins 2 caractères.", false);
+            return;
+        }
 
         try {
-            const userCredential = await auth.signInWithEmailAndPassword(email, password);
-            const user = userCredential.user;
-            
-            localStorage.setItem('currentUserEmail', user.email);
-            
-            // Re-lance la vérification d'état (qui appellera showMain après initialisation)
-            await initializeUserSession(user.email); 
-            showMain();
-
-        } catch(error) {
-            alert("Erreur de connexion: Email ou mot de passe invalide.");
-        }
-    });
-
-    // toggle create form 
-    if (toggleCreate && createForm) toggleCreate.addEventListener('click', ()=> {
-        const visible = createForm.style.display === 'block';
-        createForm.style.display = visible ? 'none' : 'block';
-        if (arrow) arrow.style.transform = visible ? 'rotate(0deg)' : 'rotate(90deg)';
-        if (!visible) {
-            populateFormActivitySelect();
-            formActivitySelect.value = selectedActivity || '';
-            populateSubActivitiesForForm(formActivitySelect.value);
-        }
-    });
-
-    // keep selects in sync
-    if (formActivitySelect) formActivitySelect.addEventListener('change', ()=>{
-        selectedActivity = formActivitySelect.value;
-        const emoji = ACTIVITY_EMOJIS[selectedActivity] || ''; 
-        currentActivityEl.textContent = selectedActivity ? `${emoji} ${selectedActivity}` : 'Aucune';
-        populateSubActivitiesForForm(selectedActivity);
-    });
-
-    formSubSelect.addEventListener('change', ()=> populateSubSub(formSubSelect.value));
-
-    // Address location logic (suggestion & map link)
-    if (locationInput) {
-        locationInput.addEventListener('input', () => {
-            const query = locationInput.value.trim().toLowerCase();
-            locationSuggestionBox.innerHTML = '';
-            locationSuggestionBox.style.display = 'none';
-            locationLink.style.display = 'none';
-
-            if (query.length > 2) {
-                const suggestions = Object.keys(addressCache).filter(key => key.includes(query));
-                if (suggestions.length > 0) {
-                    suggestions.forEach(key => {
-                        const div = document.createElement('div');
-                        div.className = 'suggestion-item';
-                        div.textContent = addressCache[key];
-                        div.onclick = () => {
-                            locationInput.value = addressCache[key];
-                            locationSuggestionBox.style.display = 'none';
-                            suggestedAddress = addressCache[key];
-                            updateMapLink(suggestedAddress);
-                        };
-                        locationSuggestionBox.appendChild(div);
-                    });
-                    locationSuggestionBox.style.display = 'block';
-                }
-            }
-        });
-        locationInput.addEventListener('blur', () => {
-            // Un petit délai pour permettre le clic sur la suggestion
-            setTimeout(() => {
-                locationSuggestionBox.style.display = 'none';
-            }, 200);
-        });
-        locationInput.addEventListener('focus', () => {
-            // Afficher de nouveau si une saisie est là
-            if (locationInput.value.trim().length > 2) {
-                locationSuggestionBox.style.display = 'block';
-            }
-        });
-        locationInput.addEventListener('change', () => {
-            updateMapLink(locationInput.value.trim());
-        });
-    }
-
-    function updateMapLink(address) {
-        if (address && address.match(/\d+\s(rue|avenue|boul|place|impasse|allée|quai)/i)) {
-            const encodedAddress = encodeURIComponent(address);
-            const linkA = locationLink.querySelector('a');
-            if (linkA) {
-                linkA.href = `https://maps.google.com/?q=${encodedAddress}`;
-                locationLink.style.display = 'block';
-            }
-        } else {
-            locationLink.style.display = 'none';
-        }
-    }
-
-    // create slot
-    if (createBtn) createBtn.addEventListener('click', async ()=> { 
-        if (!currentUser) return alert('Connecte-toi d’abord');
-        
-        const activity = selectedActivity || formActivitySelect.value;
-        const sub = formSubSelect.value || '';
-        const subsub = subsubSelect.value || '';
-        const name = (document.getElementById('slot-name')?.value||'').trim();
-        const location = (document.getElementById('slot-location')?.value||'').trim();
-        const date = (document.getElementById('slot-date')?.value||'').trim();
-        const time = (document.getElementById('slot-time')?.value||'').trim();
-        const isPrivate = !!document.getElementById('private-slot')?.checked;
-        
-        if (!activity) return alert('Choisis d’abord une activité (ex: Jeux)');
-        if (!name || !location || !date || !time) return alert('Remplis les champs nom, lieu, date et heure');
-        
-        const newSlot = {
-            activity,
-            sub: sub || '',
-            subsub: subsub || '',
-            name, location, date, time, private: isPrivate,
-            owner: currentUser.email, 
-            ownerPseudo: currentUser.pseudo, 
-            participants: [{email: currentUser.email, pseudo: currentUser.pseudo}]
-        };
-        
-        const success = await saveSlotToDB(newSlot); 
-        
-        if (success) {
-            // clear form
-            document.getElementById('slot-name').value=''; document.getElementById('slot-location').value=''; document.getElementById('slot-date').value=''; document.getElementById('slot-time').value='';
-            locationLink.style.display = 'none'; 
-            locationSuggestionBox.style.display = 'none'; 
-            formSubSelect.value=''; subsubSelect.value=''; formActivitySelect.value=''; selectedActivity = null; currentActivityEl.textContent='Aucune'; createForm.style.display='none'; if (arrow) arrow.style.transform='rotate(0deg)';
-            
-            await loadSlots(); 
-            await populateCityFilter(); 
-        } else {
-            alert('Échec de la création du créneau.');
-        }
-    });
-
-
-    // handle shared slot in URL
-    (async function checkShared(){ 
-        const params = new URLSearchParams(window.location.search); const sid = params.get('slot');
-        if (!sid) return;
-        
-        const allSlots = await getSlotsFromDB(); 
-        const s = allSlots.find(x=>String(x.id)===sid);
-        
-        if (!s) return alert('Ce créneau n’existe plus.');
-        if (s.private) return alert('🔒 Ce créneau est privé : détails cachés.');
-        const formattedDate = formatDateToWords(s.date);
-        alert(`Créneau partagé :\n${s.name}\n${s.activity} ${s.sub ? ' - '+s.sub : ''} ${s.subsub ? ' - '+s.subsub : ''}\n📍 ${s.location}\n🕒 ${formattedDate} ${s.time}\npar ${s.ownerPseudo || s.owner}`);
-    })();
-}
-
-/* ===== LOGIQUE DE LA PAGE PROFIL (profile.html) ===== */
-
-function handleProfilePage() {
-    // Si l'utilisateur n'est pas (ou plus) currentUser (géré par onAuthStateChanged dans DOMContentLoaded)
-    if (!currentUser) return; 
-    
-    fillProfileFields(currentUser);
-
-    const profileForm = document.getElementById('profile-form');
-    if (profileForm) {
-        profileForm.addEventListener('submit', async (e) => { 
-            e.preventDefault();
-            const newPseudo = document.getElementById('profile-pseudo').value.trim();
-            const newPhone = document.getElementById('profile-phone').value.trim();
-            const newPassword = document.getElementById('profile-password').value.trim();
-
-            if (!newPseudo) return alert('Le pseudo est obligatoire.');
-
-            const pseudoConflictSnapshot = await USERS_COLLECTION
-                .where('pseudo', '==', newPseudo)
-                .get();
-                
-            const pseudoConflict = pseudoConflictSnapshot.docs.some(doc => doc.data().email !== currentUser.email);
-
-            if (pseudoConflict) return alert('Ce pseudo est déjà pris par un autre utilisateur.');
-
-            const updateData = {
+            // 1. Mise à jour de Firestore (Pseudo et Téléphone)
+            await db.collection('users').doc(auth.currentUser.uid).update({
                 pseudo: newPseudo,
                 phone: newPhone
-            };
+            });
             
+            // Mettre à jour la variable globale et le champ si nécessaire
+            currentUserData.pseudo = newPseudo;
+            currentUserData.phone = newPhone;
+
+            // 2. Mise à jour du mot de passe si un nouveau est fourni
             if (newPassword) {
-                 const user = auth.currentUser;
-                 if (user) {
-                     try {
-                         await user.updatePassword(newPassword);
-                     } catch(error) {
-                         alert(`Erreur de changement de mot de passe: ${error.message}. Veuillez vous reconnecter et réessayer.`);
-                         return;
-                     }
-                 } else {
-                     alert("Erreur: Utilisateur non connecté. Veuillez vous reconnecter.");
+                if (newPassword.length < 6) {
+                     showToast("Le nouveau mot de passe doit contenir au moins 6 caractères. Veuillez réessayer.", false);
                      return;
-                 }
+                }
+                await auth.currentUser.updatePassword(newPassword);
+                profilePasswordInput.value = ''; // Vider le champ après succès
             }
 
-            const success = await updateUserData(currentUser.docId, updateData); 
+            showToast("Profil mis à jour avec succès ! ✨", true);
 
-            if (success) {
-                // Recharger les données et mettre à jour l'affichage
-                await initializeUserSession(currentUser.email); 
-                fillProfileFields(currentUser);
-                alert('Profil mis à jour avec succès !');
-                document.getElementById('profile-password').value = '';
+            // Pour s'assurer que le header est à jour si le pseudo était utilisé quelque part
+            updateHeaderDisplay(); 
+        } catch (error) {
+            // Un cas fréquent : 'auth/requires-recent-login'
+            if (error.code === 'auth/requires-recent-login') {
+                showToast("Pour changer votre mot de passe, veuillez vous déconnecter puis vous reconnecter, et réessayer.", false);
             } else {
-                 alert('Échec de la mise à jour du profil.');
+                showToast(`Erreur de mise à jour: ${error.message}`, false);
+            }
+        }
+    });
+
+    // --- Chargement et affichage des créneaux de l'utilisateur ---
+    async function loadUserSlots() {
+        const slotsSnapshot = await db.collection('slots').get();
+        
+        userSlotsList.innerHTML = '';
+        joinedSlotsList.innerHTML = '';
+
+        let createdCount = 0;
+        let joinedCount = 0;
+
+        slotsSnapshot.forEach(doc => {
+            const slot = { id: doc.id, ...doc.data() };
+            const isCreator = slot.creator.email === auth.currentUser.email;
+            const isJoined = slot.participants.some(p => p.email === auth.currentUser.email);
+
+            if (isCreator) {
+                renderSlotItem(slot, auth.currentUser.email, currentUserData.pseudo, userSlotsList);
+                createdCount++;
+            } else if (isJoined) {
+                renderSlotItem(slot, auth.currentUser.email, currentUserData.pseudo, joinedSlotsList);
+                joinedCount++;
             }
         });
+
+        if (createdCount === 0) {
+            userSlotsList.innerHTML = '<li>Vous n\'avez créé aucun créneau.</li>';
+        }
+        if (joinedCount === 0) {
+            joinedSlotsList.innerHTML = '<li>Vous n\'avez rejoint aucun créneau.</li>';
+        }
     }
-    
+
     loadUserSlots();
-    loadJoinedSlots();
-}
 
-async function loadUserSlots(){ 
-    const list = document.getElementById('user-slots'); if (!list) return; list.innerHTML='';
-    if (!currentUser) return;
-
-    let slots = await getSlotsFromDB();
-    slots = slots.filter(s => s.owner === currentUser.email);
-    slots = slots.filter(s => s.date && s.time).sort((a,b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
-
-    const currentUserEmail = currentUser.email;
-    const currentUserPseudo = currentUser.pseudo || currentUserEmail.split('@')[0];
-    
-    if (slots.length === 0) {
-        list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Vous n\'avez créé aucun créneau.</li>';
-        return;
+    // --- Logique de déconnexion sur la page de profil ---
+    const logoutBtnProfile = document.getElementById('logout-profile');
+    if (logoutBtnProfile) {
+        logoutBtnProfile.addEventListener('click', async () => {
+            await auth.signOut();
+            showToast("Déconnexion réussie.", true);
+            // La redirection vers index.html sera gérée par l'écouteur d'état d'authentification (showAuth)
+        });
     }
-
-    slots.forEach(slot => renderSlotItem(slot, currentUserEmail, currentUserPseudo, list));
 }
 
-async function loadJoinedSlots(){ 
-    const list = document.getElementById('joined-slots'); if (!list) return; list.innerHTML='';
-    if (!currentUser) return;
 
-    let slots = await getSlotsFromDB();
-    slots = slots.filter(s => s.participants.some(p => p.email === currentUser.email) && s.owner !== currentUser.email);
-    slots = slots.filter(s => s.date && s.time).sort((a,b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
+/* ========================================================================= */
+/* 8. GESTION DE L'ÉTAT D'AUTHENTIFICATION (POINT D'ENTRÉE PRINCIPAL) */
+/* ========================================================================= */
 
-    const currentUserEmail = currentUser.email;
-    const currentUserPseudo = currentUser.pseudo || currentUserEmail.split('@')[0];
-
-    if (slots.length === 0) {
-        list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Vous n\'avez rejoint aucun autre créneau.</li>';
-        return;
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        // Utilisateur connecté
+        try {
+            const userDoc = await db.collection('users').doc(user.uid).get();
+            if (userDoc.exists) {
+                currentUserData = userDoc.data();
+            } else {
+                // Créer une entrée utilisateur minimale si elle n'existe pas (cas rare)
+                currentUserData = { pseudo: 'Utilisateur Inconnu', email: user.email, phone: '' };
+            }
+            
+            // Gérer l'affichage en fonction de la page
+            if (window.location.pathname.includes('profile.html')) {
+                handleProfilePageLogic();
+            } else {
+                showMain();
+                handleIndexPageLogic(); // Pour setup les écouteurs d'événements
+            }
+            
+        } catch (error) {
+            showToast(`Erreur de chargement des données utilisateur: ${error.message}`, false);
+            showAuth(); // Afficher l'authentification en cas d'erreur critique
+        }
+    } else {
+        // Utilisateur déconnecté
+        currentUserData = null;
+        showAuth();
+        // Le code de handleIndexPageLogic doit être appelé pour setup les écouteurs de login/signup
+        if (!window.location.pathname.includes('profile.html')) {
+            handleIndexPageLogic();
+        }
     }
-
-    slots.forEach(slot => renderSlotItem(slot, currentUserEmail, currentUserPseudo, list));
-}
+});
