@@ -38,10 +38,10 @@ body {
     line-height: 1.6;
 }
 
-/* Point 4: Réduction de l'espace entre le bandeau et la première section */
+/* Réduction de l'espace global */
 main {
     max-width: 900px;
-    margin: 6px auto; /* Réduit à 6px (environ 30% de 10px) */
+    margin: 6px auto; 
     padding: 0 15px;
 }
 
@@ -97,18 +97,25 @@ a {
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    margin-bottom: 6px; /* Point 4: Réduit la marge entre les cartes */
+    margin-bottom: 6px; 
 }
+/* Point 3: Réduction de la taille de la box (padding et marge) */
+.compact-form-card {
+    padding: 12px 20px; /* Réduit le padding vertical de la carte */
+}
+.compact-form-card .form-compact {
+    /* Si besoin de réduire l'intérieur */
+}
+
 
 .card h2 {
     color: var(--text-color);
     margin-top: 0;
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border-color);
-    /* L'espace sous H2 est géré par le padding-bottom et la marge de l'élément suivant */
 }
 
-/* Point 3: Conteneur des titres et du filtre ville */
+/* Point 5: Conteneur des titres et du filtre ville */
 .slots-header-line {
     display: flex;
     justify-content: space-between;
@@ -118,7 +125,7 @@ a {
     margin-top: 0;
 }
 .slots-header-line h2 {
-    border-bottom: none; /* Enlève la double ligne de séparation */
+    border-bottom: none; 
     padding-bottom: 0;
 }
 .city-filter-container {
@@ -142,7 +149,7 @@ a {
 .status-message {
     font-size: 0.9rem;
     padding: 5px 0;
-    min-height: 1.6em; /* Évite le saut de contenu */
+    min-height: 1.6em; 
 }
 
 /* --- Inputs & Labels --- */
@@ -160,9 +167,9 @@ select {
     background: var(--input-bg);
     color: var(--text-color);
 }
-/* Point 7: Réduire l'écart entre le champ lieu et le champ date */
+/* Réduire l'écart entre le champ lieu et le champ date (si le lien Google Maps est caché) */
 input[id="slot-location"] {
-    margin-bottom: 4px; /* Réduit l'espace après le champ de lieu */
+    margin-bottom: 4px; 
 }
 input:focus, select:focus {
     border-color: var(--link-color);
@@ -174,31 +181,33 @@ label {
     margin-top: 10px;
     font-size: 0.95rem;
     font-weight: 600;
+    margin-bottom: 5px; /* Rapproche le titre du champ (Point 1 & 2) */
+}
+/* Corrige la marge du label du lieu */
+label[for="slot-location"] {
+    margin-top: 5px; /* Réduit l'espace après les champs précédents */
 }
 
-/* Styles pour les labels spécifiques aux dates/heures dans le bloc two-cols */
-.two-cols label {
-    display: block; 
-    text-align: left;
-    margin-top: 0;
-    margin-bottom: 5px;
-    flex-basis: 100%; 
-}
 
 /* Organisation en deux colonnes pour Date/Heure */
 .two-cols {
     display: flex;
     gap: 10px;
-    flex-wrap: wrap; 
-    margin-top: 4px; /* Réduction de l'écart avant la date/heure (Point 7) */
+    flex-wrap: nowrap; /* Assure que les colonnes restent sur une ligne */
+    margin-top: 4px; 
 }
 
-/* Conteneurs pour centrer les inputs de date/heure */
-.two-cols > div {
+/* Conteneurs pour date et heure */
+.date-col, .time-col {
     display: flex;
     flex-direction: column;
-    flex: 1; 
+    /* Point 1 & 2: Augmente la taille du champ de 50% par rapport à l'ancienne taille (qui était de 50%) */
+    flex: 0 0 calc(75% - 5px); /* 75% du conteneur parent moins la moitié du gap */
 }
+.time-col {
+    flex: 0 0 calc(25% - 5px); /* 25% du conteneur parent moins la moitié du gap */
+}
+
 
 .two-cols input {
     width: 100%;
@@ -214,6 +223,8 @@ input[type="date"], input[type="time"] {
     width: 100%; 
     padding-right: 0; 
     text-align: center; 
+    /* Point 1 & 2: Rapproche le texte de l'icône calendrier/horloge */
+    padding-left: 5px; 
 }
 
 /* S'assurer que les indicateurs de calendrier sont visibles sur fond sombre */
@@ -302,18 +313,6 @@ button:hover:not(:disabled) {
     list-style: none;
     padding: 0;
 }
-
-/* Style pour les boutons Modifier/Supprimer sur la page Profile */
-.profile-slot-actions button {
-    background: var(--action-ghost-bg); 
-    color: var(--text-color);
-    padding: 8px 12px;
-    font-weight: 600;
-}
-.profile-slot-actions button:hover {
-    background: var(--action-ghost-hover);
-}
-
 
 .slot-item {
     display: flex;
@@ -412,19 +411,18 @@ button:hover:not(:disabled) {
     font-size: 0.8rem;
 }
 
-/* Point 5bis et 6: Alignement et taille du titre "Créer un créneau" */
+/* Alignement et taille du titre "Créer un créneau" */
 .create-slot-box {
     display: flex;
     align-items: center;
     cursor: pointer;
-    padding: 10px 0;
+    padding: 0; /* Réduit le padding pour la compacité */
+    margin-bottom: 10px;
 }
 .create-slot-title {
-    /* Taille de h2 */
     font-size: 1.5rem; 
     font-weight: 800;
-    margin: 0; /* Supprime les marges par défaut de h2 */
-    /* Assure que l'espace entre le + et le texte est bien 2 espaces insécables */
+    margin: 0; 
 }
 .arrow {
     font-size: 1.1rem;
