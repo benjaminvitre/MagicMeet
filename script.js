@@ -1,4 +1,4 @@
-/* ===== Configuration & categories (Mise à jour V5) ===== */
+/* ===== Configuration & categories (Mise à jour V6) ===== */
 const ADMIN_EMAIL = "benjamin.vitre@gmail.com";
 
 // Triez les sous-activités
@@ -64,7 +64,7 @@ const COLOR_MAP = {
 
 const MAX_PARTICIPANTS = 10;
 let currentFilterActivity = "Toutes"; 
-let currentFilterCity = "Toutes"; // Nouvelle variable pour le filtre ville
+let currentFilterCity = "Toutes"; 
 
 /* ===== storage helpers robust (tries encrypted then plain JSON) ===== */
 function encrypt(data) {
@@ -117,14 +117,23 @@ function updateSlot(slotId, updateFn){
   }
 }
 
-// NOTE : Les fonctions editSlot, populateEditSubActivities, populateEditSubSub ne sont pas utilisées dans index.html, 
-// mais sont laissées ici pour être complètes si profile.html est utilisé.
-/*
-function editSlot(slotId) {...}
-function populateEditSubActivities(act, selectedSub = '') {...}
-function populateEditSubSub(sub, selectedSubSub = '') {...}
-*/
-
+/* Point 5: Fonction pour extraire la ville d'une adresse */
+function extractCity(locationText) {
+    if (!locationText) return '';
+    // Tente de trouver le code postal ou la première partie après une virgule
+    const parts = locationText.split(',').map(p => p.trim());
+    if (parts.length > 1) {
+        // Supposons que la ville se trouve après la première virgule ou est la dernière partie
+        // On prend le dernier élément s'il contient des chiffres (code postal) ou si c'est la seule autre partie.
+        const lastPart = parts[parts.length - 1];
+        if (lastPart.match(/\d{5}\s/)) { // Si ça ressemble à un code postal
+            return lastPart.replace(/\d{5}\s*/, '').trim(); // Retourne le nom de la ville
+        }
+        return lastPart; // Retourne le dernier élément
+    }
+    // Si pas de virgule, on essaie de prendre le dernier mot (très basique, mais mieux que rien)
+    return locationText.split(' ').pop(); 
+}
 
 /* ===== DOM behavior (Index) ===== */
 document.addEventListener('DOMContentLoaded', () => {
@@ -142,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Récupération de l'utilisateur stocké dans le localStorage
   let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
 
-  // Elements pour le filtre ville (Point 5) et le lien Google Maps
+  // Elements pour le filtre ville et le lien Google Maps
   const cityFilterSelect = document.getElementById('city-filter-select');
   const locationInput = document.getElementById('slot-location');
   const locationLink = document.getElementById('location-link');
@@ -178,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Point 4: Mise à jour du lien Google Maps et Suggestion d'adresse
+  /* Point 4 & 6: Suggestion d'adresse et Lien Google Maps */
   if (locationInput) {
     locationInput.addEventListener('input', () => {
       const location = locationInput.value.trim();
@@ -186,19 +195,29 @@ document.addEventListener('DOMContentLoaded', () => {
       locationSuggestionBox.style.display = 'none';
       suggestedAddress = ''; // Reset suggestion
 
-      if (location.length > 5) {
-        // Logique de suggestion d'adresse (simulation)
-        const mockAddress = location.includes('paris') ? '10 Rue de Lappe, 75011 Paris' : 'Adresse Complète Trouvée';
+      if (location.length > 5 && location.match(/rue|avenue|boul/i)) {
         
+        // --- Simulation de l'API de géolocalisation ---
+        let mockAddress = '';
+        // Si l'utilisateur tape un début d'adresse spécifique
+        if (location.toLowerCase().includes('1 rue de la roquet')) {
+            mockAddress = '1 rue de la Roquette, 75011 Paris';
+        } else if (location.toLowerCase().includes('cafe du coin')) {
+            mockAddress = '4 rue des Canettes, 75006 Paris';
+        } else if (location.toLowerCase().includes('tour eiffel')) {
+            mockAddress = 'Champ de Mars, 5 Av. Anatole France, 75007 Paris';
+        } else if (location.toLowerCase().includes('10 rue de lappe')) {
+            mockAddress = '10 Rue de Lappe, 75011 Paris';
+        }
+
         // Simuler une recherche asynchrone pour la suggestion
         setTimeout(() => {
-            // Afficher la suggestion si une adresse "exacte" est trouvée
-            if (location.toLowerCase().includes('rue') || location.toLowerCase().includes('avenue')) {
+            if (mockAddress) {
                 suggestedAddress = mockAddress;
                 
                 locationSuggestionBox.innerHTML = `
                     <span style="font-size:0.8em; color:var(--muted-text);">Adresse exacte ?</span>
-                    <button id="suggest-btn" type="button" class="action-btn join-btn" style="width: auto; padding: 5px 10px; margin-left: 5px;">
+                    <button id="suggest-btn" type="button" class="action-btn join-btn" style="width: auto; padding: 5px 10px; margin-left: 5px; margin-top:0;">
                         ${mockAddress}
                     </button>
                 `;
@@ -207,25 +226,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('suggest-btn').onclick = () => {
                     locationInput.value = suggestedAddress;
                     locationSuggestionBox.style.display = 'none';
-                    updateGoogleMapLink(suggestedAddress);
+                    updateGoogleMapLink(suggestedAddress, true); // True car adresse vérifiée/complète
                 };
+                
+                // Si une suggestion est faite, on ne met pas à jour le lien pour le texte non complété
+                updateGoogleMapLink(location, false); 
+            } else {
+                // Si aucune suggestion, on peut mettre à jour le lien pour le texte saisi
+                updateGoogleMapLink(location, false);
             }
-            // Mettre à jour le lien Google Map pour le texte saisi
-            updateGoogleMapLink(location);
 
-        }, 500); // Délai pour simuler une recherche
+        }, 300); // Délai pour simuler une recherche
+      } else {
+         // Si moins de 5 caractères ou ne ressemble pas à une adresse, cacher le lien
+         updateGoogleMapLink(location, false);
       }
     });
   }
 
   // Fonction pour mettre à jour le lien Google Map
-  function updateGoogleMapLink(locationText) {
-    if (locationText) {
+  function updateGoogleMapLink(locationText, isValidAddress) {
+    if (locationText && isValidAddress) {
+        // Point 6: Le lien est affiché et cliquable si l'adresse est jugée "correcte"
         const encodedLocation = encodeURIComponent(locationText);
-        // Note: L'URL doit être celle de Google Maps
         locationLink.href = `https://www.google.com/maps/search/?api=1&query=${encodedLocation}`;
         locationLink.style.display = 'inline-block';
     } else {
+        // Si l'adresse n'est pas "valide" ou le champ est vide, on cache le lien
         locationLink.style.display = 'none';
     }
   }
@@ -329,10 +356,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Point 5: Remplir la liste de villes (uniquement le nom de la ville)
   function populateCityFilter() {
-    cityFilterSelect.innerHTML = '<option value="Toutes">Toutes</option>'; // Changement du texte à "Toutes"
+    cityFilterSelect.innerHTML = '<option value="Toutes">Toutes</option>'; 
     const slots = getSlots();
-    // Extraire la première partie de l'adresse (la ville) sans doublons
-    const cities = new Set(slots.map(s => (s.location || '').split(',')[0].trim()).filter(c => c.length > 0));
+    // Utiliser la fonction extractCity pour obtenir la ville
+    const cities = new Set(slots.map(s => extractCity(s.location)).filter(c => c.length > 0));
     const sortedCities = Array.from(cities).sort((a, b) => a.localeCompare(b, 'fr'));
 
     sortedCities.forEach(city => {
@@ -389,7 +416,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const hashed = await hashPassword(password);
     const newUser = { email, password: hashed, pseudo, phone:'' }; 
     users.push(newUser); saveUsers(users);
-    // Point 6: Sauvegarde du pseudo dans l'objet currentUser
     localStorage.setItem('currentUser', JSON.stringify(newUser)); currentUser = newUser;
     showMain();
   });
@@ -402,7 +428,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const user = getUsers().find(u=>u.email===email && u.password===hashed);
     if (!user) return alert('Identifiants invalides');
 
-    // Point 6: Sauvegarde de l'objet utilisateur complet (avec pseudo)
     localStorage.setItem('currentUser', JSON.stringify(user)); currentUser = user; showMain();
   });
 
@@ -489,8 +514,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Filtrage par ville (Point 5)
     if (currentFilterCity !== "Toutes") {
         slots = slots.filter(s => {
-            // Utilise la première partie de l'adresse (la ville)
-            const city = (s.location || '').split(',')[0].trim();
+            // Utilise la fonction extractCity
+            const city = extractCity(s.location);
             return city === currentFilterCity;
         });
     }
@@ -547,7 +572,27 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Format de date avec des lettres pour le mois
       const formattedDate = formatDateToWords(slot.date);
-      const when = document.createElement('div'); when.textContent = `📍 ${slot.location} — 🗓️ ${formattedDate} à ${slot.time}`;
+      
+      const when = document.createElement('div');
+      
+      // Point 6: Rendre l'adresse cliquable (dans la liste des créneaux)
+      const locationText = document.createElement('span');
+      locationText.textContent = slot.location;
+
+      if (slot.location) {
+          // On vérifie si l'adresse est "complexe" pour la rendre cliquable (simulation de validité)
+          if (slot.location.match(/\d+\s(rue|avenue|boul)\s/i)) {
+              const locationLinkList = document.createElement('a');
+              locationLinkList.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(slot.location)}`;
+              locationLinkList.target = '_blank';
+              locationLinkList.textContent = `📍 ${slot.location}`;
+              when.appendChild(locationLinkList);
+          } else {
+              when.textContent = `📍 ${slot.location}`;
+          }
+      }
+
+      when.innerHTML += ` — 🗓️ ${formattedDate} à ${slot.time}`;
       
       const owner = document.createElement('small'); 
       // Afficher le pseudo de l'owner
