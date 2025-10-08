@@ -3,157 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MagicMeet! - Trouvez votre créneau d'activité</title>
+    <title>MagicMeet! - Trouvez votre prochaine activité</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
 <body>
-    
-    <header class="header">
-        <a href="index.html" class="logo-link">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-1 16h2v-2h-2v2zm0-4h2V7h-2v7z" fill="#4da6ff"/>
-            </svg>
-        </a>
-        <h1 class="site-title">MagicMeet!</h1>
-        <div class="header-right">
-            <a href="index.html" class="home-link">Accueil</a>
-            <a href="profile.html" id="profile-link" class="action-btn join-btn" style="display:none; width:auto; padding: 8px 12px;">Mon Profil</a>
-            <button id="logout" class="action-btn leave-btn" style="display:none; width:auto; padding: 8px 12px;">Déconnexion</button>
-        </div>
-    </header>
 
-    <main id="main-content">
-        
-        <section id="auth-section" class="auth-section" style="display: none;">
-            <div class="card auth-card">
-                <h2>Inscription</h2>
-                <label for="pseudo">Pseudo (visible par tous)</label>
-                <input type="text" id="pseudo" placeholder="Ex: JeanDuPadel" required>
-                <small id="pseudo-status" style="display:block; margin-top:-10px; margin-bottom: 10px;"></small>
-                
-                <label for="email-signup">Email</label>
-                <input type="email" id="email-signup" placeholder="email@exemple.com" required>
-                
-                <label for="password-signup">Mot de passe (min. 6 caractères)</label>
-                <input type="password" id="password-signup" required>
-                
-                <button id="signup" class="action-btn join-btn" disabled>S'inscrire</button>
-            </div>
+<header class="header">
+    <a href="index.html" class="logo-link">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-1 16h2v-2h-2v2zm0-4h2V7h-2v7z" fill="#4da6ff"/>
+        </svg>
+    </a>
+    <h1 class="site-title">MagicMeet!</h1>
+    <div class="header-right">
+        <a href="index.html" class="home-link">Accueil</a>
+        <a href="profile.html" id="profile-link" class="action-btn join-btn" style="display:none; width:auto; padding: 8px 12px;">Mon Profil</a>
+        <button id="logout" class="action-btn leave-btn" style="display:none; width:auto; padding: 8px 12px;">Déconnexion</button>
+    </div>
+</header>
 
-            <div class="card auth-card">
-                <h2>Connexion</h2>
+<main>
+
+    <section id="auth-section" class="auth-section" style="display: none;">
+        <div class="auth-card card">
+            <h2>Se connecter</h2>
+            <form id="login-form">
                 <label for="email-login">Email</label>
-                <input type="email" id="email-login" placeholder="email@exemple.com" required>
-                
+                <input type="email" id="email-login" required>
                 <label for="password-login">Mot de passe</label>
                 <input type="password" id="password-login" required>
+                <button type="button" id="login" class="action-btn join-btn">Connexion</button>
+            </form>
+        </div>
+
+        <div class="auth-card card">
+            <h2>Créer un compte</h2>
+            <form id="signup-form">
+                <label for="pseudo">Pseudo</label>
+                <input type="text" id="pseudo" required>
+                <small id="pseudo-status" class="muted-text"></small>
+                <label for="email-signup">Email</label>
+                <input type="email" id="email-signup" required>
+                <label for="password-signup">Mot de passe (6 caractères min)</label>
+                <input type="password" id="password-signup" required>
+                <button type="button" id="signup" class="action-btn join-btn" disabled>Inscription</button>
+            </form>
+        </div>
+    </section>
+
+    <section id="main-section" style="display: none;">
+
+        <div class="create-slot-box card">
+            <h2 id="toggle-create-form" class="toggle-header">Créer un créneau ! <span class="arrow">▶️</span></h2>
+            
+            <form id="create-slot-form" style="display: none;">
+                <label for="slot-name">Nom de l'activité</label>
+                <input type="text" id="slot-name" placeholder="Ex: Match de Padel à Paris">
                 
-                <button id="login" class="action-btn join-btn">Se connecter</button>
-            </div>
-        </section>
-
-        <section id="main-section" style="display: none;">
-
-            <section class="card create-slot-box">
-                <h2 id="toggle-create-form" class="toggle-header">
-                    Créer un créneau ! 🎸 <span class="arrow">▶</span>
-                </h2>
-                <form id="create-slot-form" style="display:none;">
-                    <label for="form-activity-select">Activité principale</label>
-                    <select id="form-activity-select" required></select>
-
-                    <label for="slot-name">Nom du créneau / Description rapide</label>
-                    <input type="text" id="slot-name" placeholder="Ex: Padel entre amis" required>
-
-                    <div class="inline-fields">
-                        <div>
-                            <label for="sub-select">Sous-activité (optionnel)</label>
-                            <select id="sub-select"></select>
-                        </div>
-                        <div>
-                            <label for="subsub-select">Optionnel (ex: type de jeu)</label>
-                            <select id="subsub-select"></select>
-                        </div>
+                <label>Activité (<span id="current-activity" style="font-weight: bold;">Aucune</span> sélectionnée)</label>
+                <div class="inline-fields">
+                    <div>
+                        <select id="form-activity-select">
+                            </select>
                     </div>
-
-                    <label for="slot-location">Lieu / Adresse</label>
-                    <input type="text" id="slot-location" placeholder="Ex: 10 rue de lappe, Paris" required>
-                    <div id="location-suggestion-box" class="suggestion-box" style="display: none;"></div>
-                    <a id="location-link" target="_blank" style="display:none; font-size: 0.9em; margin-top: -10px; margin-bottom: 15px;">Voir sur Google Maps</a>
-
-
-                    <div class="inline-fields">
-                        <div>
-                            <label for="slot-date">Date</label>
-                            <input type="date" id="slot-date" required>
-                        </div>
-                        <div>
-                            <label for="slot-time">Heure</label>
-                            <input type="time" id="slot-time" required>
-                        </div>
-                    </div>
-                    
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="private-slot">
-                        <label for="private-slot">Créneau privé (participants masqués)</label>
-                    </div>
-
-                    <button type="button" id="create-slot" class="action-btn join-btn">Créer</button>
-                </form>
-            </section>
-
-            <section class="card filter-box">
-                <h2>Trouver une activité</h2>
-                
-                <p>Activité sélectionnée: <strong id="current-activity">Aucune</strong></p>
-                <div id="activities" class="activity-buttons">
-                    </div>
-                
-                <p class="muted-text" style="margin-top: 15px;">Filtre de sous-activité :</p>
-                <div id="subactivities" class="activity-buttons">
-                    </div>
-
-                <div class="filter-controls">
-                    <label for="city-filter-select" style="margin: 0; margin-right: 5px;">Filtrer par Ville:</label>
-                    <select id="city-filter-select">
+                    <div>
+                        <select id="sub-select">
+                            <option value="">-- Choisis une sous-activité --</option>
                         </select>
+                    </div>
+                    <div>
+                        <select id="subsub-select">
+                            <option value="">-- Optionnel --</option>
+                        </select>
+                    </div>
                 </div>
 
-            </section>
+                <label for="slot-location">Lieu / Adresse</label>
+                <input type="text" id="slot-location" placeholder="Ex: 10 rue de lappe, Paris">
+                <div id="location-suggestion-box" class="suggestion-box" style="display: none;"></div>
+                <p id="location-link" style="display: none; font-size: 0.9em; margin-top:-10px; margin-bottom: 10px;">
+                    <a href="#" target="_blank">Voir sur Google Maps</a>
+                </p>
+
+                <div class="inline-fields">
+                    <div>
+                        <label for="slot-date">Date</label>
+                        <input type="date" id="slot-date">
+                    </div>
+                    <div>
+                        <label for="slot-time">Heure</label>
+                        <input type="time" id="slot-time">
+                    </div>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="private-slot">
+                    <label for="private-slot">Créneau privé (participants cachés)</label>
+                </div>
+
+                <button type="button" id="create-slot" class="action-btn join-btn">Créer</button>
+            </form>
+        </div>
+
+        <div class="filter-box card">
+            <h2>🔎 Filtrer les créneaux</h2>
+            <div id="activities" class="activity-buttons">
+                </div>
             
-            <section class="card slot-list-card">
-                <h2>Créneaux disponibles (10 prochains)</h2>
-                <ul id="slots-list">
-                    </ul>
-            </section>
+            <div id="subactivities" class="activity-buttons" style="margin-top: 5px;">
+                </div>
 
-        </section>
+            <div class="filter-controls">
+                <label for="city-filter-select">Filtrer par ville:</label>
+                <select id="city-filter-select"></select>
+            </div>
+        </div>
 
-    </main>
+        <div class="slot-list-card card">
+            <h2>🗓️ Prochains Créneaux</h2>
+            <ul id="slots-list">
+                </ul>
+        </div>
+        
+    </section>
+</main>
 
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script>
+    // Votre configuration Firebase ici (remplacer par vos vraies clés)
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
 
-    <script>
-        // Remplacez les '...' par les valeurs réelles de votre console Firebase
-        const firebaseConfig = {
-          apiKey: "AIzaSyB0U_y6sMU8_vYriCK17H-Y5uPUb2ewPRw",
-  authDomain: "magicmeet--app.firebaseapp.com",
-  projectId: "magicmeet--app",
-  storageBucket: "magicmeet--app.firebasestorage.app",
-  messagingSenderId: "168285202241",
-  appId: "1:168285202241:web:6284051ec3884cfd81a3c0"
-        };
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+</script>
 
-        // Initialisation de Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore(); 
-    </script>
-    
-    <script src="script.js"></script>
+<script src="script.js"></script>
 
 </body>
 </html>
