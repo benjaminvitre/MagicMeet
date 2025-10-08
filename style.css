@@ -16,11 +16,11 @@
     --input-bg: #2d333b;
     --muted-text: #9aa9bf;
 
-    /* NOUVEAU: Couleur pour les boutons d'action gris clair (Point 4) */
+    /* Couleur pour les boutons d'action gris clair */
     --action-ghost-bg: #2d333b;
     --action-ghost-hover: #3a4149; 
 
-    /* Couleurs d'activité (adaptées pour Autres) */
+    /* Couleurs d'activité */
     --act-jeux: #c085f5; 
     --act-culture: #e67c73;
     --act-autres: #78d6a4; 
@@ -33,7 +33,7 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     margin: 0;
     padding: 0;
-    background: var(--bg-color); /* Fond gris très foncé */
+    background: var(--bg-color); 
     color: var(--text-color);
     line-height: 1.6;
 }
@@ -41,7 +41,7 @@ body {
 /* Point 4: Réduction de l'espace entre le bandeau et la première section */
 main {
     max-width: 900px;
-    margin: 10px auto; /* Réduit à 10px (contre 20px) */
+    margin: 6px auto; /* Réduit à 6px (environ 30% de 10px) */
     padding: 0 15px;
 }
 
@@ -97,7 +97,7 @@ a {
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    margin-bottom: 10px; /* Point 4: Réduit la marge entre les cartes (contre 20px) */
+    margin-bottom: 6px; /* Point 4: Réduit la marge entre les cartes */
 }
 
 .card h2 {
@@ -105,6 +105,44 @@ a {
     margin-top: 0;
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border-color);
+    /* L'espace sous H2 est géré par le padding-bottom et la marge de l'élément suivant */
+}
+
+/* Point 3: Conteneur des titres et du filtre ville */
+.slots-header-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+    margin-top: 0;
+}
+.slots-header-line h2 {
+    border-bottom: none; /* Enlève la double ligne de séparation */
+    padding-bottom: 0;
+}
+.city-filter-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.city-filter-title {
+    font-size: 0.95rem;
+    color: var(--muted-text);
+    white-space: nowrap;
+}
+#city-filter-select {
+    width: auto;
+    padding: 5px 10px;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* Point 9: Message de statut du pseudo */
+.status-message {
+    font-size: 0.9rem;
+    padding: 5px 0;
+    min-height: 1.6em; /* Évite le saut de contenu */
 }
 
 /* --- Inputs & Labels --- */
@@ -122,6 +160,10 @@ select {
     background: var(--input-bg);
     color: var(--text-color);
 }
+/* Point 7: Réduire l'écart entre le champ lieu et le champ date */
+input[id="slot-location"] {
+    margin-bottom: 4px; /* Réduit l'espace après le champ de lieu */
+}
 input:focus, select:focus {
     border-color: var(--link-color);
     outline: none;
@@ -134,28 +176,28 @@ label {
     font-weight: 600;
 }
 
-/* Styles pour les labels spécifiques aux dates/heures dans le bloc two-cols (Point 1) */
+/* Styles pour les labels spécifiques aux dates/heures dans le bloc two-cols */
 .two-cols label {
-    display: block; /* S'assurer qu'il prend sa place */
+    display: block; 
     text-align: left;
     margin-top: 0;
     margin-bottom: 5px;
-    flex-basis: 100%; /* Permet aux labels de prendre toute la largeur de leur colonne */
+    flex-basis: 100%; 
 }
 
 /* Organisation en deux colonnes pour Date/Heure */
 .two-cols {
     display: flex;
     gap: 10px;
-    flex-wrap: wrap; /* Permet aux labels et inputs de s'aligner correctement */
-    margin-top: 10px;
+    flex-wrap: wrap; 
+    margin-top: 4px; /* Réduction de l'écart avant la date/heure (Point 7) */
 }
 
 /* Conteneurs pour centrer les inputs de date/heure */
 .two-cols > div {
     display: flex;
     flex-direction: column;
-    flex: 1; /* Prend l'espace disponible */
+    flex: 1; 
 }
 
 .two-cols input {
@@ -169,9 +211,9 @@ input[type="date"], input[type="time"] {
     color: var(--text-color); 
     font-weight: normal;
     border-color: var(--border-color);
-    width: 100%; /* Doit être 100% dans la colonne */
-    padding-right: 0; /* Éviter que le padding à droite ne décale le texte */
-    text-align: center; /* Point 2: Centre le texte de la date/heure */
+    width: 100%; 
+    padding-right: 0; 
+    text-align: center; 
 }
 
 /* S'assurer que les indicateurs de calendrier sont visibles sur fond sombre */
@@ -261,9 +303,9 @@ button:hover:not(:disabled) {
     padding: 0;
 }
 
-/* Point 6: Style pour les boutons Modifier/Supprimer sur la page Profile */
+/* Style pour les boutons Modifier/Supprimer sur la page Profile */
 .profile-slot-actions button {
-    background: var(--action-ghost-bg); /* Thème sombre */
+    background: var(--action-ghost-bg); 
     color: var(--text-color);
     padding: 8px 12px;
     font-weight: 600;
@@ -370,13 +412,23 @@ button:hover:not(:disabled) {
     font-size: 0.8rem;
 }
 
+/* Point 5bis et 6: Alignement et taille du titre "Créer un créneau" */
 .create-slot-box {
     display: flex;
     align-items: center;
     cursor: pointer;
     padding: 10px 0;
+}
+.create-slot-title {
+    /* Taille de h2 */
+    font-size: 1.5rem; 
+    font-weight: 800;
+    margin: 0; /* Supprime les marges par défaut de h2 */
+    /* Assure que l'espace entre le + et le texte est bien 2 espaces insécables */
+}
+.arrow {
     font-size: 1.1rem;
-    font-weight: 600;
+    transition: transform 0.3s;
 }
 
 .form-compact {
