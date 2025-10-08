@@ -1,27 +1,57 @@
-/* ===== Configuration & categories (Point 6: Nouvelles activités) ===== */
+/* ===== Configuration & categories (Mise à jour V3) ===== */
 const ADMIN_EMAIL = "benjamin.vitre@gmail.com";
 
+// Triez les sous-activités
+const sortArray = (arr) => arr.sort((a, b) => a.localeCompare(b, 'fr'));
+
 const ACTIVITIES = {
-  "Toutes": [], // Nouvelle activité de filtrage
-  "Jeux": ["Jeux de cartes", "Jeux vidéo"],
-  "Culture": [],
-  "Restaurant / Bar": [],
-  "Sport": [],
-  "Sorties": []
+  "Toutes": [],
+  "Autres": [], // Point 1: Nouvelle activité "Autres" (remplace Restaurant / Bar)
+  "Culture": sortArray(["Cinéma", "Théâtre", "Exposition", "Concert"]), // Point 6
+  "Jeux": sortArray(["Jeux de cartes", "Jeux vidéo", "Jeux de société"]), // Point 2
+  "Sorties": sortArray(["Bar", "Restaurant", "Picnic"]), // Point 7
+  "Sport": sortArray(["Foot", "Padel", "Tennis", "Running", "Badminton"]) // Point 3
 };
 
+// Trie le dictionnaire principal par clé (activité), en gardant 'Toutes' en premier
+const sortedActivityKeys = Object.keys(ACTIVITIES).filter(key => key !== "Toutes").sort((a, b) => a.localeCompare(b, 'fr'));
+const tempActivities = { "Toutes": ACTIVITIES["Toutes"] };
+sortedActivityKeys.forEach(key => tempActivities[key] = ACTIVITIES[key]);
+Object.assign(ACTIVITIES, tempActivities); // Remplace ACTIVITIES par la version triée
+
+// Sous-sous-activités (pas de changement dans cette itération, mais on s'assure que les sous-activités liées à l'ancienne caté ne plantent pas)
 const SUBSUB = {
   "Jeux de cartes": ["Magic The Gathering", "Pokémon", "Yu-Gi-Oh!"],
-  "Jeux vidéo": []
+  "Jeux vidéo": [],
+  "Jeux de société": []
 };
+// On trie aussi les sous-sous-activités pour être cohérent
+Object.keys(SUBSUB).forEach(key => {
+  if (SUBSUB[key].length > 0) {
+    SUBSUB[key] = sortArray(SUBSUB[key]);
+  }
+});
+
 
 // Mappage des couleurs pour les boîtes d'activité/sous-activité
 const COLOR_MAP = {
+  "Autres": "#9aa9bf", 
+  "Jeux": "#c085f5", 
+  "Culture": "#e67c73", 
+  "Sport": "#f27a7d", 
+  "Sorties": "#f1a66a", 
+  "Toutes": "#9aa9bf",
+  
+  // Couleurs pour les sous-activités (nouvelles et anciennes)
+  "Jeux de cartes": "#c085f5", "Jeux vidéo": "#6fb2f2", "Jeux de société": "#64e3be",
+  "Cinéma": "#e67c73", "Théâtre": "#cc5a4f", "Exposition": "#e39791", "Concert": "#f1b6b3",
+  "Foot": "#f27a7d", "Padel": "#cc5a5e", "Tennis": "#e39799", "Running": "#f1b6b7", "Badminton": "#78d6a4",
+  "Bar": "#f1a66a", "Restaurant": "#d68e4a", "Picnic": "#f5c399",
+  
+  // Couleurs des sous-sous-activités
   "Magic The Gathering": "#b294f2", "Pokémon": "#f6d06f", "Yu-Gi-Oh!": "#f1a66a",
-  "Jeux de cartes": "#c085f5", "Jeux vidéo": "#6fb2f2", "Jeux": "#c085f5",
-  "Culture": "#e67c73", "Restaurant / Bar": "#78d6a4", "Sport": "#f27a7d", 
-  "Sorties": "#f1a66a", "Toutes": "#9aa9bf"
 };
+
 
 const MAX_PARTICIPANTS = 10;
 let currentFilterActivity = "Toutes"; // Pour le point 5
@@ -173,10 +203,14 @@ document.addEventListener('DOMContentLoaded', () => {
     activitiesDiv.innerHTML = '';
     Object.keys(ACTIVITIES).forEach(act => {
       const b = document.createElement('button');
+      // Utilisation d'un mappage basé sur le nom pour les classes CSS
       const classNameMap = {
-        "Jeux": 'act-jeux', "Culture": 'act-culture', "Restaurant / Bar": 'act-restaurant', "Sport": 'act-sport', "Sorties": 'act-sorties', "Toutes": 'act-toutes'
+        "Jeux": 'act-jeux', "Culture": 'act-culture', "Sport": 'act-sport', "Sorties": 'act-sorties', "Autres": 'act-autres', "Toutes": 'act-toutes'
       };
-      b.className = 'activity-btn ' + classNameMap[act] + (act === currentFilterActivity ? ' active' : '');
+      // On utilise une classe par défaut si le nom n'est pas dans le map (ex: 'Autres')
+      const className = classNameMap[act] || `act-${act.toLowerCase().replace(/\s|\//g, '-')}`; 
+      
+      b.className = 'activity-btn ' + className + (act === currentFilterActivity ? ' active' : '');
       b.textContent = act;
 
       b.addEventListener('click', ()=> {
@@ -215,6 +249,10 @@ document.addEventListener('DOMContentLoaded', () => {
     subs.forEach(s => {
       const btn = document.createElement('button');
       btn.className = 'activity-btn';
+      // Ajout d'une couleur plus spécifique si possible, sinon on utilise la couleur de l'activité parente
+      btn.style.borderColor = COLOR_MAP[s] || COLOR_MAP[act] || 'var(--muted-text)';
+      btn.style.color = COLOR_MAP[s] || COLOR_MAP[act] || 'var(--muted-text)';
+
       btn.textContent = s;
       btn.addEventListener('click', ()=> {
         formSubSelect.value = s;
@@ -394,8 +432,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let subPill = document.createElement('span'); 
         subPill.className = 'subsub-box';
         subPill.textContent = slot.sub;
-        subPill.style.border = `1px solid ${COLOR_MAP[slot.sub] || '#9aa9bf'}`; 
-        subPill.style.color = COLOR_MAP[slot.sub] || '#9aa9bf';
+        subPill.style.border = `1px solid ${COLOR_MAP[slot.sub] || COLOR_MAP[slot.activity] || '#9aa9bf'}`; 
+        subPill.style.color = COLOR_MAP[slot.sub] || COLOR_MAP[slot.activity] || '#9aa9bf';
         activityLine.appendChild(subPill);
       }
 
@@ -404,8 +442,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let subsubPill = document.createElement('span'); 
         subsubPill.className = 'subsub-box';
         subsubPill.textContent = slot.subsub;
-        subsubPill.style.border = `1px solid ${COLOR_MAP[slot.subsub] || '#9aa9bf'}`; 
-        subsubPill.style.color = COLOR_MAP[slot.subsub] || '#9aa9bf';
+        subsubPill.style.border = `1px solid ${COLOR_MAP[slot.subsub] || COLOR_MAP[slot.sub] || COLOR_MAP[slot.activity] || '#9aa9bf'}`; 
+        subsubPill.style.color = COLOR_MAP[slot.subsub] || COLOR_MAP[slot.sub] || COLOR_MAP[slot.activity] || '#9aa9bf';
         activityLine.appendChild(subsubPill);
       }
 
@@ -451,39 +489,36 @@ document.addEventListener('DOMContentLoaded', () => {
       
       info.appendChild(owner); // Owner at the bottom
 
-      const actions = document.createElement('div'); actions.className='actions';
+      const actions = document.createElement('div'); actions.className='actions-box'; // Classe pour le style
       
       const isParticipant = (slot.participants || []).some(p => p.email === currentUserEmail);
       const isOwner = slot.owner === currentUserEmail;
 
-      // Bouton Rejoindre
+      // Bouton Rejoindre / Quitter
       if (current && !isParticipant){
         const joinBtn = document.createElement('button');
-        joinBtn.className = 'ghost-btn';
+        joinBtn.className = 'action-btn join-btn'; // Nouvelle classe
         joinBtn.textContent = '✅ Rejoindre';
         
-        // Logique de rejoindre: public OU invité (via owner check pour la simu d'invitation)
-        if (!slot.private || isOwner){ // Si public OU invité (via owner check pour la simu d'invitation)
+        if (!slot.private || isOwner){ 
           joinBtn.onclick = ()=> {
             if (participantsCount >= MAX_PARTICIPANTS) return alert('Désolé, ce créneau est complet.');
             
             updateSlot(slot.id, s => {
-              s.participants = s.participants || []; // Ensure participants array exists
+              s.participants = s.participants || []; 
               s.participants.push({ email: currentUserEmail, pseudo: currentUserPseudo });
               return s;
             });
           };
           actions.appendChild(joinBtn);
         } else {
-          // Slot privé et utilisateur non invité/propriétaire
           joinBtn.textContent = '🔒 Privé';
           joinBtn.disabled = true;
           actions.appendChild(joinBtn);
         }
       } else if (isParticipant && !isOwner) {
-        // Bouton Quitter
         const leaveBtn = document.createElement('button');
-        leaveBtn.className = 'ghost-btn';
+        leaveBtn.className = 'action-btn leave-btn'; // Nouvelle classe
         leaveBtn.textContent = '❌ Quitter';
         leaveBtn.onclick = ()=> {
           updateSlot(slot.id, s => {
@@ -494,13 +529,19 @@ document.addEventListener('DOMContentLoaded', () => {
         actions.appendChild(leaveBtn);
       }
 
-      // delete & reminder if owner
+      // delete, reminder, share for all
+      
       if (isOwner){
         const del = document.createElement('button'); del.textContent='🗑️'; del.title='Supprimer';
+        del.className = 'action-btn ghost-action-btn'; // Point 4
         del.onclick = ()=> { if (!confirm('Supprimer ce créneau ?')) return; const remain = getSlots().filter(s=>s.id!==slot.id); saveSlots(remain); loadSlots(); };
         actions.appendChild(del);
+      }
 
+      // Rappel pour le propriétaire (Point 4)
+      if (isOwner){
         const rem = document.createElement('button'); rem.textContent='⏰'; rem.title='Rappel';
+        rem.className = 'action-btn ghost-action-btn'; // Point 4
         rem.onclick = ()=> {
           const notifTime = new Date(slot.date + 'T' + slot.time); const delay = notifTime - new Date();
           if (delay>0){ alert('Rappel programmé (simple notification navigateur)'); setTimeout(()=>{ if (Notification.permission==='granted') new Notification(`Rappel : ${slot.name}`); else alert(`Rappel : ${slot.name}`); }, delay); }
@@ -509,9 +550,12 @@ document.addEventListener('DOMContentLoaded', () => {
         actions.appendChild(rem);
       }
 
+      // Partager pour tous (Point 4)
       const share = document.createElement('button'); share.textContent='🔗'; share.title='Partager';
+      share.className = 'action-btn ghost-action-btn'; // Point 4
       share.onclick = ()=> { const link = `${window.location.origin}${window.location.pathname}?slot=${slot.id}`; navigator.clipboard.writeText(link).then(()=>alert('Lien copié !')); };
       actions.appendChild(share);
+
 
       li.appendChild(info); li.appendChild(actions);
       list.appendChild(li);
