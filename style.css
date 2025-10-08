@@ -456,18 +456,22 @@ input:focus, select:focus {
     .header {
         flex-wrap: wrap;
     }
+    /* CORRECTION POINT 1: Aligner Logo et Titre sur la même ligne en haut */
+    .logo-link {
+        order: 0;
+        margin-right: 5px; /* Réduit l'espace pour le titre */
+    }
     .site-title {
         order: 1;
-        width: 100%;
-        margin-top: 5px;
-        text-align: center;
+        /* Retire width: 100% et text-align: center */
+        width: auto; 
+        margin-top: 0;
+        text-align: left;
+        font-size: 1.3em; /* Légèrement réduit pour gagner de la place */
     }
     .header-right {
         order: 2;
         margin-left: auto;
-    }
-    .logo-link {
-        order: 0;
     }
     .home-link {
         display: none; /* Cache le lien Accueil sur mobile pour la compacité */
