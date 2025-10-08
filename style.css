@@ -1,6 +1,6 @@
 /*
 ====================================
-1. BASE & THEME SOMBRE (Point 1)
+1. BASE & THEME SOMBRE
 ====================================
 */
 :root {
@@ -16,10 +16,14 @@
     --input-bg: #2d333b;
     --muted-text: #9aa9bf;
 
-    /* Couleurs d'activité (maintenues et adaptées) */
+    /* NOUVEAU: Couleur pour les boutons d'action gris clair (Point 4) */
+    --action-ghost-bg: #2d333b;
+    --action-ghost-hover: #3a4149; 
+
+    /* Couleurs d'activité (adaptées pour Autres) */
     --act-jeux: #c085f5; 
     --act-culture: #e67c73;
-    --act-restaurant: #78d6a4;
+    --act-autres: #78d6a4; /* Nouvelle couleur pour 'Autres' */
     --act-sport: #f27a7d;
     --act-sorties: #f1a66a; 
     --act-toutes: #9aa9bf;
@@ -129,7 +133,7 @@ label {
     font-weight: 600;
 }
 
-/* Point 2: Couleurs et alignement pour les labels du formulaire de créneau */
+/* Couleurs et alignement pour les labels du formulaire de créneau */
 .form-compact label {
     display: flex; 
     align-items: center;
@@ -147,11 +151,12 @@ label {
     width: 100%;
 }
 
-/* Point 4: Mettre en évidence les sélecteurs de date/heure */
+/* Point 5: Style Thème Sombre pour les sélecteurs de date/heure */
 input[type="date"], input[type="time"] {
-    background: var(--btn-primary-bg); /* Couleur vive */
-    color: var(--btn-primary-text); /* Texte noir sur fond clair */
-    font-weight: bold;
+    background: var(--input-bg); /* Rétablir le fond sombre par défaut */
+    color: var(--text-color); /* Rétablir la couleur du texte par défaut */
+    font-weight: normal;
+    border-color: var(--border-color);
     /* Rétablir la largeur car la ligne 71 l'a modifié */
     width: calc(100% - 20px);
 }
@@ -160,6 +165,7 @@ input[type="date"], input[type="time"] {
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator {
     filter: invert(0.8); /* Inverser la couleur des icônes pour le contraste */
+    cursor: pointer;
 }
 
 /* --- Buttons --- */
@@ -215,6 +221,7 @@ button:hover:not(:disabled) {
     padding: 8px 12px;
     margin: 0;
     transition: all 0.2s;
+    font-weight: normal; /* Plus léger pour les boutons de catégorie */
 }
 .activity-btn:hover:not(:disabled), .activity-btn.active {
     background: var(--link-color);
@@ -226,14 +233,15 @@ button:hover:not(:disabled) {
 .act-toutes { border-color: var(--act-toutes); color: var(--act-toutes); }
 .act-jeux { border-color: var(--act-jeux); color: var(--act-jeux); }
 .act-culture { border-color: var(--act-culture); color: var(--act-culture); }
-.act-restaurant { border-color: var(--act-restaurant); color: var(--act-restaurant); }
+/* Modification de la classe 'restaurant' vers 'autres' */
+.act-autres { border-color: var(--act-autres); color: var(--act-autres); } 
 .act-sport { border-color: var(--act-sport); color: var(--act-sport); }
 .act-sorties { border-color: var(--act-sorties); color: var(--act-sorties); }
 
 
 /*
 ====================================
-3. SLOTS LIST (Point 3)
+3. SLOTS LIST & ACTION BUTTONS (Point 4)
 ====================================
 */
 #slots-list, #user-slots {
@@ -243,8 +251,8 @@ button:hover:not(:disabled) {
 .slot-item {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: 10px 15px;
+    align-items: flex-start; /* Aligner en haut pour le bloc d'actions */
+    padding: 10px 0;
     border-bottom: 1px solid var(--border-color);
 }
 .slot-item:last-child {
@@ -253,6 +261,55 @@ button:hover:not(:disabled) {
 .slot-info {
     flex-grow: 1;
 }
+
+/* Conteneur pour les actions (boutons) */
+.actions-box { 
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-left: 10px;
+    flex-shrink: 0;
+}
+
+/* Styles pour tous les boutons d'action dans la liste */
+.action-btn {
+    width: 40px; /* Taille fixe */
+    height: 40px; /* Taille fixe */
+    padding: 0;
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: normal;
+    display: flex; /* Centrage du contenu */
+    align-items: center;
+    justify-content: center;
+}
+
+/* Style spécifique aux boutons Supprimer/Rappel/Partager (gris clair) */
+.ghost-action-btn {
+    background: var(--action-ghost-bg);
+    color: var(--text-color);
+}
+.ghost-action-btn:hover:not(:disabled) {
+    background: var(--action-ghost-hover);
+    opacity: 1;
+}
+
+/* Style Rejoindre / Quitter */
+.join-btn, .leave-btn {
+    width: 100px; /* Plus large */
+    height: auto;
+    font-size: 0.9rem;
+    padding: 5px 10px;
+    background: var(--link-color);
+    color: var(--btn-primary-text);
+}
+.leave-btn {
+    background: var(--input-bg);
+    border: 1px solid var(--muted-text);
+    color: var(--muted-text);
+}
+
+
 .slot-info strong {
     display: block;
     font-size: 1.1rem;
@@ -263,7 +320,7 @@ button:hover:not(:disabled) {
     color: var(--muted-text);
 }
 
-/* Style des boîtes sous-activité/sous-sous-activité (Point 3) */
+/* Style des boîtes sous-activité/sous-sous-activité */
 .subsub-box {
     display: inline-block;
     padding: 3px 8px;
