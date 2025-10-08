@@ -90,23 +90,25 @@ ul {
 }
 
 .logo-link {
-    display: flex;
-    align-items: center;
-    width: 40px; /* Ajusté pour le mobile */
+    display: flex; /* <-- CORRECTION: Permet le centrage vertical */
+    align-items: center; 
+    width: 40px; 
     height: 40px;
     margin-right: 15px;
 }
 
 .site-title {
-    flex-grow: 1;
+    /* Suppression du flex-grow pour mieux contrôler l'espace */
     font-size: 1.5em;
     font-weight: 800;
     margin-bottom: 0;
     color: var(--text-primary);
+    margin-right: auto; /* <-- CORRECTION: Pousse le bloc de droite */
 }
 
 .header-right {
     display: flex;
+    align-items: center; /* <-- CORRECTION: Alignement vertical des boutons */
     gap: 10px;
 }
 
@@ -135,9 +137,9 @@ ul {
     box-shadow: var(--card-shadow);
     margin-bottom: 20px;
 }
-/* CORRECTION: Réduction de 20% de la taille de la box 'Créer un créneau !' ET Centrage vertical */
+/* CORRECTION: Réduction de 15% de la taille de la box 'Créer un créneau !' */
 .create-slot-box {
-    padding: 22px 20px; /* Réduction de 20% par rapport à 27px, environ 22px */
+    padding: 17px 20px; 
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -476,6 +478,7 @@ input:focus, select:focus {
         margin-top: 0;
         text-align: left;
         font-size: 1.3em; 
+        margin-right: 10px; /* Ajout d'une petite marge */
     }
     .header-right {
         order: 2;
