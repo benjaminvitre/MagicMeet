@@ -41,10 +41,9 @@ body {
     line-height: 1.6;
 }
 
-/* Point 2: Réduction de l'écart entre le header et le main (6px au lieu de 15px) */
 main, .auth-section {
     max-width: 900px;
-    margin: 6px auto; /* Anciennement margin: 15px auto; */
+    margin: 6px auto; 
     padding: 0 15px;
 }
 
@@ -129,6 +128,10 @@ ul {
     border-radius: 12px;
     box-shadow: var(--card-shadow);
     margin-bottom: 20px;
+}
+/* Point 2: Augmentation de la taille de la box "Créer un créneau !" */
+.create-slot-box {
+    padding: 36px 20px; /* Augmenté de 80% le padding vertical (20*1.8=36) pour augmenter visuellement la taille du bloc fermé */
 }
 
 .auth-section {
