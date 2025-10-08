@@ -3,10 +3,11 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Mon Profil - Magic Meet!</title>
+    <title>Magic Meet!</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
     <header class="header">
         <a class="logo-link" href="index.html" aria-label="Accueil">
             <svg width="56" height="56" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img">
@@ -29,42 +30,101 @@
                 </g>
             </svg>
         </a>
-        <a class="home-link" href="index.html">🏠 Accueil</a>
-        <h1 class="site-title">Mon Profil</h1>
+        <h1 class="site-title">MagicMeet!</h1>
         <nav class="header-right">
-            <button id="logout" class="ghost-btn">Se déconnecter</button>
+            <a id="profile-link" href="profile.html" class="ghost-btn" style="display:none;">Mon profil</a>
+            <button id="logout" class="ghost-btn" style="display:none;">Se déconnecter</button>
         </nav>
     </header>
 
-    <main id="profile-main">
-        <section class="card">
-            <h2>Mes informations</h2>
-            <form id="profile-form">
-                <label for="edit-pseudo">Pseudo</label>
-                <input id="edit-pseudo" type="text" placeholder="Pseudo" required />
 
-                <label for="edit-email">Email</label>
-                <input id="edit-email" type="email" placeholder="Email (non modifiable)" disabled />
+    <section id="auth-section" class="auth-section">
+        <div class="card auth-card">
+            <h2>Se connecter</h2>
+            <input id="email-login" type="email" placeholder="Email" required />
+            <input id="password-login" type="password" placeholder="Mot de passe" required />
+            <button id="login" class="action-btn">Connexion</button>
+        </div>
+        <div class="card auth-card">
+            <h2>S'inscrire</h2>
+            <input id="pseudo" type="text" placeholder="Pseudo" required />
+            <span id="pseudo-status" style="font-size: 0.8em; margin-bottom: 5px;"></span>
+            <input id="email-signup" type="email" placeholder="Email" required />
+            <input id="password-signup" type="password" placeholder="Mot de passe" required />
+            <button id="signup" class="action-btn" disabled>Créer mon compte</button>
+        </div>
+    </section>
 
-                <label for="edit-phone">Téléphone</label>
-                <input id="edit-phone" type="tel" placeholder="Numéro de téléphone" />
+    <main id="main-section" style="display:none;">
 
-                <label for="edit-password">Nouveau Mot de passe (laisser vide pour ne pas changer)</label>
-                <input id="edit-password" type="password" placeholder="Nouveau mot de passe" />
+        <section class="card filter-box">
+            <h2>Trouver une activité <span class="muted-text">/</span> <span id="current-activity">Aucune</span></h2>
+            
+            <div id="activities" class="activity-buttons">
+                </div>
 
-                <button id="save-profile-btn" type="submit">Enregistrer les modifications</button>
+            <div id="subactivities" class="activity-buttons" style="margin-top: 10px;">
+                </div>
+
+            <div class="filter-controls">
+                <label for="city-filter-select">Ville :</label>
+                <select id="city-filter-select">
+                    </select>
+            </div>
+        </section>
+
+
+        <section class="card create-slot-box">
+            <h2 id="toggle-create-form" class="toggle-header">
+                Créer un nouveau créneau <span class="arrow">▶</span>
+            </h2>
+            <form id="create-slot-form" style="display:none;">
+                
+                <label for="slot-name">Nom du créneau</label>
+                <input id="slot-name" type="text" placeholder="Ex: Match de Padel" required />
+
+                <label for="form-activity-select">Activité principale</label>
+                <select id="form-activity-select" required>
+                    </select>
+
+                <label for="sub-select">Sous-activité (optionnel)</label>
+                <select id="sub-select">
+                    </select>
+
+                <label for="subsub-select">Sous-sous-activité (optionnel)</label>
+                <select id="subsub-select">
+                    </select>
+
+                <label for="slot-location">Lieu <span class="muted-text">(Ex: 10 rue de lappe, Paris)</span></label>
+                <input id="slot-location" type="text" placeholder="Adresse complète ou nom du lieu" required />
+                <div id="location-suggestion-box" class="suggestion-box" style="display:none;"></div>
+                <a id="location-link" href="#" target="_blank" style="display:none; font-size: 0.8em; margin-bottom: 10px;">Voir sur Google Maps</a>
+
+
+                <div class="inline-fields">
+                    <div>
+                        <label for="slot-date">Date</label>
+                        <input id="slot-date" type="date" required />
+                    </div>
+                    <div>
+                        <label for="slot-time">Heure</label>
+                        <input id="slot-time" type="time" required />
+                    </div>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="private-slot" />
+                    <label for="private-slot">Créneau privé (Participants cachés)</label>
+                </div>
+
+                <button id="create-slot" type="button">Créer le créneau</button>
             </form>
         </section>
 
-        <section class="card">
-            <h2>Mes créneaux créés 🎸</h2>
-            <ul id="user-slots">
-                </ul>
-        </section>
-        
-        <section class="card">
-            <h2>Mes créneaux rejoints ✅</h2>
-            <ul id="joined-slots">
+
+        <section class="card slot-list-card">
+            <h2>Créneaux disponibles (10 prochains)</h2>
+            <ul id="slots-list">
                 </ul>
         </section>
 
