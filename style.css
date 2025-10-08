@@ -1,73 +1,345 @@
-:root{
-  --bg:#121416; --card:#1e2327; --muted:#9aa9bf;
-  --green:#2ecc71;
+:root {
+  /* Couleurs pour le thème sombre */
+  --bg-color: #0f1417; 
+  --card-bg: #1a1f23;
+  --text-color: #e5e5e5; 
+  --link-color: #4da6ff;
+  --border-color: #333;
+  --btn-primary-bg: #4da6ff;
+  --btn-primary-text: #000;
+  --btn-ghost-color: #9aa9bf;
+  --input-bg: #2d333b;
+  --muted-text: #9aa9bf;
+
+  /* Couleurs d'activité (maintenues) */
+  --act-jeux: #c085f5; 
+  --act-culture: #e67c73;
+  --act-restaurant: #78d6a4;
+  --act-sport: #f27a7d;
+  --act-sorties: #f1a66a; 
+  --act-toutes: #9aa9bf;
 }
-* { box-sizing:border-box; }
+
 body {
-  background:var(--bg); color:#e6eef8; font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial;
-  margin:0; padding:18px; display:flex; flex-direction:column; align-items:center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  margin: 0;
+  padding: 0;
+  background: var(--bg-color); /* Fond gris très foncé */
+  color: var(--text-color);
+  line-height: 1.6;
 }
 
-/* header */
-.header { width:100%; max-width:980px; display:flex; align-items:center; gap:12px; margin-bottom:18px; }
-.logo-link { display:flex; align-items:center; gap:12px; text-decoration:none; }
-.site-title { flex:1; text-align:center; font-size:1.25rem; margin:0; color:#f7fbff; }
-.header-right { display:flex; gap:10px; align-items:center; }
-
-/* cards */
-.card { background:var(--card); width:100%; max-width:980px; border-radius:12px; padding:18px; margin-bottom:16px; box-shadow:0 8px 24px rgba(0,0,0,0.6); }
-
-/* inputs */
-input, select, button { width:100%; padding:10px 12px; margin-top:8px; border-radius:8px; background:#22272b; color:#eaf2ff; border:0; }
-.row-btns { display:flex; gap:10px; margin-top:12px; }
-.two-cols { display:flex; gap:10px; }
-.two-cols input { flex:1; }
-
-/* activities */
-.activity-container { display:flex; flex-wrap:wrap; gap:12px; margin-top:10px; }
-.activity-btn { flex:0 1 calc(50% - 12px); padding:10px; border-radius:14px; color:#fff; font-weight:600; border:0; cursor:pointer; text-align:center; }
-.activity-btn:hover { transform:scale(1.03); }
-.act-games { background:#9b59b6; } .act-cinema { background:#e74c3c; } .act-restaurant { background:#27ae60; } .act-sport { background:#3498db; }
-
-/* create */
-.create-slot-box { background:#252b30; padding:12px; border-radius:10px; display:flex; align-items:center; gap:10px; cursor:pointer; }
-.create-slot-box:hover{background:#2d3338;}
-#create-slot-form { display:none; margin-top:12px; }
-.current-activity-line { display:flex; gap:10px; align-items:center; margin-top:8px; }
-.pill.muted { background:#1a1f23; padding:6px 10px; border-radius:8px; color:#cfdfee }
-
-/* slots */
-#slots-list { list-style:none; padding:0; margin:0; }
-.slot-item { display:flex; align-items:center; justify-content:space-between; gap:12px; background:#151719; border-radius:10px; padding:10px 12px; margin-bottom:10px; max-width:920px;}
-.slot-info { display:flex; flex-direction:column; min-width:0; gap:3px; }
-/* Largeur fixe pour les boîtes de sous-sous-activité */
-.subsub-box{ 
-  display:inline-block; 
-  padding:4px 8px; 
-  border-radius:8px; 
-  font-weight:600; 
-  font-size:0.85rem; 
-  margin-bottom:4px;
-  min-width: 120px; /* Largeur minimale pour fixer la taille */
-  text-align:center; /* Centrer le texte pour une meilleure apparence avec une largeur fixe */
+main {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 0 15px;
 }
 
-/* gauge/participants */
-.participants-box { display:flex; align-items:center; gap:8px; font-size:0.9rem; color:var(--muted); }
-.gauge-bar { width:60px; height:8px; background:#333; border-radius:4px; overflow:hidden; }
-.gauge-fill { height:100%; background:var(--green); transition:width 0.3s; }
-.participants-list { font-size:0.75rem; color:#888; margin-top:4px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.private-slot-lock { font-weight: bold; color: #e74c3c; margin-left: 5px; }
+/* --- Header --- */
+.header {
+  background: var(--card-bg);
+  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.site-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0 15px;
+  color: var(--text-color);
+}
+
+.header-right {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+}
+
+/* --- Navigation & Links --- */
+a {
+  color: var(--link-color);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+.profile-link, .home-link {
+  color: var(--text-color);
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+.profile-link:hover, .home-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  text-decoration: none;
+}
+
+/* --- Cards / Sections --- */
+.card {
+  background: var(--card-bg);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  margin-bottom: 20px;
+}
+
+.card h2 {
+  color: var(--text-color);
+  margin-top: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* --- Forms / Inputs --- */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="date"],
+input[type="time"],
+select {
+  width: calc(100% - 20px);
+  padding: 10px;
+  margin: 8px 0;
+  box-sizing: border-box;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--input-bg);
+  color: var(--text-color);
+}
+input:focus, select:focus {
+  border-color: var(--link-color);
+  outline: none;
+}
+
+label {
+  display: block;
+  margin-top: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* 2/ AJOUT : Couleurs et alignement pour les labels du formulaire de créneau */
+.form-compact label {
+  display: flex; /* Utiliser flexbox pour l'alignement */
+  align-items: center;
+  margin-bottom: 0px; 
+}
+.form-compact label[for="form-activity-select"] { color: var(--act-jeux); }
+.form-compact label[for="sub-select"] { color: var(--act-sorties); }
+.form-compact label[for="subsub-select"] { color: var(--act-culture); }
+
+.two-cols {
+  display: flex;
+  gap: 10px;
+}
+.two-cols input {
+  width: 100%; /* S'assurer qu'ils occupent l'espace */
+}
+
+/* 4/ AJOUT : Mettre en évidence les boutons de date/heure */
+/* Note: Ceci est un hack pour styler les champs date/time */
+input[type="date"], input[type="time"] {
+  background: var(--btn-primary-bg); /* Couleur vive */
+  color: var(--btn-primary-text); /* Texte noir sur fond clair */
+  font-weight: bold;
+}
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1); /* Inverser la couleur des icônes pour le contraste */
+}
 
 
-/* actions */
-.actions { display:flex; gap:8px; align-items:center; }
-.ghost-btn { background:transparent; border:1px solid rgba(255,255,255,0.06); padding:8px 10px; color:#dfefff; border-radius:8px; }
+/* --- Buttons --- */
+button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  margin: 5px 0;
+  transition: background 0.2s;
+  
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+}
+button:hover:not(:disabled) {
+  background: var(--link-color);
+  opacity: 0.8;
+}
 
-/* small screens */
-@media (max-width:640px) {
-  .activity-btn { flex-basis:100%; }
-  .slot-item { flex-direction:column; align-items:stretch; }
-  .slot-info { order: -1; } /* Info en haut */
-  .actions { justify-content: flex-end; } /* Actions à droite */
+.ghost-btn {
+  background: transparent;
+  color: var(--btn-ghost-color);
+  border: 1px solid var(--btn-ghost-color);
+}
+.ghost-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-color);
+  border-color: var(--text-color);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.row-btns {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+.row-btns button {
+  flex-grow: 1;
+}
+
+/* --- Activity Buttons --- */
+.activity-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 15px;
+}
+
+.activity-btn {
+  background: var(--input-bg);
+  color: var(--text-color);
+  border: 1px solid var(--muted-text);
+  padding: 8px 12px;
+  margin: 0;
+}
+.activity-btn:hover:not(:disabled), .activity-btn.active {
+  background: var(--link-color);
+  color: var(--btn-primary-text);
+  border-color: var(--link-color);
+}
+
+.act-jeux { border-color: var(--act-jeux); color: var(--act-jeux); }
+.act-culture { border-color: var(--act-culture); color: var(--act-culture); }
+.act-restaurant { border-color: var(--act-restaurant); color: var(--act-restaurant); }
+.act-sport { border-color: var(--act-sport); color: var(--act-sport); }
+.act-sorties { border-color: var(--act-sorties); color: var(--act-sorties); }
+.act-toutes { border-color: var(--act-toutes); color: var(--act-toutes); }
+
+/* --- Slot Items --- */
+#slots-list, #user-slots {
+  list-style: none;
+  padding: 0;
+}
+.slot-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--border-color);
+}
+.slot-item:last-child {
+  border-bottom: none;
+}
+.slot-info {
+  flex-grow: 1;
+}
+.slot-info strong {
+  display: block;
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+}
+.slot-info small {
+  display: block;
+  color: var(--muted-text);
+}
+.actions button {
+  background: var(--input-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  padding: 6px 10px;
+  margin-left: 5px;
+}
+.actions button:hover {
+  background: #333;
+}
+.private-slot-lock {
+  color: #e74c3c;
+  margin-left: 5px;
+  font-weight: normal;
+}
+
+/* 3/ AJOUT : Style des boîtes sous-activité/sous-sous-activité */
+.subsub-box {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-right: 8px;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+.subsub-line {
+  display: block;
+  margin-top: 5px;
+}
+
+/* --- Misc --- */
+.pill {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+.pill.muted {
+  background: var(--input-bg);
+  color: var(--muted-text);
+}
+.current-activity-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.create-slot-box {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 10px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.form-compact {
+  display: none;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
+}
+
+.gauge-bar {
+  height: 6px;
+  background-color: var(--input-bg);
+  border-radius: 3px;
+  margin-top: 5px;
+  overflow: hidden;
+}
+
+.gauge-fill {
+  height: 100%;
+  background-color: var(--link-color);
+  transition: width 0.3s;
+}
+
+.participants-box {
+  font-size: 0.9rem;
+  color: var(--muted-text);
+  margin: 5px 0;
+}
+.participants-list {
+  font-size: 0.85rem;
+  color: var(--muted-text);
+  margin-top: 5px;
 }
