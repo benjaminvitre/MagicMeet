@@ -1,20 +1,30 @@
-/* ===== Configuration & categories ===== */
+/* ===== Configuration & categories (Point 6: Nouvelles activités) ===== */
 const ADMIN_EMAIL = "benjamin.vitre@gmail.com";
 
 const ACTIVITIES = {
-  "Games": ["Card Games","Video Games"],
-  "Cinema": [],
+  "Toutes": [], // Nouvelle activité de filtrage
+  "Jeux": ["Jeux de cartes", "Jeux vidéo"],
+  "Culture": [],
   "Restaurant / Bar": [],
-  "Sport": []
+  "Sport": [],
+  "Sorties": []
 };
 
 const SUBSUB = {
-  "Card Games": ["Magic The Gathering","Pokémon","Yu-Gi-Oh!"],
-  "Video Games": []
+  "Jeux de cartes": ["Magic The Gathering", "Pokémon", "Yu-Gi-Oh!"],
+  "Jeux vidéo": []
 };
 
-// Limite de participants pour la jauge
-const MAX_PARTICIPANTS = 10; 
+// Mappage des couleurs pour les boîtes d'activité/sous-activité
+const COLOR_MAP = {
+  "Magic The Gathering": "#b294f2", "Pokémon": "#f6d06f", "Yu-Gi-Oh!": "#f1a66a",
+  "Jeux de cartes": "#c085f5", "Jeux vidéo": "#6fb2f2", "Jeux": "#c085f5",
+  "Culture": "#e67c73", "Restaurant / Bar": "#78d6a4", "Sport": "#f27a7d", 
+  "Sorties": "#f1a66a", "Toutes": "#9aa9bf"
+};
+
+const MAX_PARTICIPANTS = 10;
+let currentFilterActivity = "Toutes"; // Pour le point 5
 
 /* ===== storage helpers robust (tries encrypted then plain JSON) ===== */
 function encrypt(data) {
@@ -93,7 +103,7 @@ function editSlot(slotId) {
 
   // Populate main activity select
   editActSelect.innerHTML = '<option value="">-- Choisis une activité --</option>';
-  Object.keys(ACTIVITIES).forEach(act => {
+  Object.keys(ACTIVITIES).filter(a=>a!=='Toutes').forEach(act => {
     const o = document.createElement('option'); o.value = act; o.textContent = act; editActSelect.appendChild(o);
   });
   editActSelect.value = slot.activity;
@@ -103,8 +113,6 @@ function editSlot(slotId) {
   
   // Populate sub-sub-activity select
   populateEditSubSub(slot.sub, slot.subsub);
-
-  // Event listeners for nested selects (must be added in profile.html script)
 
   // Show the edit form
   document.getElementById('edit-slot-container').style.display = 'block';
@@ -144,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const formSubSelect = document.getElementById('sub-select');
 
   const createBtn = document.getElementById('create-slot');
-  let selectedActivity = null;
+  let selectedActivity = null; // Activity selected in the main section
 
   let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
 
@@ -152,27 +160,47 @@ document.addEventListener('DOMContentLoaded', () => {
   function populateFormActivitySelect(){
     if (!formActivitySelect) return;
     formActivitySelect.innerHTML = '<option value="">-- Choisis une activité --</option>';
-    Object.keys(ACTIVITIES).forEach(act => {
+    // Exclure 'Toutes' du formulaire de création
+    Object.keys(ACTIVITIES).filter(a=>a!=='Toutes').forEach(act => {
       const o = document.createElement('option'); o.value = act; o.textContent = act; formActivitySelect.appendChild(o);
     });
     formActivitySelect.value = selectedActivity || '';
     populateSubActivitiesForForm(formActivitySelect.value);
   }
 
-  // Initial render activity buttons
+  // Initial render activity buttons (Point 5 & 6)
   function renderActivities(){
     activitiesDiv.innerHTML = '';
     Object.keys(ACTIVITIES).forEach(act => {
       const b = document.createElement('button');
-      b.className = 'activity-btn ' + (act==='Games' ? 'act-games' : act==='Cinema' ? 'act-cinema' : act==='Restaurant / Bar' ? 'act-restaurant' : 'act-sport');
-      b.textContent = (act==='Games' ? '🎮 ' : act==='Cinema' ? '🎬 ' : act==='Restaurant / Bar' ? '🍸 ' : '⚽ ') + act;
+      const classNameMap = {
+        "Jeux": 'act-jeux', "Culture": 'act-culture', "Restaurant / Bar": 'act-restaurant', "Sport": 'act-sport', "Sorties": 'act-sorties', "Toutes": 'act-toutes'
+      };
+      b.className = 'activity-btn ' + classNameMap[act] + (act === currentFilterActivity ? ' active' : '');
+      b.textContent = act;
+
       b.addEventListener('click', ()=> {
-        selectedActivity = act;
-        currentActivityEl.textContent = act;
-        populateSubActivities(act);
-        if (formActivitySelect) { 
-          formActivitySelect.value = act; 
-          populateSubActivitiesForForm(act); 
+        // Point 5: Filtrage des créneaux
+        currentFilterActivity = act;
+        loadSlots(); // Charger les slots filtrés
+
+        // Mise à jour des classes 'active'
+        document.querySelectorAll('.activity-btn').forEach(btn => btn.classList.remove('active'));
+        b.classList.add('active');
+
+        // Gestion de la sélection pour la création de créneau
+        if(act !== "Toutes") {
+          selectedActivity = act;
+          currentActivityEl.textContent = act;
+          populateSubActivities(act);
+          if (formActivitySelect) { 
+            formActivitySelect.value = act; 
+            populateSubActivitiesForForm(act); 
+          }
+        } else {
+          selectedActivity = null;
+          currentActivityEl.textContent = 'Aucune';
+          subDiv.innerHTML = '';
         }
       });
       activitiesDiv.appendChild(b);
@@ -264,6 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (logoutBtn) logoutBtn.addEventListener('click', ()=> {
     localStorage.removeItem('currentUser'); currentUser = null;
     document.getElementById('auth-section').style.display = 'block'; document.getElementById('main-section').style.display='none';
+    window.location.href = 'index.html'; // Redirect to clear state
   });
 
   // toggle create form
@@ -303,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const time = (document.getElementById('slot-time')?.value||'').trim();
     const isPrivate = !!document.getElementById('private-slot')?.checked;
     
-    if (!activity) return alert('Choisis d’abord une activité (ex: Games)');
+    if (!activity) return alert('Choisis d’abord une activité (ex: Jeux)');
     if (!name || !location || !date || !time) return alert('Remplis les champs nom, lieu, date et heure');
     
     const slots = getSlots();
@@ -315,7 +344,6 @@ document.addEventListener('DOMContentLoaded', () => {
       name, location, date, time, private: isPrivate,
       owner: currentUser.email, 
       ownerPseudo: currentUser.pseudo || '',
-      // Ajout du champ participants
       participants: [{email: currentUser.email, pseudo: currentUser.pseudo || currentUser.email.split('@')[0]}]
     };
     slots.push(newSlot); saveSlots(slots);
@@ -326,21 +354,21 @@ document.addEventListener('DOMContentLoaded', () => {
     loadSlots();
   });
 
-  // Load and render slots
+  // Load and render slots (Point 3 & 5)
   function loadSlots(){
     const list = document.getElementById('slots-list'); if (!list) return; list.innerHTML='';
     let slots = getSlots() || [];
     
+    // Point 5: Filtrage
+    if (currentFilterActivity !== "Toutes") {
+      slots = slots.filter(s => s.activity === currentFilterActivity);
+    }
+
     // sort by date+time
     slots = slots.filter(s => s.date && s.time).sort((a,b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
     // limit 10
     slots = slots.slice(0,10);
 
-    const colorMap = {
-      "Magic The Gathering":"#b294f2","Pokémon":"#f6d06f","Yu-Gi-Oh!":"#f1a66a",
-      "Card Games":"#c085f5","Video Games":"#6fb2f2","Cinema":"#e67c73",
-      "Restaurant / Bar":"#78d6a4","Sport":"#f27a7d"
-    };
     
     const current = JSON.parse(localStorage.getItem('currentUser')||'null');
     const currentUserEmail = current ? current.email : null;
@@ -350,11 +378,39 @@ document.addEventListener('DOMContentLoaded', () => {
       const li = document.createElement('li'); li.className='slot-item';
       const info = document.createElement('div'); info.className='slot-info';
 
-      const pill = document.createElement('span'); pill.className='subsub-box';
-      const pillText = slot.subsub || slot.sub || slot.activity || '';
-      const color = colorMap[pillText] || '#9aa9bf';
-      pill.textContent = pillText;
-      pill.style.border = `1px solid ${color}`; pill.style.color = color;
+      // Point 3: Affichage des boîtes de sous-activité/sous-sous-activité
+      const activityLine = document.createElement('div'); activityLine.className = 'subsub-line';
+
+      // 1. Activité principale
+      let actPill = document.createElement('span'); 
+      actPill.className = 'subsub-box';
+      actPill.textContent = slot.activity;
+      actPill.style.border = `1px solid ${COLOR_MAP[slot.activity] || '#9aa9bf'}`; 
+      actPill.style.color = COLOR_MAP[slot.activity] || '#9aa9bf';
+      activityLine.appendChild(actPill);
+
+      // 2. Sous-activité
+      if (slot.sub) {
+        let subPill = document.createElement('span'); 
+        subPill.className = 'subsub-box';
+        subPill.textContent = slot.sub;
+        subPill.style.border = `1px solid ${COLOR_MAP[slot.sub] || '#9aa9bf'}`; 
+        subPill.style.color = COLOR_MAP[slot.sub] || '#9aa9bf';
+        activityLine.appendChild(subPill);
+      }
+
+      // 3. Sous-sous-activité
+      if (slot.subsub) {
+        let subsubPill = document.createElement('span'); 
+        subsubPill.className = 'subsub-box';
+        subsubPill.textContent = slot.subsub;
+        subsubPill.style.border = `1px solid ${COLOR_MAP[slot.subsub] || '#9aa9bf'}`; 
+        subsubPill.style.color = COLOR_MAP[slot.subsub] || '#9aa9bf';
+        activityLine.appendChild(subsubPill);
+      }
+
+      info.appendChild(activityLine);
+
 
       const title = document.createElement('strong'); title.textContent = slot.name;
       
@@ -366,7 +422,8 @@ document.addEventListener('DOMContentLoaded', () => {
       owner.textContent = `par ${slot.ownerPseudo || slot.owner}`;
       if (slot.private) owner.innerHTML += ' <span class="private-slot-lock">🔒 Privé</span>';
 
-      info.appendChild(pill); info.appendChild(title); info.appendChild(when); 
+      // info.appendChild(pill); // Remplacé par activityLine
+      info.appendChild(title); info.appendChild(when); 
       
       // Participants and Gauge
       const participantsCount = (slot.participants || []).length;
