@@ -78,12 +78,12 @@
             
             <form id="create-slot-form" style="display: none;">
                 <label for="slot-name">Nom de l'activité</label>
-                <input type="text" id="slot-name" placeholder="Ex: Match de Padel à Paris">
+                <input type="text" id="slot-name" placeholder="Ex: Match de Padel à Paris" required>
                 
                 <label>Activité (<span id="current-activity" style="font-weight: bold;">Aucune</span> sélectionnée)</label>
                 <div class="inline-fields">
                     <div>
-                        <select id="form-activity-select">
+                        <select id="form-activity-select" required>
                             </select>
                     </div>
                     <div>
@@ -99,7 +99,7 @@
                 </div>
 
                 <label for="slot-location">Lieu / Adresse</label>
-                <input type="text" id="slot-location" placeholder="Ex: 10 rue de lappe, Paris">
+                <input type="text" id="slot-location" placeholder="Ex: 10 rue de lappe, Paris" required>
                 <div id="location-suggestion-box" class="suggestion-box" style="display: none;"></div>
                 <p id="location-link" style="display: none; font-size: 0.9em; margin-top:-10px; margin-bottom: 10px;">
                     <a href="#" target="_blank">Voir sur Google Maps</a>
@@ -108,11 +108,11 @@
                 <div class="inline-fields">
                     <div>
                         <label for="slot-date">Date</label>
-                        <input type="date" id="slot-date">
+                        <input type="date" id="slot-date" required>
                     </div>
                     <div>
                         <label for="slot-time">Heure</label>
-                        <input type="time" id="slot-time">
+                        <input type="time" id="slot-time" required>
                     </div>
                 </div>
 
@@ -151,7 +151,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-<script src="script.js"></script>
+<script src="script.js"></script> 
 
 </body>
 </html>
