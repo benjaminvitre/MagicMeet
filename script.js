@@ -1,4 +1,4 @@
-/* ===== Configuration & categories (Mise à jour V6) ===== */
+/* ===== Configuration & categories (Mise à jour V7) ===== */
 const ADMIN_EMAIL = "benjamin.vitre@gmail.com";
 
 // Triez les sous-activités
@@ -64,6 +64,7 @@ const COLOR_MAP = {
 
 const MAX_PARTICIPANTS = 10;
 let currentFilterActivity = "Toutes"; 
+let currentFilterSub = "Toutes"; // Nouveau filtre pour la sous-activité (Point 1)
 let currentFilterCity = "Toutes"; 
 let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null'); // Initialise l'utilisateur
 
@@ -124,17 +125,14 @@ function updateSlot(slotId, updateFn){
 /* Fonction pour extraire la ville d'une adresse */
 function extractCity(locationText) {
     if (!locationText) return '';
-    // Tente de trouver le code postal ou la première partie après une virgule
     const parts = locationText.split(',').map(p => p.trim());
     if (parts.length > 1) {
-        // On prend le dernier élément
         const lastPart = parts[parts.length - 1];
         if (lastPart.match(/\d{5}\s/)) { 
             return lastPart.replace(/\d{5}\s*/, '').trim(); 
         }
         return lastPart; 
     }
-    // Si pas de virgule, on essaie de prendre le dernier mot
     return locationText.split(' ').pop(); 
 }
 
@@ -249,7 +247,7 @@ function handleIndexPage() {
         populateSubActivitiesForForm(formActivitySelect.value);
     }
 
-    // Initial render activity buttons
+    // Initial render activity buttons (Filtre activité principale)
     function renderActivities(){
         activitiesDiv.innerHTML = '';
         Object.keys(ACTIVITIES).forEach(act => {
@@ -266,6 +264,7 @@ function handleIndexPage() {
 
             b.addEventListener('click', ()=> {
                 currentFilterActivity = act;
+                currentFilterSub = "Toutes"; // Réinitialise le filtre sous-activité lors du changement d'activité principale
                 loadSlots(); 
 
                 document.querySelectorAll('.activity-btn').forEach(btn => btn.classList.remove('active'));
@@ -288,22 +287,62 @@ function handleIndexPage() {
             activitiesDiv.appendChild(b);
         });
         populateFormActivitySelect();
+        // S'assurer que les sous-activités sont chargées pour le filtre actif
+        if (currentFilterActivity !== "Toutes") {
+            populateSubActivities(currentFilterActivity);
+        }
     }
 
-    // populate subactivities area (visual buttons)
+    // populate subactivities area (Point 1: Rendu et filtre de sous-activité)
     function populateSubActivities(act){
         subDiv.innerHTML = '';
+        
+        // 1. Bouton Réinitialiser/Toutes (pour les sous-activités)
+        const resetBtn = document.createElement('button');
+        resetBtn.className = 'activity-btn';
+        resetBtn.textContent = '❌ Toutes les sous-activités';
+        resetBtn.style.borderColor = COLOR_MAP[act]; // Couleur de l'activité principale
+        resetBtn.style.color = COLOR_MAP[act];
+        if (currentFilterSub === "Toutes") {
+             resetBtn.classList.add('active');
+             resetBtn.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+        }
+
+        resetBtn.addEventListener('click', () => {
+            currentFilterSub = "Toutes";
+            loadSlots();
+            populateSubActivities(act); // Re-render pour l'état actif
+        });
+        subDiv.appendChild(resetBtn);
+
+
+        // 2. Boutons pour chaque sous-activité
         const subs = ACTIVITIES[act] || [];
         subs.forEach(s => {
             const btn = document.createElement('button');
             btn.className = 'activity-btn';
-            btn.style.borderColor = COLOR_MAP[s] || COLOR_MAP[act] || 'var(--muted-text)';
-            btn.style.color = COLOR_MAP[s] || COLOR_MAP[act] || 'var(--muted-text)';
+            
+            const btnColor = COLOR_MAP[s] || COLOR_MAP[act] || 'var(--muted-text)';
+            btn.style.borderColor = btnColor;
+            btn.style.color = btnColor;
+            
+            if (s === currentFilterSub) {
+                btn.classList.add('active');
+                btn.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'; // Couleur de survol pour l'état actif
+            }
 
             btn.textContent = s;
+            
+            // Logique de Filtrage (Point 1)
             btn.addEventListener('click', ()=> {
+                // Pour la création : remplissage du formulaire
                 formSubSelect.value = s;
-                populateSubSub(s);
+                populateSubSub(s); 
+                
+                // Pour le filtrage des slots
+                currentFilterSub = s;
+                loadSlots();
+                populateSubActivities(act); // Re-render pour l'état actif
             });
             subDiv.appendChild(btn);
         });
@@ -326,7 +365,7 @@ function handleIndexPage() {
         });
     }
 
-    // Remplir la liste de villes (uniquement le nom de la ville)
+    // Remplir la liste de villes
     function populateCityFilter() {
         if (!cityFilterSelect) return;
         cityFilterSelect.innerHTML = '<option value="Toutes">Toutes</option>'; 
@@ -342,10 +381,10 @@ function handleIndexPage() {
         });
 
         cityFilterSelect.value = currentFilterCity;
-        cityFilterSelect.addEventListener('change', () => {
+        cityFilterSelect.onchange = () => { // Utilisation d'onchange au lieu d'addEventListener pour éviter les multiples listeners
             currentFilterCity = cityFilterSelect.value;
             loadSlots();
-        });
+        };
     }
 
     // Fonction centrale pour le rendu d'un slot (utilisée par loadSlots, loadUserSlots, loadJoinedSlots)
@@ -493,7 +532,7 @@ function handleIndexPage() {
                 saveSlots(remain); 
                 if (typeof loadSlots === 'function') loadSlots(); // Refresh index
                 if (document.getElementById('user-slots')) loadUserSlots(); // Refresh profile
-                populateCityFilter(); 
+                if (typeof populateCityFilter === 'function') populateCityFilter(); 
             };
             actions.appendChild(del);
 
@@ -503,7 +542,6 @@ function handleIndexPage() {
             rem.onclick = ()=> {
                 const notifTime = new Date(slot.date + 'T' + slot.time); const delay = notifTime - new Date();
                 if (delay>0){ alert('Rappel programmé (simple notification navigateur)'); 
-                // On simule juste la notification pour la démo, pas de vrai timer
                 if (Notification.permission === 'granted') {
                     new Notification(`Rappel : ${slot.name}`);
                 } else if (Notification.permission !== 'denied') {
@@ -564,10 +602,16 @@ function handleIndexPage() {
         const list = document.getElementById('slots-list'); if (!list) return; list.innerHTML='';
         let slots = getSlots() || [];
         
-        // Filtrage par activité
+        // Filtrage par activité principale
         if (currentFilterActivity !== "Toutes") {
             slots = slots.filter(s => s.activity === currentFilterActivity);
         }
+        
+        // Filtrage par sous-activité (Point 1)
+        if (currentFilterSub !== "Toutes") {
+            slots = slots.filter(s => s.sub === currentFilterSub);
+        }
+
 
         // Filtrage par ville
         if (currentFilterCity !== "Toutes") {
@@ -857,8 +901,9 @@ function loadUserSlots(){
     const list = document.getElementById('user-slots'); if (!list) return; list.innerHTML='';
     if (!currentUser) return;
 
+    // Point 3: Correction - filtrer uniquement par owner, et trier
     let slots = getSlots().filter(s => s.owner === currentUser.email);
-    slots = slots.filter(s => s.date && s.time).sort((a,b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.date));
+    slots = slots.filter(s => s.date && s.time).sort((a,b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
 
     const currentUserEmail = currentUser.email;
     const currentUserPseudo = currentUser.pseudo || currentUserEmail.split('@')[0];
