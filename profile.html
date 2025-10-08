@@ -3,85 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MagicMeet! - Mon Profil</title>
+    <title>Mon Profil - MagicMeet!</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
 <body>
+
+<header class="header">
+    <a href="index.html" class="logo-link">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-1 16h2v-2h-2v2zm0-4h2V7h-2v7z" fill="#4da6ff"/>
+        </svg>
+    </a>
+    <h1 class="site-title">MagicMeet!</h1>
+    <div class="header-right">
+        <a href="index.html" class="home-link">Accueil</a>
+        <a href="profile.html" id="profile-link" class="action-btn join-btn" style="display:none; width:auto; padding: 8px 12px;">Mon Profil</a>
+        <button id="logout-profile" class="action-btn leave-btn" style="display:none; width:auto; padding: 8px 12px;">Déconnexion</button>
+    </div>
+</header>
+
+<main id="profile-main">
+
+    <div class="card">
+        <h2>🧑 Mon Profil</h2>
+        <form id="profile-form">
+            <label for="profile-email">Email (Non modifiable)</label>
+            <input type="email" id="profile-email" disabled>
+
+            <label for="profile-pseudo">Pseudo</label>
+            <input type="text" id="profile-pseudo" required>
+
+            <label for="profile-phone">Téléphone (Optionnel)</label>
+            <input type="tel" id="profile-phone" placeholder="Ex: 06 XX XX XX XX">
+
+            <label for="profile-password">Nouveau mot de passe (Laisser vide pour garder l'ancien)</label>
+            <input type="password" id="profile-password" placeholder="Minimum 6 caractères">
+
+            <button type="submit" id="save-profile-btn" class="action-btn join-btn" style="margin-top: 15px;">Sauvegarder les modifications</button>
+        </form>
+    </div>
+
+    <div class="slot-list-card card">
+        <h2>⭐ Créneaux que j'ai créés</h2>
+        <ul id="user-slots">
+            </ul>
+    </div>
     
-    <header class="header">
-        <a href="index.html" class="logo-link">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-1 16h2v-2h-2v2zm0-4h2V7h-2v7z" fill="#4da6ff"/>
-            </svg>
-        </a>
-        <h1 class="site-title">MagicMeet!</h1>
-        <div class="header-right">
-            <a href="index.html" class="home-link">Accueil</a>
-            <a href="profile.html" id="profile-link" class="action-btn join-btn" style="display:none; width:auto; padding: 8px 12px;">Mon Profil</a>
-            <button id="logout-profile" class="action-btn leave-btn" style="display:none; width:auto; padding: 8px 12px;">Déconnexion</button>
-        </div>
-    </header>
+    <div class="slot-list-card card">
+        <h2>🤝 Créneaux que j'ai rejoints</h2>
+        <ul id="joined-slots">
+            </ul>
+    </div>
 
-    <main id="profile-main">
-        
-        <section class="card profile-card auth-card">
-            <h2>Mon Profil</h2>
-            <form id="profile-form">
-                <label for="profile-pseudo">Pseudo</label>
-                <input type="text" id="profile-pseudo" required>
-                
-                <label for="profile-email">Email (non modifiable)</label>
-                <input type="email" id="profile-email" disabled>
-                
-                <label for="profile-phone">Téléphone (optionnel)</label>
-                <input type="tel" id="profile-phone" placeholder="06 XX XX XX XX">
-                
-                <hr style="border-color: var(--border-color); margin: 20px 0;">
-                
-                <label for="profile-password">Nouveau mot de passe (laisser vide pour ne pas changer)</label>
-                <input type="password" id="profile-password">
-                
-                <button type="submit" id="save-profile-btn" class="action-btn join-btn">Enregistrer les modifications</button>
-            </form>
-        </section>
+</main>
 
-        <section class="card slot-list-card">
-            <h2>Mes créneaux créés</h2>
-            <ul id="user-slots">
-                </ul>
-        </section>
-        
-        <section class="card slot-list-card">
-            <h2>Créneaux rejoints</h2>
-            <ul id="joined-slots">
-                </ul>
-        </section>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script>
+    // Votre configuration Firebase ici (remplacer par vos vraies clés)
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
 
-    </main>
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+</script>
 
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-
-    <script>
-        // Remplacez les '...' par les valeurs réelles de votre console Firebase
-        const firebaseConfig = {
-          apiKey: "AIzaSyB0U_y6sMU8_vYriCK17H-Y5uPUb2ewPRw",
-  authDomain: "magicmeet--app.firebaseapp.com",
-  projectId: "magicmeet--app",
-  storageBucket: "magicmeet--app.firebasestorage.app",
-  messagingSenderId: "168285202241",
-  appId: "1:168285202241:web:6284051ec3884cfd81a3c0"
-        };
-
-        // Initialisation de Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore(); 
-    </script>
-    
-    <script src="script.js"></script>
+<script src="script.js"></script>
 
 </body>
 </html>
