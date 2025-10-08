@@ -61,6 +61,13 @@ h1, h2, h3 {
     margin-bottom: 15px;
     color: var(--text-primary);
 }
+/* POINT 3: Réduction de la taille de la police des titres des sections */
+.filter-box h2, .create-slot-box h2, .slot-list-card h2 {
+    font-size: 1.5em; /* Taille par défaut */
+    font-size: 1.275em; /* Environ 15% de réduction (1.5 * 0.85) */
+    margin-bottom: 12px; 
+}
+
 
 ul {
     list-style: none;
@@ -129,9 +136,10 @@ ul {
     box-shadow: var(--card-shadow);
     margin-bottom: 20px;
 }
-/* Point 2: Augmentation de la taille de la box "Créer un créneau !" */
+/* POINT 1: Réduction de 25% de la taille de la box "Créer un créneau !" */
+/* Précédemment 36px de padding vertical. Réduction de 25%: 36 * 0.75 = 27px */
 .create-slot-box {
-    padding: 36px 20px; /* Augmenté de 80% le padding vertical (20*1.8=36) pour augmenter visuellement la taille du bloc fermé */
+    padding: 27px 20px; 
 }
 
 .auth-section {
@@ -341,6 +349,7 @@ input:focus, select:focus {
 
 /* Slot List */
 .slot-list-card h2 {
+    /* HÉRITE DE LA RÉDUCTION DE TAILLE */
     margin-bottom: 5px;
 }
 
@@ -456,25 +465,23 @@ input:focus, select:focus {
     .header {
         flex-wrap: wrap;
     }
-    /* CORRECTION POINT 1: Aligner Logo et Titre sur la même ligne en haut */
     .logo-link {
         order: 0;
-        margin-right: 5px; /* Réduit l'espace pour le titre */
+        margin-right: 5px; 
     }
     .site-title {
         order: 1;
-        /* Retire width: 100% et text-align: center */
         width: auto; 
         margin-top: 0;
         text-align: left;
-        font-size: 1.3em; /* Légèrement réduit pour gagner de la place */
+        font-size: 1.3em; 
     }
     .header-right {
         order: 2;
         margin-left: auto;
     }
     .home-link {
-        display: none; /* Cache le lien Accueil sur mobile pour la compacité */
+        display: none; 
     }
     .auth-section {
         flex-direction: column;
