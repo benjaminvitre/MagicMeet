@@ -90,7 +90,7 @@ ul {
 }
 
 .logo-link {
-    display: flex; /* <-- CORRECTION: Permet le centrage vertical */
+    display: flex; /* <-- CORRECTION: Permet le centrage vertical (Point 1 & 2) */
     align-items: center; 
     width: 40px; 
     height: 40px;
@@ -103,12 +103,12 @@ ul {
     font-weight: 800;
     margin-bottom: 0;
     color: var(--text-primary);
-    margin-right: auto; /* <-- CORRECTION: Pousse le bloc de droite */
+    margin-right: auto; /* <-- CORRECTION: Pousse le bloc de droite (Point 2) */
 }
 
 .header-right {
     display: flex;
-    align-items: center; /* <-- CORRECTION: Alignement vertical des boutons */
+    align-items: center; /* <-- CORRECTION: Alignement vertical des boutons (Point 2) */
     gap: 10px;
 }
 
@@ -137,7 +137,7 @@ ul {
     box-shadow: var(--card-shadow);
     margin-bottom: 20px;
 }
-/* CORRECTION: Réduction de 15% de la taille de la box 'Créer un créneau !' */
+/* CORRECTION: Réduction de 15% de la taille de la box 'Créer un créneau !' (Point 3) */
 .create-slot-box {
     padding: 17px 20px; 
     display: flex;
