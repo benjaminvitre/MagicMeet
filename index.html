@@ -31,8 +31,15 @@
             <form id="login-form">
                 <label for="email-login">Email</label>
                 <input type="email" id="email-login" required>
+                
                 <label for="password-login">Mot de passe</label>
                 <input type="password" id="password-login" required>
+                
+                <div class="checkbox-group show-password-group">
+                    <input type="checkbox" id="show-password-login">
+                    <label for="show-password-login">Afficher le mot de passe</label>
+                </div>
+                
                 <button type="button" id="login" class="action-btn join-btn">Connexion</button>
             </form>
         </div>
@@ -43,10 +50,22 @@
                 <label for="pseudo">Pseudo</label>
                 <input type="text" id="pseudo" required>
                 <small id="pseudo-status" class="muted-text"></small>
+                
                 <label for="email-signup">Email</label>
                 <input type="email" id="email-signup" required>
+                
                 <label for="password-signup">Mot de passe (6 caractères min)</label>
                 <input type="password" id="password-signup" required>
+                
+                <label for="password-confirm">Confirmer mot de passe</label>
+                <input type="password" id="password-confirm" required>
+                <small id="password-match-status" class="muted-text"></small>
+                
+                <div class="checkbox-group show-password-group">
+                    <input type="checkbox" id="show-password-signup">
+                    <label for="show-password-signup">Afficher le mot de passe</label>
+                </div>
+                
                 <button type="button" id="signup" class="action-btn join-btn" disabled>Inscription</button>
             </form>
         </div>
