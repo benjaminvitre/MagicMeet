@@ -57,9 +57,9 @@
       <div id="subactivities" class="activity-container"></div>
     </section>
 
-        <section class="card">
+            <section class="card compact-form-card">
             <div id="toggle-create-form" class="create-slot-box">
-        <h2 class="create-slot-title">➕ &nbsp;&nbsp; Créer un créneau</h2> 
+        <h2 class="create-slot-title">➕    Créer un créneau ! 🎸</h2> 
         <span class="arrow" style="margin-left:auto">▶</span>
       </div>
 
@@ -85,15 +85,24 @@
         </select>
 
         <input id="slot-name" type="text" placeholder="Nom du créneau" />
-                <input id="slot-location" type="text" placeholder="Lieu (ex : Café du coin, Paris 11e)" />
-        <a id="location-link" href="#" target="_blank" style="display: none; font-size: 0.9em; margin: 5px 0 10px 0;">📍 Voir sur Google Maps</a>
+                <label for="slot-location">Lieu (ex : Café du coin, Paris)</label>
+        <input id="slot-location" type="text" placeholder="Ex : 10 Rue de Lappe, 75011 Paris" />
+        <div id="location-suggestion-box" style="display: none; margin-bottom: 5px;">
+            </div>
+
         
         <div class="two-cols">
-          <label for="slot-date">Date</label>
-          <input id="slot-date" type="date" title="Afficher le sélecteur de date" />
-          <label for="slot-time">Heure</label>
-          <input id="slot-time" type="time" title="Afficher le sélecteur d'heure" />
+                    <div class="date-col">
+            <label for="slot-date">Date</label>
+            <input id="slot-date" type="date" title="Afficher le sélecteur de date" />
+          </div>
+          <div class="time-col">
+            <label for="slot-time">Heure</label>
+            <input id="slot-time" type="time" title="Afficher le sélecteur d'heure" />
+          </div>
         </div>
+        <a id="location-link" href="#" target="_blank" style="display: none; font-size: 0.9em; margin: 5px 0 10px 0;">📍 Voir sur Google Maps</a>
+
 
         <label class="inline-label"><input id="private-slot" type="checkbox" /> Privé</label>
 
@@ -105,9 +114,9 @@
       <div class="slots-header-line">
         <h2>Créneaux disponibles</h2>
                 <div class="city-filter-container">
-          <span class="city-filter-title">Filtrer par ville :</span>
+          <span class="city-filter-title">Filtrer par ville</span>
           <select id="city-filter-select">
-            <option value="Toutes">Toutes les villes</option>
+            <option value="Toutes">Toutes</option>
                       </select>
         </div>
       </div>
