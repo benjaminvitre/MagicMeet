@@ -4,12 +4,13 @@
 
 // ⚠️ REMPLACER PAR VOTRE PROPRE CONFIGURATION FIREBASE
 const firebaseConfig = {
- apiKey: "AIzaSyB0U_y6sMU8_vYriCK17H-Y5uPUb2ewPRw",
+  apiKey: "AIzaSyB0U_y6sMU8_vYriCK17H-Y5uPUb2ewPRw",
   authDomain: "magicmeet--app.firebaseapp.com",
   projectId: "magicmeet--app",
   storageBucket: "magicmeet--app.firebasestorage.app",
   messagingSenderId: "168285202241",
   appId: "1:168285202241:web:6284051ec3884cfd81a3c0",
+
 };
 
 // Initialisation de Firebase
