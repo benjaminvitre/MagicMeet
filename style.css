@@ -1,15 +1,18 @@
 /* --- Global Reset & Typography --- */
 :root {
-    --primary-color: #4da6ff; /* Bleu */
-    --secondary-color: #4da6ff; /* Bleu clair */
-    --text-color: #333;
-    --muted-text: #666;
-    --background-color: #f4f7f9; /* Fond très clair (gris) */
-    --card-background: #ffffff;
-    --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.05);
-    --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.1);
-    --success-color: #78d6a4; /* Vert */
-    --danger-color: #e67c73; /* Rouge */
+    /* Couleurs de base inversées pour le Mode Sombre */
+    --primary-color: #4da6ff;      /* Bleu (inchangé) */
+    --secondary-color: #4da6ff;    /* Bleu clair (inchangé) */
+    --text-color: #f4f7f9;         /* Texte clair */
+    --muted-text: #b0b0b0;         /* Texte gris clair */
+    --background-color: #1a1a1a;   /* Fond très sombre (noir/gris foncé) */
+    --card-background: #252525;    /* Fond des cartes plus clair que l'arrière-plan */
+    
+    /* Ombres plus discrètes */
+    --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.5);
+    --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.7);
+    --success-color: #78d6a4;      /* Vert (inchangé) */
+    --danger-color: #e67c73;       /* Rouge (inchangé) */
 }
 
 * {
@@ -20,11 +23,12 @@
 
 body {
     font-family: 'Inter', sans-serif;
+    /* UTILISE background-color (qui est maintenant sombre) */
     background-color: var(--background-color); 
     color: var(--text-color);
     line-height: 1.6;
 }
-
+/* ... (le reste du CSS reste inchangé) ... */
 main {
     padding: 20px;
     max-width: 1200px;
