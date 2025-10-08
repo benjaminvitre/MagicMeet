@@ -24,7 +24,7 @@
         <circle cx="30" cy="30" r="4" fill="#f1a66a"/>
         <circle cx="80" cy="60" r="6" fill="#b294f2"/>
                 <g transform="translate(12,18)" fill="#ffffff">
-          <path d="M6 60 q6 -60 18 0 q6 -40 18 0" fill="url(#g1)" stroke="none"/>           <text x="0" y="58" font-family="Inter,Arial" font-weight="800" font-size="72" fill="#4da6ff" style="letter-spacing:-4px">M</text>
+          <text x="0" y="58" font-family="Inter,Arial" font-weight="800" font-size="72" fill="#4da6ff" style="letter-spacing:-4px">M</text>
           <text x="46" y="58" font-family="Inter,Arial" font-weight="800" font-size="72" fill="#48d28a" style="letter-spacing:-4px">M</text>
         </g>
       </svg>
@@ -40,7 +40,7 @@
 
     <section id="auth-section" class="card">
     <h2>Connexion / Inscription</h2>
-        <input id="pseudo" type="text" placeholder="Pseudo (Obligatoire)" required />
+    <input id="pseudo" type="text" placeholder="Pseudo (Obligatoire)" required />
     <div id="pseudo-status" class="status-message"></div>
     <input id="email" type="email" placeholder="Email ou téléphone" />
     <input id="password" type="password" placeholder="Mot de passe" />
@@ -50,49 +50,50 @@
     </div>
   </section>
 
-    <main id="main-section" style="display:none;">
+      <main id="main-section" style="display:none;">
         <section class="card">
-      <h2>Trouver une activité 😊</h2>       <div id="activities" class="activity-container">
+      <h2 class="section-title">Trouver une activité 😊</h2>       <div id="activities" class="activity-container">
               </div>
       <div id="subactivities" class="activity-container"></div>
     </section>
 
-            <section class="card compact-form-card">
-            <div id="toggle-create-form" class="create-slot-box">
-        <h2 class="create-slot-title">➕    Créer un créneau ! 🎸</h2> 
-        <span class="arrow" style="margin-left:auto">▶</span>
+        <section class="card compact-form-card">       <div id="toggle-create-form" class="create-slot-box">
+        <h2 class="create-slot-title section-title">➕ Créer un créneau ! 🎸</h2>         <span class="arrow" style="margin-left:auto">▶</span>
       </div>
 
-      <form id="create-slot-form" class="form-compact" onsubmit="return false;">
+            <form id="create-slot-form" class="form-compact" onsubmit="return false;">
                 <div class="current-activity-line">
           <label>Activité sélectionnée :</label>
           <div id="current-activity" class="pill muted">Aucune</div>
         </div>
         
-                <label for="form-activity-select">Activité (ou utiliser les boutons au-dessus)</label>
+        <label for="form-activity-select">Activité (ou utiliser les boutons au-dessus)</label>
         <select id="form-activity-select">
           <option value="">-- Choisis une activité --</option>
                   </select>
 
-                <label for="sub-select">Sous-activité</label>
+        <label for="sub-select">Sous-activité</label>
         <select id="sub-select">
           <option value="">-- Choisis une sous-activité --</option>
         </select>
 
-                <label for="subsub-select">Sous-sous-activité (optionnel)</label>
+        <label for="subsub-select">Sous-sous-activité (optionnel)</label>
         <select id="subsub-select">
           <option value="">-- Optionnel --</option>
         </select>
 
-        <input id="slot-name" type="text" placeholder="Nom du créneau" />
+                <label for="slot-name">Nom du créneau</label>
+        <input id="slot-name" type="text" placeholder="Ex : Jam session au Bar" /> 
+        
                 <label for="slot-location">Lieu (ex : Café du coin, Paris)</label>
         <input id="slot-location" type="text" placeholder="Ex : 10 Rue de Lappe, 75011 Paris" />
-        <div id="location-suggestion-box" style="display: none; margin-bottom: 5px;">
+        <div id="location-suggestion-box" style="display: none;">
             </div>
+        <a id="location-link" href="#" target="_blank" style="display: none; font-size: 0.9em; margin: 5px 0 10px 0;">📍 Voir sur Google Maps</a>
 
-        
+
         <div class="two-cols">
-                    <div class="date-col">
+          <div class="date-col">
             <label for="slot-date">Date</label>
             <input id="slot-date" type="date" title="Afficher le sélecteur de date" />
           </div>
@@ -101,19 +102,17 @@
             <input id="slot-time" type="time" title="Afficher le sélecteur d'heure" />
           </div>
         </div>
-        <a id="location-link" href="#" target="_blank" style="display: none; font-size: 0.9em; margin: 5px 0 10px 0;">📍 Voir sur Google Maps</a>
-
+        
 
         <label class="inline-label"><input id="private-slot" type="checkbox" /> Privé</label>
 
-                <button id="create-slot">Créer un créneau ! 🎸</button>
+        <button id="create-slot">Créer un créneau ! 🎸</button>
       </form>
     </section>
 
         <section class="card">
       <div class="slots-header-line">
-        <h2>Créneaux disponibles</h2>
-                <div class="city-filter-container">
+        <h2 class="section-title">Créneaux disponibles</h2>         <div class="city-filter-container">
           <span class="city-filter-title">Filtrer par ville</span>
           <select id="city-filter-select">
             <option value="Toutes">Toutes</option>
