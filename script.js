@@ -1,4 +1,10 @@
-/* ===== Configuration & categories (Mise à jour V8) ===== */
+/* ===== CONFIGURATION DES DONNÉES ET DE FIREBASE ===== */
+
+// REMARQUE: Les variables 'app', 'auth', et 'db' sont définies dans le bloc <script> de votre HTML.
+
+const USERS_COLLECTION = db.collection('users');
+const SLOTS_COLLECTION = db.collection('slots');
+
 const ADMIN_EMAIL = "benjamin.vitre@gmail.com";
 
 // Triez les sous-activités
@@ -66,39 +72,73 @@ const MAX_PARTICIPANTS = 10;
 let currentFilterActivity = "Toutes"; 
 let currentFilterSub = "Toutes"; 
 let currentFilterCity = "Toutes"; 
-let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null'); 
+// currentUser contient maintenant l'objet utilisateur de Firestore (pseudo, email, docId)
+let currentUser = null; 
 
-/* ===== storage helpers robust (tries encrypted then plain JSON) ===== */
-function encrypt(data) {
-  try { return btoa(unescape(encodeURIComponent(JSON.stringify(data)))); }
-  catch(e){ return btoa(JSON.stringify(data)); }
-}
-function decrypt(str) {
-  if (!str) return null;
-  try { return JSON.parse(decodeURIComponent(escape(atob(str)))); }
-  catch(e){
-    try { return JSON.parse(atob(str)); } catch(e2){
-      try { return JSON.parse(str); } catch(e3){ return null; }
-    }
-  }
-}
-function getUsers(){
-  const s = localStorage.getItem('users'); if (!s) return [];
-  const v = decrypt(s); return Array.isArray(v) ? v : [];
-}
-function saveUsers(u){ localStorage.setItem('users', encrypt(u || [])); }
-function getSlots(){
-  const s = localStorage.getItem('slots'); if (!s) return [];
-  const v = decrypt(s); return Array.isArray(v) ? v : [];
-}
-function saveSlots(s){ localStorage.setItem('slots', encrypt(s || [])); }
+/* ===== NOUVEAUX HELPERS DE DONNÉES FIREBASE (Remplacement de localStorage) ===== */
 
-/* hash password */
-async function hashPassword(pwd){
-  const enc = new TextEncoder(); const data = enc.encode(pwd);
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+/** Récupère tous les créneaux de Firestore. */
+async function getSlotsFromDB() {
+    try {
+        const snapshot = await SLOTS_COLLECTION.get();
+        // Mappe chaque document pour inclure l'ID Firestore (nécessaire pour update/delete)
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+        console.error("Erreur de récupération des créneaux:", error);
+        return [];
+    }
 }
+
+/** Ajoute ou met à jour un créneau dans Firestore. */
+async function saveSlotToDB(slotData, slotId = null) {
+    try {
+        if (slotId) {
+            // Mise à jour (update pour ne modifier que les champs passés)
+            await SLOTS_COLLECTION.doc(slotId).update(slotData);
+        } else {
+            // Création
+            const newDoc = await SLOTS_COLLECTION.add(slotData);
+            slotData.id = newDoc.id; // Assurez-vous d'avoir l'ID
+        }
+        return true;
+    } catch (error) {
+        console.error("Erreur de sauvegarde du créneau:", error);
+        return false;
+    }
+}
+
+/** Récupère les données supplémentaires de l'utilisateur (pseudo, phone) depuis Firestore. */
+async function getUserData(email) {
+    const snapshot = await USERS_COLLECTION.where('email', '==', email).limit(1).get();
+    if (snapshot.empty) return null;
+    const userData = snapshot.docs[0].data();
+    userData.docId = snapshot.docs[0].id; // Stocke l'ID du document Firestore
+    return userData;
+}
+
+/** Met à jour les données supplémentaires de l'utilisateur dans Firestore. */
+async function updateUserData(docId, data) {
+    try {
+        await USERS_COLLECTION.doc(docId).update(data);
+        return true;
+    } catch (error) {
+        console.error("Erreur de mise à jour de l'utilisateur:", error);
+        return false;
+    }
+}
+
+// Fonction pour récupérer la liste des pseudos de la DB
+async function getAllUserPseudos() {
+    try {
+        const snapshot = await USERS_COLLECTION.get();
+        return snapshot.docs.map(doc => doc.data().pseudo).filter(p => p);
+    } catch (error) {
+        console.error("Erreur de récupération des pseudos:", error);
+        return [];
+    }
+}
+
+/* --- Fonctions de logiques persistantes --- */
 
 // Helper pour formater la date en mots (e.g., 10 Octobre)
 function formatDateToWords(dateString){
@@ -109,18 +149,23 @@ function formatDateToWords(dateString){
 }
 
 /* Ajout d'une fonction pour mettre à jour un slot */
-function updateSlot(slotId, updateFn){
-  let slots = getSlots();
-  const index = slots.findIndex(s => s.id === slotId);
-  if (index !== -1){
-    slots[index] = updateFn(slots[index]);
-    saveSlots(slots);
-    // Re-render the list if loadSlots is available (index page)
-    if (typeof loadSlots === 'function' && document.getElementById('slots-list')) loadSlots(); 
-    // Re-render the profile page lists
-    if (document.getElementById('user-slots')) loadUserSlots(); 
-    if (document.getElementById('joined-slots')) loadJoinedSlots(); 
-  }
+async function updateSlot(slotId, updateFn){
+    // 1. Récupère le créneau actuel
+    const currentSlotDoc = await SLOTS_COLLECTION.doc(slotId).get();
+    if (!currentSlotDoc.exists) return;
+
+    let slot = { id: currentSlotDoc.id, ...currentSlotDoc.data() };
+
+    // 2. Applique la modification
+    let updatedSlot = updateFn(slot);
+
+    // 3. Sauvegarde dans la DB (utilisation de set pour réécrire, y compris les participants)
+    await SLOTS_COLLECTION.doc(slotId).set(updatedSlot); 
+    
+    // Re-render
+    if (typeof loadSlots === 'function' && document.getElementById('slots-list')) await loadSlots(); 
+    if (document.getElementById('user-slots')) await loadUserSlots(); 
+    if (document.getElementById('joined-slots')) await loadJoinedSlots(); 
 }
 
 /* Fonction pour extraire la ville d'une adresse */
@@ -138,6 +183,27 @@ function extractCity(locationText) {
 }
 
 /* ===== CORE DOM INIT & HELPERS ===== */
+
+/** Initialise la session utilisateur en chargeant les données de Firestore. */
+async function initializeUserSession(email) {
+    if (!email) {
+        currentUser = null;
+        return;
+    }
+    const userData = await getUserData(email);
+    if (userData) {
+        // Met à jour la variable globale 'currentUser' avec les données de Firestore
+        currentUser = userData; 
+    } else {
+        // Utilisateur Auth mais pas de doc Firestore (cas d'erreur ou d'inscription incomplète)
+        // Rediriger ou forcer la déconnexion si les données principales manquent
+        console.warn("Utilisateur authentifié mais pas de données Firestore. Forcing logout.");
+        auth.signOut();
+        localStorage.removeItem('currentUserEmail');
+        currentUser = null;
+    }
+}
+
 
 // Mise à jour de l'affichage du header (connexion/profil)
 function updateHeaderDisplay() {
@@ -171,15 +237,22 @@ function fillProfileFields(user) {
     if (profilePhone) profilePhone.value = user.phone || '';
 }
 
-// Fonction de déconnexion
+// Fonction de déconnexion (utilise Firebase Auth)
 function logout() {
-    localStorage.removeItem('currentUser'); 
+    auth.signOut(); // Déconnexion Firebase
+    localStorage.removeItem('currentUserEmail'); 
     currentUser = null;
     window.location.href = 'index.html'; // Redirection vers l'accueil
 }
 
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Récupérer l'email stocké (clef de la persistance de session)
+    const userEmail = localStorage.getItem('currentUserEmail');
+    
+    // 1. Initialiser la session utilisateur
+    await initializeUserSession(userEmail); 
+
     updateHeaderDisplay(); // Initialiser l'affichage du header
 
     // Événements de déconnexion pour les deux pages
@@ -263,10 +336,10 @@ function handleIndexPage() {
             const emoji = ACTIVITY_EMOJIS[act] || ''; 
             b.textContent = `${emoji} ${act}`;
 
-            b.addEventListener('click', ()=> {
+            b.addEventListener('click', async ()=> { 
                 currentFilterActivity = act;
-                currentFilterSub = "Toutes"; // Réinitialise le filtre sous-activité lors du changement d'activité principale
-                loadSlots(); 
+                currentFilterSub = "Toutes"; 
+                await loadSlots(); 
 
                 document.querySelectorAll('.activity-buttons > .activity-btn').forEach(btn => btn.classList.remove('active'));
                 b.classList.add('active');
@@ -303,17 +376,17 @@ function handleIndexPage() {
         resetBtn.className = 'activity-btn';
         resetBtn.textContent = '❌ Toutes les sous-activités';
         const actColor = COLOR_MAP[act] || '#9aa9bf';
-        resetBtn.style.borderColor = actColor; // Couleur de l'activité principale
+        resetBtn.style.borderColor = actColor; 
         resetBtn.style.color = actColor;
         if (currentFilterSub === "Toutes") {
              resetBtn.classList.add('active');
              resetBtn.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
         }
 
-        resetBtn.addEventListener('click', () => {
+        resetBtn.addEventListener('click', async () => { 
             currentFilterSub = "Toutes";
-            loadSlots();
-            populateSubActivities(act); // Re-render pour l'état actif
+            await loadSlots();
+            populateSubActivities(act); 
         });
         subDiv.appendChild(resetBtn);
 
@@ -330,21 +403,21 @@ function handleIndexPage() {
             
             if (s === currentFilterSub) {
                 btn.classList.add('active');
-                btn.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'; // Couleur de survol pour l'état actif
+                btn.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'; 
             }
 
             btn.textContent = s;
             
             // Logique de Filtrage 
-            btn.addEventListener('click', ()=> {
+            btn.addEventListener('click', async ()=> { 
                 // Pour la création : remplissage du formulaire
                 formSubSelect.value = s;
                 populateSubSub(s); 
                 
                 // Pour le filtrage des slots
                 currentFilterSub = s;
-                loadSlots();
-                populateSubActivities(act); // Re-render pour l'état actif
+                await loadSlots();
+                populateSubActivities(act); 
             });
             subDiv.appendChild(btn);
         });
@@ -368,10 +441,11 @@ function handleIndexPage() {
     }
 
     // Remplir la liste de villes
-    function populateCityFilter() {
+    async function populateCityFilter() {
         if (!cityFilterSelect) return;
         cityFilterSelect.innerHTML = '<option value="Toutes">Toutes</option>'; 
-        const slots = getSlots();
+        // UTILISATION FIREBASE: getSlotsFromDB()
+        const slots = await getSlotsFromDB(); 
         const cities = new Set(slots.map(s => extractCity(s.location)).filter(c => c.length > 0));
         const sortedCities = Array.from(cities).sort((a, b) => a.localeCompare(b, 'fr'));
 
@@ -383,9 +457,9 @@ function handleIndexPage() {
         });
 
         cityFilterSelect.value = currentFilterCity;
-        cityFilterSelect.onchange = () => { // Utilisation d'onchange au lieu d'addEventListener pour éviter les multiples listeners
+        cityFilterSelect.onchange = async () => { 
             currentFilterCity = cityFilterSelect.value;
-            loadSlots();
+            await loadSlots();
         };
     }
 
@@ -494,10 +568,10 @@ function handleIndexPage() {
                 joinBtn.textContent = '✅ Rejoindre';
                 
                 if (!slot.private || isOwner){ 
-                    joinBtn.onclick = ()=> {
+                    joinBtn.onclick = async ()=> {
                         if (participantsCount >= MAX_PARTICIPANTS) return alert('Désolé, ce créneau est complet.');
                         
-                        updateSlot(slot.id, s => {
+                        await updateSlot(slot.id, s => {
                             s.participants = s.participants || []; 
                             s.participants.push({ email: currentUserEmail, pseudo: currentUserPseudo });
                             return s;
@@ -513,8 +587,8 @@ function handleIndexPage() {
                 const leaveBtn = document.createElement('button');
                 leaveBtn.className = 'action-btn leave-btn'; 
                 leaveBtn.textContent = '❌ Quitter';
-                leaveBtn.onclick = ()=> {
-                    updateSlot(slot.id, s => {
+                leaveBtn.onclick = async ()=> {
+                    await updateSlot(slot.id, s => {
                         s.participants = s.participants.filter(p => p.email !== currentUserEmail);
                         return s;
                     });
@@ -528,13 +602,16 @@ function handleIndexPage() {
             // Supprimer
             const del = document.createElement('button'); del.textContent='🗑️'; del.title='Supprimer';
             del.className = 'action-btn ghost-action-btn'; 
-            del.onclick = ()=> { 
+            del.onclick = async ()=> { 
                 if (!confirm('Supprimer ce créneau ?')) return; 
-                const remain = getSlots().filter(s=>s.id!==slot.id); 
-                saveSlots(remain); 
-                if (typeof loadSlots === 'function' && document.getElementById('slots-list')) loadSlots(); 
-                if (document.getElementById('user-slots')) loadUserSlots(); 
-                if (typeof populateCityFilter === 'function') populateCityFilter(); 
+                
+                // UTILISATION FIREBASE: Suppression du document
+                await SLOTS_COLLECTION.doc(slot.id).delete();
+                
+                // Rechargement des listes asynchrone
+                if (typeof loadSlots === 'function' && document.getElementById('slots-list')) await loadSlots(); 
+                if (document.getElementById('user-slots')) await loadUserSlots(); 
+                if (typeof populateCityFilter === 'function') await populateCityFilter(); 
             };
             actions.appendChild(del);
 
@@ -580,8 +657,8 @@ function handleIndexPage() {
                 leaveBtn.className = 'action-btn leave-btn'; 
                 leaveBtn.textContent = '❌ Quitter';
                 leaveBtn.style.width = '70px'; // Ajustement taille
-                leaveBtn.onclick = ()=> {
-                    updateSlot(slot.id, s => {
+                leaveBtn.onclick = async ()=> { // Fonction asynchrone
+                    await updateSlot(slot.id, s => {
                         s.participants = s.participants.filter(p => p.email !== currentUserEmail);
                         return s;
                     });
@@ -600,9 +677,10 @@ function handleIndexPage() {
 
 
     // Load and render slots (Page Index)
-    function loadSlots(){
+    async function loadSlots(){
         const list = document.getElementById('slots-list'); if (!list) return; list.innerHTML='';
-        let slots = getSlots() || [];
+        // UTILISATION FIREBASE: getSlotsFromDB()
+        let slots = await getSlotsFromDB() || []; 
         
         // Filtrage par activité principale
         if (currentFilterActivity !== "Toutes") {
@@ -629,9 +707,9 @@ function handleIndexPage() {
         slots = slots.slice(0,10);
 
         
-        const current = JSON.parse(localStorage.getItem('currentUser')||'null');
-        const currentUserEmail = current ? current.email : null;
-        const currentUserPseudo = current ? current.pseudo || currentUserEmail.split('@')[0] : '';
+        const currentUserEmail = currentUser ? currentUser.email : null;
+        // Utilise le pseudo de Firestore ou une valeur par défaut
+        const currentUserPseudo = currentUser ? currentUser.pseudo || currentUser.email.split('@')[0] : '';
         
         if (slots.length === 0) {
             list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Aucun créneau ne correspond à vos filtres.</li>';
@@ -642,13 +720,13 @@ function handleIndexPage() {
     }
 
     /* --- Gestion de l'Authentification et des formulaires --- */
-    function showMain(){
+    async function showMain(){
         document.getElementById('auth-section').style.display = 'none';
         document.getElementById('main-section').style.display = 'block';
         updateHeaderDisplay();
         renderActivities();
-        loadSlots();
-        populateCityFilter(); 
+        await loadSlots(); // Rendre asynchrone
+        await populateCityFilter(); // Rendre asynchrone
     }
 
     if (currentUser) {
@@ -661,14 +739,17 @@ function handleIndexPage() {
 
     // Vérification de l'unicité du pseudo
     if (pseudoInput && signupBtn) {
-        pseudoInput.addEventListener('input', () => {
+        pseudoInput.addEventListener('input', async () => { // Rendre asynchrone
             const pseudo = pseudoInput.value.trim();
             if (!pseudo) {
                 pseudoStatus.textContent = '';
                 signupBtn.disabled = true; 
                 return;
             }
-            const isTaken = getUsers().some(u => u.pseudo === pseudo);
+            // UTILISATION FIREBASE: vérification contre la DB
+            const allPseudos = await getAllUserPseudos();
+            const isTaken = allPseudos.some(p => p === pseudo);
+            
             if (isTaken) {
                 pseudoStatus.textContent = 'Ce pseudo est déjà pris 😞';
                 pseudoStatus.style.color = '#e67c73'; 
@@ -682,34 +763,67 @@ function handleIndexPage() {
     }
 
     // signup/login handlers
-    if (signupBtn) signupBtn.addEventListener('click', async ()=>{
+    if (signupBtn) signupBtn.addEventListener('click', async ()=>{ // Rendre asynchrone
         const pseudo = (document.getElementById('pseudo')?.value||'').trim();
         const email = (document.getElementById('email-signup')?.value||'').trim();
         const password = (document.getElementById('password-signup')?.value||'').trim();
 
         if (!pseudo || !email || !password) return alert('Remplis tous les champs (y compris le pseudo).');
         
-        const users = getUsers();
-        if (users.find(u=>u.email===email)) return alert('Utilisateur existant avec cet email.');
-        if (users.find(u=>u.pseudo===pseudo)) return alert('Ce pseudo est déjà pris. Choisis-en un autre.');
-        
-        const hashed = await hashPassword(password);
-        const newUser = { email, password: hashed, pseudo, phone:'' }; 
-        users.push(newUser); saveUsers(users);
-        localStorage.setItem('currentUser', JSON.stringify(newUser)); currentUser = newUser;
-        showMain();
+        try {
+            // 1. Vérification de l'unicité du pseudo (redondance)
+            const allPseudos = await getAllUserPseudos();
+            if (allPseudos.some(p => p === pseudo)) return alert('Ce pseudo est déjà pris. Choisis-en un autre.');
+
+            // 2. Création du compte Firebase Auth
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+
+            // 3. Création du document utilisateur dans Firestore
+            const userData = {
+                email: user.email,
+                pseudo: pseudo,
+                phone: '',
+                uid: user.uid 
+            };
+            await USERS_COLLECTION.add(userData);
+
+            // 4. Stockage des données pertinentes pour la session
+            localStorage.setItem('currentUserEmail', user.email); 
+            
+            await initializeUserSession(user.email); 
+            showMain();
+
+        } catch(error) {
+            let message = "Erreur lors de l'inscription.";
+            if (error.code === 'auth/email-already-in-use') {
+                message = "Cet email est déjà utilisé.";
+            } else if (error.code === 'auth/weak-password') {
+                message = "Le mot de passe doit contenir au moins 6 caractères.";
+            }
+            alert(message + " " + error.message);
+        }
     });
 
-    if (loginBtn) loginBtn.addEventListener('click', async ()=>{
+    if (loginBtn) loginBtn.addEventListener('click', async ()=>{ // Rendre asynchrone
         const email = (document.getElementById('email-login')?.value||'').trim();
         const password = (document.getElementById('password-login')?.value||'').trim();
         if (!email || !password) return alert('Remplis tous les champs.');
-        const hashed = await hashPassword(password);
-        const user = getUsers().find(u=>u.email===email && u.password===hashed);
-        if (!user) return alert('Identifiants invalides');
 
-        localStorage.setItem('currentUser', JSON.stringify(user)); currentUser = user; 
-        showMain();
+        try {
+            // 1. Connexion via Firebase Auth
+            const userCredential = await auth.signInWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+            
+            // 2. Stockage de l'email pour la session
+            localStorage.setItem('currentUserEmail', user.email);
+            
+            await initializeUserSession(user.email); // Initialisation de la session
+            showMain();
+
+        } catch(error) {
+            alert("Erreur de connexion: Email ou mot de passe invalide.");
+        }
     });
 
     // toggle create form
@@ -799,7 +913,7 @@ function handleIndexPage() {
 
 
     // create slot
-    if (createBtn) createBtn.addEventListener('click', ()=> {
+    if (createBtn) createBtn.addEventListener('click', async ()=> { // Rendre asynchrone
         if (!currentUser) return alert('Connecte-toi d’abord');
         
         const activity = selectedActivity || formActivitySelect.value;
@@ -814,34 +928,42 @@ function handleIndexPage() {
         if (!activity) return alert('Choisis d’abord une activité (ex: Jeux)');
         if (!name || !location || !date || !time) return alert('Remplis les champs nom, lieu, date et heure');
         
-        const slots = getSlots();
+        // UTILISATION FIREBASE: Création de l'objet et appel à saveSlotToDB
         const newSlot = {
-            id: Date.now(),
             activity,
             sub: sub || '',
             subsub: subsub || '',
             name, location, date, time, private: isPrivate,
             owner: currentUser.email, 
-            ownerPseudo: currentUser.pseudo || currentUser.email.split('@')[0], 
-            participants: [{email: currentUser.email, pseudo: currentUser.pseudo || currentUser.email.split('@')[0]}]
+            ownerPseudo: currentUser.pseudo, 
+            participants: [{email: currentUser.email, pseudo: currentUser.pseudo}]
         };
-        slots.push(newSlot); saveSlots(slots);
         
-        // clear form
-        document.getElementById('slot-name').value=''; document.getElementById('slot-location').value=''; document.getElementById('slot-date').value=''; document.getElementById('slot-time').value='';
-        locationLink.style.display = 'none'; 
-        locationSuggestionBox.style.display = 'none'; 
-        formSubSelect.value=''; subsubSelect.value=''; formActivitySelect.value=''; selectedActivity = null; currentActivityEl.textContent='Aucune'; createForm.style.display='none'; if (arrow) arrow.style.transform='rotate(0deg)';
-        loadSlots();
-        populateCityFilter(); 
+        const success = await saveSlotToDB(newSlot); // Sauvegarde dans Firestore
+        
+        if (success) {
+            // clear form
+            document.getElementById('slot-name').value=''; document.getElementById('slot-location').value=''; document.getElementById('slot-date').value=''; document.getElementById('slot-time').value='';
+            locationLink.style.display = 'none'; 
+            locationSuggestionBox.style.display = 'none'; 
+            formSubSelect.value=''; subsubSelect.value=''; formActivitySelect.value=''; selectedActivity = null; currentActivityEl.textContent='Aucune'; createForm.style.display='none'; if (arrow) arrow.style.transform='rotate(0deg)';
+            
+            await loadSlots(); // Rendre asynchrone
+            await populateCityFilter(); // Rendre asynchrone
+        } else {
+            alert('Échec de la création du créneau.');
+        }
     });
 
 
     // handle shared slot in URL
-    (function checkShared(){
+    (async function checkShared(){ // Rendre asynchrone pour utiliser getSlotsFromDB
         const params = new URLSearchParams(window.location.search); const sid = params.get('slot');
         if (!sid) return;
-        const s = getSlots().find(x=>String(x.id)===sid);
+        
+        const allSlots = await getSlotsFromDB(); // Charger tous les slots
+        const s = allSlots.find(x=>String(x.id)===sid);
+        
         if (!s) return alert('Ce créneau n’existe plus.');
         if (s.private) return alert('🔒 Ce créneau est privé : détails cachés.');
         const formattedDate = formatDateToWords(s.date);
@@ -861,13 +983,12 @@ function handleProfilePage() {
     fillProfileFields(currentUser);
 
     // Charger les créneaux créés et rejoints
-    loadUserSlots();
-    loadJoinedSlots();
+    // ATTENTION: ces fonctions sont asynchrones et appelées plus bas
     
     // Gestion de la modification du profil
     const profileForm = document.getElementById('profile-form');
     if (profileForm) {
-        profileForm.addEventListener('submit', async (e) => {
+        profileForm.addEventListener('submit', async (e) => { // Rendre asynchrone
             e.preventDefault();
             const newPseudo = document.getElementById('profile-pseudo').value.trim();
             const newPhone = document.getElementById('profile-phone').value.trim();
@@ -875,41 +996,68 @@ function handleProfilePage() {
 
             if (!newPseudo) return alert('Le pseudo est obligatoire.');
 
-            let users = getUsers();
-            const userIndex = users.findIndex(u => u.email === currentUser.email);
-            if (userIndex === -1) return alert('Erreur utilisateur non trouvé.');
-
-            // POINT 4: Correction de la vérification de conflit de pseudo
-            // Permet de sauvegarder si le pseudo est inchangé (car il ne sera plus considéré en conflit avec lui-même)
-            const pseudoConflict = users.some((u, index) => 
-                u.pseudo === newPseudo && index !== userIndex
-            );
+            // 1. Vérification de conflit de pseudo (doit être fait dans la DB)
+            const pseudoConflictSnapshot = await USERS_COLLECTION
+                .where('pseudo', '==', newPseudo)
+                .get();
+                
+            // S'il y a des documents avec ce pseudo, on doit s'assurer que ce n'est pas le document de l'utilisateur actuel
+            const pseudoConflict = pseudoConflictSnapshot.docs.some(doc => doc.data().email !== currentUser.email);
 
             if (pseudoConflict) return alert('Ce pseudo est déjà pris par un autre utilisateur.');
 
-            users[userIndex].pseudo = newPseudo;
-            users[userIndex].phone = newPhone;
-
+            // 2. Préparation des données à mettre à jour
+            const updateData = {
+                pseudo: newPseudo,
+                phone: newPhone
+            };
+            
+            // 3. Mise à jour du mot de passe via Firebase Auth
             if (newPassword) {
-                users[userIndex].password = await hashPassword(newPassword);
+                 const user = auth.currentUser;
+                 if (user) {
+                     try {
+                         await user.updatePassword(newPassword);
+                     } catch(error) {
+                         // Gérer les erreurs (ex: mot de passe trop faible)
+                         alert(`Erreur de changement de mot de passe: ${error.message}. Veuillez vous reconnecter et réessayer.`);
+                         return;
+                     }
+                 } else {
+                     alert("Erreur: Utilisateur non connecté. Veuillez vous reconnecter.");
+                     return;
+                 }
             }
 
-            saveUsers(users);
-            localStorage.setItem('currentUser', JSON.stringify(users[userIndex]));
-            currentUser = users[userIndex]; // Mise à jour de la variable globale
+            // 4. Mettre à jour les données dans Firestore (où l'ID du doc est stocké dans currentUser.docId)
+            const success = await updateUserData(currentUser.docId, updateData); 
 
-            alert('Profil mis à jour avec succès !');
+            // 5. Mise à jour de la session locale après succès
+            if (success) {
+                // Recharge l'utilisateur mis à jour dans la variable globale
+                await initializeUserSession(currentUser.email); 
+                // Réafficher l'email (non modifiable) au cas où le champ pseudo ait été la seule modification
+                fillProfileFields(currentUser);
+                alert('Profil mis à jour avec succès !');
+            } else {
+                 alert('Échec de la mise à jour du profil.');
+            }
         });
     }
+    
+    // Appel asynchrone au chargement des créneaux
+    loadUserSlots();
+    loadJoinedSlots();
 }
 
 // Load and render user created slots (Page Profile)
-function loadUserSlots(){
+async function loadUserSlots(){ // Rendre asynchrone
     const list = document.getElementById('user-slots'); if (!list) return; list.innerHTML='';
     if (!currentUser) return;
 
-    // POINT 2: Affichage des créneaux créés (déjà corrigé)
-    let slots = getSlots().filter(s => s.owner === currentUser.email);
+    // UTILISATION FIREBASE: getSlotsFromDB()
+    let slots = await getSlotsFromDB();
+    slots = slots.filter(s => s.owner === currentUser.email);
     slots = slots.filter(s => s.date && s.time).sort((a,b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
 
     const currentUserEmail = currentUser.email;
@@ -924,11 +1072,13 @@ function loadUserSlots(){
 }
 
 // Load and render user joined slots (Page Profile)
-function loadJoinedSlots(){
+async function loadJoinedSlots(){ // Rendre asynchrone
     const list = document.getElementById('joined-slots'); if (!list) return; list.innerHTML='';
     if (!currentUser) return;
 
-    let slots = getSlots().filter(s => s.participants.some(p => p.email === currentUser.email) && s.owner !== currentUser.email);
+    // UTILISATION FIREBASE: getSlotsFromDB()
+    let slots = await getSlotsFromDB();
+    slots = slots.filter(s => s.participants.some(p => p.email === currentUser.email) && s.owner !== currentUser.email);
     slots = slots.filter(s => s.date && s.time).sort((a,b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
 
     const currentUserEmail = currentUser.email;
