@@ -24,59 +24,52 @@
 </header>
 
 <main id="profile-main">
+    
+    <div class="profile-container">
+        <h1>⚙️ Mon Profil</h1>
 
-    <div class="card">
-        <h2>🧑 Mon Profil</h2>
-        <form id="profile-form">
-            <label for="profile-email">Email (Non modifiable)</label>
-            <input type="email" id="profile-email" disabled>
+        <div class="card profile-card">
+            <h2>Informations Personnelles</h2>
+            <form id="profile-form">
+                
+                <label for="profile-pseudo">Pseudo</label>
+                <input type="text" id="profile-pseudo" required>
+                
+                <label for="profile-email">Email (Non modifiable)</label>
+                <input type="email" id="profile-email" disabled>
 
-            <label for="profile-pseudo">Pseudo</label>
-            <input type="text" id="profile-pseudo" required>
+                <label for="profile-phone">Téléphone (Optionnel)</label>
+                <input type="tel" id="profile-phone">
+                
+                <hr>
 
-            <label for="profile-phone">Téléphone (Optionnel)</label>
-            <input type="tel" id="profile-phone" placeholder="Ex: 06 XX XX XX XX">
+                <h3>Changer le mot de passe</h3>
+                <small class="muted-text">Laissez vide si vous ne souhaitez pas changer votre mot de passe.</small>
+                <label for="profile-password">Nouveau mot de passe (6 caractères min)</label>
+                <input type="password" id="profile-password">
 
-            <label for="profile-password">Nouveau mot de passe (Laisser vide pour garder l'ancien)</label>
-            <input type="password" id="profile-password" placeholder="Minimum 6 caractères">
+                <button type="submit" class="action-btn join-btn">Sauvegarder les modifications</button>
+            </form>
+        </div>
 
-            <button type="submit" id="save-profile-btn" class="action-btn join-btn" style="margin-top: 15px;">Sauvegarder les modifications</button>
-        </form>
-    </div>
+        <div class="card profile-card">
+            <h2>Créneaux que j'ai créé</h2>
+            <ul id="user-slots">
+                </ul>
+        </div>
 
-    <div class="slot-list-card card">
-        <h2>⭐ Créneaux que j'ai créés</h2>
-        <ul id="user-slots">
-            </ul>
+        <div class="card profile-card">
+            <h2>Créneaux que j'ai rejoint</h2>
+            <ul id="joined-slots">
+                </ul>
+        </div>
     </div>
     
-    <div class="slot-list-card card">
-        <h2>🤝 Créneaux que j'ai rejoints</h2>
-        <ul id="joined-slots">
-            </ul>
-    </div>
-
 </main>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-<script>
-    // Votre configuration Firebase ici (remplacer par vos vraies clés)
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
-
-    // Initialize Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-</script>
 
 <script src="script.js"></script>
 
