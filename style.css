@@ -1,33 +1,17 @@
-/*
-====================================
-0. CUSTOM PROPERTIES (VARIABLES)
-====================================
-*/
+/* --- Global Reset & Typography --- */
 :root {
-    --bg-primary: #0f1417;
-    --bg-secondary: #1a2024;
-    --text-primary: #e6e8eb;
-    --text-accent: #4da6ff;
-    --muted-text: #9aa9bf;
-    --border-color: #2b353e;
-    --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    --hover-bg: #2b353e;
-    --focus-ring: 0 0 0 3px rgba(77, 166, 255, 0.5);
-    
-    /* Couleurs Activités (Pastels sur sombre) */
-    --act-autres: #78d6a4; /* Vert menthe */
-    --act-jeux: #c085f5; /* Violet */
-    --act-culture: #e67c73; /* Corail */
-    --act-sport: #f27a7d; /* Rouge pastel */
-    --act-sorties: #f1a66a; /* Orange */
-    --act-toutes: #9aa9bf; /* Gris-bleu */
+    --primary-color: #4da6ff; /* Bleu */
+    --secondary-color: #4da6ff; /* Bleu clair */
+    --text-color: #333;
+    --muted-text: #666;
+    --background-color: #f4f7f9; /* Fond très clair */
+    --card-background: #ffffff;
+    --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --success-color: #78d6a4; /* Vert */
+    --danger-color: #e67c73; /* Rouge */
 }
 
-/*
-====================================
-1. BASE & THEME SOMBRE
-====================================
-*/
 * {
     box-sizing: border-box;
     margin: 0;
@@ -35,252 +19,207 @@
 }
 
 body {
-    font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
     line-height: 1.6;
 }
 
-main, .auth-section {
-    max-width: 900px;
-    margin: 6px auto; 
-    padding: 0 15px;
-}
-
-a {
-    color: var(--text-accent);
-    text-decoration: none;
-    transition: color 0.2s;
-}
-
-a:hover {
-    color: var(--text-primary);
+main {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 20px auto 40px;
 }
 
 h1, h2, h3 {
-    margin-bottom: 15px;
-    color: var(--text-primary);
-}
-/* CORRECTION: Réduction de la taille de la police des titres des sections */
-.filter-box h2, .create-slot-box h2, .slot-list-card h2 {
-    font-size: 1.275em; /* Environ 15% de réduction */
-    margin-bottom: 12px; 
+    color: var(--text-color);
+    font-weight: 800;
+    margin-bottom: 10px;
 }
 
-
-ul {
-    list-style: none;
+.muted-text {
+    color: var(--muted-text);
+    font-size: 0.85em;
+    display: block;
+    margin-top: 5px;
 }
 
-/*
-====================================
-2. HEADER & NAVIGATION
-====================================
-*/
+/* --- Header & Navigation --- */
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 15px;
-    background-color: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
+    padding: 15px 20px;
+    background-color: var(--card-background);
+    box-shadow: var(--shadow-medium);
+    border-bottom: 3px solid var(--primary-color);
     position: sticky;
     top: 0;
     z-index: 1000;
 }
 
 .logo-link {
-    display: flex; /* <-- CORRECTION: Permet le centrage vertical (Point 1 & 2) */
-    align-items: center; 
-    width: 40px; 
-    height: 40px;
-    margin-right: 15px;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
 }
 
 .site-title {
-    /* Suppression du flex-grow pour mieux contrôler l'espace */
-    font-size: 1.5em;
+    font-size: 1.8em;
     font-weight: 800;
+    color: var(--primary-color);
+    margin-left: 10px;
     margin-bottom: 0;
-    color: var(--text-primary);
-    margin-right: auto; /* <-- CORRECTION: Pousse le bloc de droite (Point 2) */
 }
 
 .header-right {
     display: flex;
-    align-items: center; /* <-- CORRECTION: Alignement vertical des boutons (Point 2) */
+    align-items: center;
     gap: 10px;
 }
 
 .home-link {
-    font-size: 0.9em;
-    margin-right: 10px;
-    padding: 8px 10px;
-    border-radius: 6px;
-    transition: background-color 0.2s;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+    padding: 8px 12px;
 }
 
-.home-link:hover {
-    background-color: var(--hover-bg);
-}
-
-
-/*
-====================================
-3. CARDS & FORMS
-====================================
-*/
-.card {
-    background-color: var(--bg-secondary);
+/* --- Cards & General Layout --- */
+.card, .auth-card {
+    background-color: var(--card-background);
     padding: 20px;
     border-radius: 12px;
-    box-shadow: var(--card-shadow);
+    box-shadow: var(--shadow-light);
     margin-bottom: 20px;
-}
-/* CORRECTION: Réduction de 15% de la taille de la box 'Créer un créneau !' (Point 3) */
-.create-slot-box {
-    padding: 17px 20px; 
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    border: 1px solid #e0e0e0;
 }
 
+/* --- Auth Section --- */
 .auth-section {
     display: flex;
-    gap: 20px;
+    gap: 30px;
     justify-content: center;
-    margin-top: 50px;
+    margin-top: 40px;
 }
 
 .auth-card {
-    width: 100%;
-    max-width: 400px;
+    flex-basis: 400px;
+    padding: 30px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
 }
 
 label {
-    display: block;
     margin-top: 10px;
     margin-bottom: 5px;
-    font-size: 0.9em;
-    color: var(--muted-text);
+    font-weight: 600;
 }
 
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="tel"],
-input[type="date"],
-input[type="time"],
-select {
-    width: 100%;
+input[type="email"], input[type="password"], input[type="text"], input[type="date"], input[type="time"], input[type="tel"], select {
     padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid var(--border-color);
+    border: 1px solid #ccc;
     border-radius: 6px;
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
-    transition: border-color 0.2s, box-shadow 0.2s;
+    font-size: 1em;
+    margin-bottom: 15px;
+    transition: border-color 0.2s;
 }
 
 input:focus, select:focus {
-    border-color: var(--text-accent);
+    border-color: var(--primary-color);
     outline: none;
-    box-shadow: var(--focus-ring);
 }
 
-/*
-====================================
-4. BUTTONS
-====================================
-*/
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.checkbox-group label {
+    margin: 0 0 0 8px;
+    font-weight: 400;
+}
+
+.show-password-group {
+    margin-top: -5px;
+    margin-bottom: 20px;
+}
+
+/* --- Buttons --- */
 .action-btn {
     padding: 10px 15px;
     border: none;
     border-radius: 6px;
+    font-weight: 600;
     cursor: pointer;
-    font-weight: bold;
     transition: background-color 0.2s, opacity 0.2s;
+    font-size: 1em;
+    width: 100%;
+    margin-top: 10px;
 }
 
 .action-btn:disabled {
-    opacity: 0.5;
+    opacity: 0.6;
     cursor: not-allowed;
 }
 
-/* Primary actions (Join, Create) */
-.join-btn, #create-slot, #signup, #login, #save-profile-btn {
-    background-color: var(--text-accent);
-    color: var(--bg-primary);
-    width: 100%;
+.join-btn {
+    background-color: var(--primary-color);
+    color: white;
 }
 
-.join-btn:hover:not(:disabled), #create-slot:hover:not(:disabled), #signup:hover:not(:disabled), #login:hover:not(:disabled), #save-profile-btn:hover:not(:disabled) {
-    background-color: #6fb2f2;
+.join-btn:hover:not(:disabled) {
+    background-color: #3b87d6;
 }
 
-/* Secondary actions (Leave, Ghost) */
-.leave-btn, .ghost-btn {
-    background-color: var(--hover-bg);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
+.leave-btn {
+    background-color: var(--danger-color);
+    color: white;
 }
 
-.leave-btn:hover:not(:disabled), .ghost-btn:hover:not(:disabled) {
-    background-color: var(--border-color);
+.leave-btn:hover:not(:disabled) {
+    background-color: #cc5a5a;
 }
 
 .ghost-action-btn {
-    background: none;
+    width: 35px;
+    height: 35px;
+    padding: 0;
+    margin: 0;
+    background-color: transparent;
     color: var(--muted-text);
-    border: none;
-    padding: 5px;
     font-size: 1.2em;
 }
 
 .ghost-action-btn:hover {
-    color: var(--text-accent);
-    background-color: transparent;
+    color: var(--primary-color);
 }
 
 
-/*
-====================================
-5. INDEX SPECIFIC
-====================================
-*/
-.muted-text {
-    color: var(--muted-text);
-}
-
-.filter-controls {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-top: 20px;
-}
-
-.filter-controls select {
-    width: auto;
-    max-width: 250px;
-    margin-bottom: 0;
+/* --- Main Section (Slots & Filters) --- */
+.create-slot-box, .filter-box {
+    padding: 20px;
 }
 
 .toggle-header {
     cursor: pointer;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
+    font-size: 1.2em;
     margin-bottom: 0;
-}
-
-.toggle-header:hover {
-    color: var(--text-accent);
+    color: var(--primary-color);
 }
 
 .arrow {
-    transition: transform 0.2s;
-    font-size: 1.5em;
-    line-height: 1;
+    transition: transform 0.3s;
+    display: inline-block;
+    color: var(--muted-text);
+    font-size: 1.2em;
 }
 
 .inline-fields {
@@ -289,224 +228,192 @@ input:focus, select:focus {
 }
 
 .inline-fields > div {
-    flex: 1;
+    flex-grow: 1;
 }
 
-.checkbox-group {
-    display: flex;
-    align-items: center;
-    margin-top: -5px;
-    margin-bottom: 15px;
+.inline-fields label {
+    margin-top: 5px;
 }
 
-.checkbox-group input[type="checkbox"] {
-    width: auto;
-    margin-right: 8px;
-}
-
-.checkbox-group label {
-    margin: 0;
-    font-size: 1em;
-    color: var(--text-primary);
-}
-
-/* Activity Buttons (Filtering) */
 .activity-buttons {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-bottom: 15px;
+    margin-top: 15px;
 }
 
 .activity-btn {
-    padding: 6px 10px;
+    padding: 8px 15px;
+    border: none;
     border-radius: 20px;
-    border: 1px solid var(--border-color);
-    background-color: transparent;
-    color: var(--muted-text);
+    color: white;
+    font-weight: 600;
     cursor: pointer;
-    font-size: 0.9em;
-    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+    opacity: 0.9;
+    transition: opacity 0.2s, transform 0.1s;
 }
 
-.activity-btn.active, .activity-btn:hover {
-    background-color: var(--hover-bg);
-    border-color: var(--text-accent);
-    color: var(--text-primary);
+.activity-btn:hover {
+    opacity: 1;
 }
 
-/* Specific colors for filtering boxes (using the custom properties) */
-.activity-btn.act-jeux { border-color: var(--act-jeux); color: var(--act-jeux); }
-.activity-btn.act-culture { border-color: var(--act-culture); color: var(--act-culture); }
-.activity-btn.act-sport { border-color: var(--act-sport); color: var(--act-sport); }
-.activity-btn.act-sorties { border-color: var(--act-sorties); color: var(--act-sorties); }
-.activity-btn.act-autres { border-color: var(--act-autres); color: var(--act-autres); }
-.activity-btn.act-toutes { border-color: var(--act-toutes); color: var(--act-toutes); }
+.activity-btn.selected {
+    border: 2px solid var(--text-color);
+    transform: scale(1.05);
+    box-shadow: var(--shadow-light);
+}
 
-.activity-btn.act-jeux.active, .activity-btn.act-jeux:hover { background-color: rgba(192, 133, 245, 0.2); }
-.activity-btn.act-culture.active, .activity-btn.act-culture:hover { background-color: rgba(230, 124, 115, 0.2); }
-.activity-btn.act-sport.active, .activity-btn.act-sport:hover { background-color: rgba(242, 122, 125, 0.2); }
-.activity-btn.act-sorties.active, .activity-btn.act-sorties:hover { background-color: rgba(241, 166, 106, 0.2); }
-.activity-btn.act-autres.active, .activity-btn.act-autres:hover { background-color: rgba(120, 214, 164, 0.2); }
+.filter-controls {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
 
+.filter-controls select {
+    width: auto;
+    flex-grow: 1;
+}
 
-/* Slot List */
-.slot-list-card h2 {
-    margin-bottom: 5px;
+/* --- Slot List --- */
+.slot-list-card {
+    padding: 0; 
+    border: none;
+    box-shadow: none;
+    background-color: transparent;
+}
+
+#slots-list, #user-slots, #joined-slots {
+    list-style: none;
+    padding: 0;
 }
 
 .slot-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 0;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.slot-item:last-child {
-    border-bottom: none;
+    background-color: var(--card-background);
+    padding: 15px 20px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    box-shadow: var(--shadow-light);
+    border-left: 5px solid var(--primary-color); /* Bande de couleur subtile */
 }
 
 .slot-info {
     flex-grow: 1;
-    margin-right: 15px;
+    display: flex;
+    flex-direction: column;
 }
 
 .slot-info strong {
-    display: block;
     font-size: 1.1em;
     margin-bottom: 5px;
 }
 
-.slot-info small {
-    display: block;
-    color: var(--muted-text);
-    font-size: 0.8em;
-    margin-top: 5px;
+.subsub-line {
+    margin-bottom: 8px;
 }
 
-.slot-info a {
-    color: var(--text-primary);
-    text-decoration: underline;
+.subsub-box {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: 0.75em;
+    font-weight: 600;
+    border-radius: 4px;
+    margin-right: 5px;
 }
 
-.slot-info a:hover {
-    color: var(--text-accent);
-}
-
-.private-slot-lock {
-    color: var(--text-accent);
-    font-size: 0.9em;
-}
-
-.actions-box {
-    display: flex;
-    gap: 5px;
-}
-
-/* Participants Gauge */
 .participants-box {
-    margin-top: 8px;
-    margin-bottom: 5px;
-}
-
-.gauge-bar {
-    height: 6px;
-    background-color: var(--bg-primary);
-    border-radius: 3px;
     margin-top: 5px;
-    overflow: hidden;
-}
-
-.gauge-fill {
-    height: 100%;
-    background-color: var(--text-accent);
-    transition: width 0.3s;
-}
-
-.participants-list {
-    font-size: 0.85em;
+    font-size: 0.9em;
     color: var(--muted-text);
-    margin-bottom: 5px;
-}
-
-.suggestion-box {
-    padding: 8px;
-    margin-top: -10px;
-    margin-bottom: 15px;
-    background-color: var(--hover-bg);
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-.subsub-line {
+.participants-list {
+    font-size: 0.85em;
+    color: var(--muted-text);
+    margin-top: 3px;
+    margin-bottom: 5px;
+}
+
+.gauge-bar {
+    flex-grow: 1;
+    height: 5px;
+    background-color: #e0e0e0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.gauge-fill {
+    height: 100%;
+    background-color: var(--primary-color);
+    transition: width 0.3s;
+}
+
+.actions-box {
     display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
+    gap: 5px;
+    margin-left: 20px;
 }
 
-.subsub-box {
-    font-size: 0.75em;
-    padding: 3px 8px;
-    border-radius: 4px;
-    border: 1px solid;
-    font-weight: 500;
+/* --- Profile Page --- */
+.profile-container {
+    max-width: 800px;
+    margin: 0 auto;
 }
 
+.profile-container h1 {
+    text-align: center;
+    margin-bottom: 30px;
+}
 
-/*
-====================================
-6. MOBILE RESPONSIVE
-====================================
-*/
-@media (max-width: 600px) {
-    .header {
-        flex-wrap: wrap;
-    }
-    /* CORRECTION: Aligner Logo et Titre sur la même ligne en haut */
-    .logo-link {
-        order: 0;
-        margin-right: 5px; 
-    }
-    .site-title {
-        order: 1;
-        width: auto; 
-        margin-top: 0;
-        text-align: left;
-        font-size: 1.3em; 
-        margin-right: 10px; /* Ajout d'une petite marge */
-    }
-    .header-right {
-        order: 2;
-        margin-left: auto;
-    }
-    .home-link {
-        display: none; 
-    }
+.profile-card {
+    margin-bottom: 30px;
+}
+
+/* --- Responsive Design --- */
+@media (max-width: 800px) {
     .auth-section {
         flex-direction: column;
-        margin-top: 20px;
+        gap: 20px;
     }
-    .inline-fields {
-        flex-direction: column;
+    
+    .header {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
     }
+    
+    .site-title {
+        margin-left: 0;
+    }
+    
+    .header-right {
+        width: 100%;
+        justify-content: center;
+        margin-top: 5px;
+    }
+
     .slot-item {
         flex-direction: column;
         align-items: flex-start;
     }
-    .slot-info {
-        width: 100%;
-        margin-bottom: 10px;
-    }
+    
     .actions-box {
-        width: 100%;
-        justify-content: flex-end;
+        margin-left: 0;
+        margin-top: 10px;
     }
-    .ghost-action-btn {
-        padding: 5px 10px;
+    
+    .inline-fields {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .gauge-bar {
+        max-width: 150px;
     }
 }
