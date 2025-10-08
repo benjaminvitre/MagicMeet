@@ -130,6 +130,29 @@
 
     </main>
 
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+<script>
+    // Vos clés secrètes ! Remplacez les '...' par les valeurs réelles de votre console Firebase
+    const firebaseConfig = {
+     apiKey: "AIzaSyB0U_y6sMU8_vYriCK17H-Y5uPUb2ewPRw",
+  authDomain: "magicmeet--app.firebaseapp.com",
+  projectId: "magicmeet--app",
+  storageBucket: "magicmeet--app.firebasestorage.app",
+  messagingSenderId: "168285202241",
+  appId: "1:168285202241:web:6284051ec3884cfd81a3c0",
+  measurementId: "G-VGHYDK5B7R"
+    };
+
+    // Initialisation de Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore(); 
+</script>
+
+    
     <script src="script.js"></script>
 </body>
 </html>
