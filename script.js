@@ -149,7 +149,7 @@ function formatDateToWords(dateString){
   return date.toLocaleDateString('fr-FR', options);
 }
 
-/* Ajout d'une fonction pour mettre à jour un slot */
+/** Ajout d'une fonction pour mettre à jour un slot */
 async function updateSlot(slotId, updateFn){
     // 1. Récupère le créneau actuel
     const currentSlotDoc = await SLOTS_COLLECTION.doc(slotId).get();
@@ -163,7 +163,7 @@ async function updateSlot(slotId, updateFn){
     // 3. Sauvegarde dans la DB (utilisation de set pour réécrire, y compris les participants)
     await SLOTS_COLLECTION.doc(slotId).set(updatedSlot); 
     
-    // CORRECTION: Assure le rafraîchissement de TOUTES les listes
+    // CORRECTION (Point 4 & 6): Assure le rafraîchissement de TOUTES les listes
     if (document.getElementById('slots-list')) await loadSlots(); 
     if (document.getElementById('user-slots')) await loadUserSlots(); 
     if (document.getElementById('joined-slots')) await loadJoinedSlots(); 
@@ -543,7 +543,7 @@ function handleIndexPage() {
         
         info.appendChild(participantsBox);
         
-        // Liste des participants (cachée si privée)
+        // Liste des participants (Point 5 - affichage des pseudos)
         const participantsList = document.createElement('div'); participantsList.className = 'participants-list';
         const isParticipant = (slot.participants || []).some(p => p.email === currentUserEmail);
         const isOwner = slot.owner === currentUserEmail;
@@ -551,6 +551,7 @@ function handleIndexPage() {
         if (slot.private && slot.owner !== currentUserEmail){
             participantsList.textContent = 'Participants cachés.';
         } else {
+            // Affiche les pseudos des participants
             const pseudos = (slot.participants || []).map(p => p.pseudo || p.email.split('@')[0]);
             participantsList.textContent = 'Membres: ' + pseudos.join(', ');
         }
@@ -573,9 +574,12 @@ function handleIndexPage() {
                         
                         await updateSlot(slot.id, s => {
                             s.participants = s.participants || []; 
+                            // Point 5: Ajout du pseudo de l'utilisateur qui rejoint
                             s.participants.push({ email: currentUserEmail, pseudo: currentUserPseudo });
                             return s;
                         });
+                        // Point 7: Message de confirmation
+                        alert('Cool ! Créneau rejoint 😃');
                     };
                     actions.appendChild(joinBtn);
                 } else {
@@ -597,7 +601,7 @@ function handleIndexPage() {
             }
         }
         
-        // Boutons d'action pour le propriétaire (index.html ET profile.html)
+        // Boutons d'action pour le propriétaire (index.html ET profile.html) (Point 4 - permet la modification)
         if (isOwner){
             // Supprimer
             const del = document.createElement('button'); del.textContent='🗑️'; del.title='Supprimer';
@@ -608,7 +612,7 @@ function handleIndexPage() {
                 // UTILISATION FIREBASE: Suppression du document
                 await SLOTS_COLLECTION.doc(slot.id).delete();
                 
-                // Rechargement des listes asynchrone
+                // Rechargement des listes asynchrone (géré par updateSlot pour la cohérence)
                 if (document.getElementById('slots-list')) await loadSlots(); 
                 if (document.getElementById('user-slots')) await loadUserSlots(); 
                 if (typeof populateCityFilter === 'function') await populateCityFilter(); 
@@ -650,13 +654,12 @@ function handleIndexPage() {
         li.appendChild(info); 
         
         // Logique pour les actions sur la page de profil
-        // On vérifie que les actions pour le propriétaire sont bien affichées dans sa liste
         if (targetListElement.id === 'user-slots') {
-             // Si c'est ma liste, j'ajoute les actions du propriétaire
+             // Si c'est ma liste (Créneaux Créés), j'ajoute les actions du propriétaire (Point 4)
              li.appendChild(actions); 
 
         } else if (targetListElement.id === 'joined-slots') {
-            // Ajouter seulement l'action 'Quitter' dans la liste des créneaux rejoints
+            // Ajouter seulement l'action 'Quitter' dans la liste des créneaux rejoints (Point 6)
             if (isParticipant && !isOwner) {
                 const leaveBtn = document.createElement('button');
                 leaveBtn.className = 'action-btn leave-btn'; 
@@ -941,6 +944,7 @@ function handleIndexPage() {
             name, location, date, time, private: isPrivate,
             owner: currentUser.email, 
             ownerPseudo: currentUser.pseudo, 
+            // Point 5: S'assure que le créateur a son pseudo dans la liste des participants dès la création
             participants: [{email: currentUser.email, pseudo: currentUser.pseudo}]
         };
         
@@ -1047,7 +1051,7 @@ function handleProfilePage() {
         });
     }
     
-    // Appel asynchrone au chargement des créneaux
+    // Appel asynchrone au chargement des créneaux (Point 4 et 6)
     loadUserSlots();
     loadJoinedSlots();
 }
@@ -1059,7 +1063,7 @@ async function loadUserSlots(){
 
     // UTILISATION FIREBASE: getSlotsFromDB()
     let slots = await getSlotsFromDB();
-    // CORRECTION: Filtrage sur les créneaux dont l'utilisateur est OWNER
+    // Point 4: Filtrage sur les créneaux dont l'utilisateur est OWNER
     slots = slots.filter(s => s.owner === currentUser.email);
     slots = slots.filter(s => s.date && s.time).sort((a,b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
 
@@ -1072,28 +1076,4 @@ async function loadUserSlots(){
     }
 
     // Le renderSlotItem gère les actions (supprimer/rappeler/partager) pour l'owner si la targetList est 'user-slots'
-    slots.forEach(slot => renderSlotItem(slot, currentUserEmail, currentUserPseudo, list));
-}
-
-// Load and render user joined slots (Page Profile)
-async function loadJoinedSlots(){ 
-    const list = document.getElementById('joined-slots'); if (!list) return; list.innerHTML='';
-    if (!currentUser) return;
-
-    // UTILISATION FIREBASE: getSlotsFromDB()
-    let slots = await getSlotsFromDB();
-    // CORRECTION: Filtrage sur les créneaux où l'utilisateur est PARTICIPANT mais pas OWNER
-    slots = slots.filter(s => s.participants.some(p => p.email === currentUser.email) && s.owner !== currentUser.email);
-    slots = slots.filter(s => s.date && s.time).sort((a,b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
-
-    const currentUserEmail = currentUser.email;
-    const currentUserPseudo = currentUser.pseudo || currentUserEmail.split('@')[0];
-
-    if (slots.length === 0) {
-        list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Vous n\'avez rejoint aucun autre créneau.</li>';
-        return;
-    }
-
-    // Le renderSlotItem gère l'action 'Quitter' si la targetList est 'joined-slots'
-    slots.forEach(slot => renderSlotItem(slot, currentUserEmail, currentUserPseudo, list));
-}
+    slots.forEach
