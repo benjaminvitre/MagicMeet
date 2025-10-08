@@ -1,115 +1,107 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Magic Meet!</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Magic Meet!</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="header">
-    <a class="logo-link" href="index.html" aria-label="Accueil">
-      <!-- Inline SVG logo MM -->
-      <svg width="56" height="56" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img">
-        <rect rx="18" ry="18" width="120" height="120" fill="#0f1417"/>
-        <!-- 12 pastel circles (example positions) -->
-        <circle cx="20" cy="18" r="6" fill="#b294f2"/>
-        <circle cx="40" cy="10" r="3" fill="#f6d06f"/>
-        <circle cx="60" cy="16" r="8" fill="#f5b88b"/>
-        <circle cx="88" cy="20" r="5" fill="#9fe3cc"/>
-        <circle cx="18" cy="92" r="6" fill="#f5b0d0"/>
-        <circle cx="36" cy="100" r="3" fill="#c085f5"/>
-        <circle cx="60" cy="98" r="10" fill="#6fb2f2"/>
-        <circle cx="92" cy="94" r="4" fill="#f6d06f"/>
-        <circle cx="100" cy="40" r="5" fill="#f5b88b"/>
-        <circle cx="98" cy="70" r="3" fill="#78d6a4"/>
-        <circle cx="30" cy="30" r="4" fill="#f1a66a"/>
-        <circle cx="80" cy="60" r="6" fill="#b294f2"/>
-        <!-- Rounded M letters -->
-        <g transform="translate(12,18)" fill="#ffffff">
-          <path d="M6 60 q6 -60 18 0 q6 -40 18 0" fill="url(#g1)" stroke="none"/> <!-- decorative; actual shapes kept simple below -->
-          <text x="0" y="58" font-family="Inter,Arial" font-weight="800" font-size="72" fill="#4da6ff" style="letter-spacing:-4px">M</text>
-          <text x="46" y="58" font-family="Inter,Arial" font-weight="800" font-size="72" fill="#48d28a" style="letter-spacing:-4px">M</text>
-        </g>
-      </svg>
-    </a>
+  <header class="header">
+    <a class="logo-link" href="index.html" aria-label="Accueil">
+            <svg width="56" height="56" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img">
+        <rect rx="18" ry="18" width="120" height="120" fill="#0f1417"/>
+                <circle cx="20" cy="18" r="6" fill="#b294f2"/>
+        <circle cx="40" cy="10" r="3" fill="#f6d06f"/>
+        <circle cx="60" cy="16" r="8" fill="#f5b88b"/>
+        <circle cx="88" cy="20" r="5" fill="#9fe3cc"/>
+        <circle cx="18" cy="92" r="6" fill="#f5b0d0"/>
+        <circle cx="36" cy="100" r="3" fill="#c085f5"/>
+        <circle cx="60" cy="98" r="10" fill="#6fb2f2"/>
+        <circle cx="92" cy="94" r="4" fill="#f6d06f"/>
+        <circle cx="100" cy="40" r="5" fill="#f5b88b"/>
+        <circle cx="98" cy="70" r="3" fill="#78d6a4"/>
+        <circle cx="30" cy="30" r="4" fill="#f1a66a"/>
+        <circle cx="80" cy="60" r="6" fill="#b294f2"/>
+                <g transform="translate(12,18)" fill="#ffffff">
+          <path d="M6 60 q6 -60 18 0 q6 -40 18 0" fill="url(#g1)" stroke="none"/>           <text x="0" y="58" font-family="Inter,Arial" font-weight="800" font-size="72" fill="#4da6ff" style="letter-spacing:-4px">M</text>
+          <text x="46" y="58" font-family="Inter,Arial" font-weight="800" font-size="72" fill="#48d28a" style="letter-spacing:-4px">M</text>
+        </g>
+      </svg>
+    </a>
 
-    <h1 class="site-title">Magic Meet!</h1>
+    <h1 class="site-title">Bienvenue sur Magic Meet!</h1>
 
-    <nav class="header-right">
-      <a class="profile-link" href="profile.html">👤 Profil</a>
-      <button id="logout" class="ghost-btn">Se déconnecter</button>
-    </nav>
-  </header>
+    <nav class="header-right">
+      <a class="profile-link" href="profile.html">👤 Profil</a>
+      <button id="logout" class="ghost-btn">Se déconnecter</button>
+    </nav>
+  </header>
 
-  <!-- Auth -->
-  <section id="auth-section" class="card">
-    <h2>Connexion / Inscription</h2>
-    <input id="email" type="email" placeholder="Email ou téléphone" />
-    <input id="password" type="password" placeholder="Mot de passe" />
-    <div class="row-btns">
-      <button id="login">Se connecter</button>
-      <button id="signup">Créer un compte</button>
-    </div>
-  </section>
+    <section id="auth-section" class="card">
+    <h2>Connexion / Inscription</h2>
+    <input id="email" type="email" placeholder="Email ou téléphone" />
+    <input id="password" type="password" placeholder="Mot de passe" />
+    <div class="row-btns">
+      <button id="login">Se connecter</button>
+      <button id="signup">Créer un compte</button>
+    </div>
+  </section>
 
-  <!-- Main -->
-  <main id="main-section" style="display:none;">
-    <!-- Activities -->
-    <section class="card">
-      <h2>Trouver une activité</h2>
-      <div id="activities" class="activity-container">
-        <!-- Buttons will be filled by JS -->
-      </div>
-      <div id="subactivities" class="activity-container"></div>
-    </section>
+    <main id="main-section" style="display:none;">
+        <section class="card">
+      <h2>Trouver une activité :)</h2>
+      <div id="activities" class="activity-container">
+              </div>
+      <div id="subactivities" class="activity-container"></div>
+    </section>
 
-    <!-- Create slot (accordion) -->
-    <section class="card">
-      <div id="toggle-create-form" class="create-slot-box">
-        <span>➕</span> <strong>Créer un créneau</strong>
-        <span class="arrow" style="margin-left:auto">▶</span>
-      </div>
+        <section class="card">
+      <div id="toggle-create-form" class="create-slot-box">
+        <span>➕</span> <strong>Créer un créneau</strong>
+        <span class="arrow" style="margin-left:auto">▶</span>
+      </div>
 
-      <form id="create-slot-form" class="form-compact" onsubmit="return false;">
-        <!-- Activity chosen by button; this shows current selection -->
-        <div class="current-activity-line">
-          <label>Activité sélectionnée :</label>
-          <div id="current-activity" class="pill muted">Aucune</div>
-        </div>
+      <form id="create-slot-form" class="form-compact" onsubmit="return false;">
+                <div class="current-activity-line">
+          <label>Activité sélectionnée :</label>
+          <div id="current-activity" class="pill muted">Aucune</div>
+        </div>
+        
+                <label for="form-activity-select">Activité (ou utiliser les boutons au-dessus)</label>
+        <select id="form-activity-select">
+          <option value="">-- Choisis une activité --</option>
+                  </select>
 
-        <!-- select sub-activity (populated by JS after choosing an activity) -->
-        <label for="sub-select">Sous-activité</label>
-        <select id="sub-select">
-          <option value="">-- Choisis une sous-activité --</option>
-        </select>
+                <label for="sub-select">Sous-activité</label>
+        <select id="sub-select">
+          <option value="">-- Choisis une sous-activité --</option>
+        </select>
 
-        <!-- select sub-sub only if available -->
-        <label for="subsub-select">Sous-sous-activité (optionnel)</label>
-        <select id="subsub-select">
-          <option value="">-- Optionnel --</option>
-        </select>
+                <label for="subsub-select">Sous-sous-activité (optionnel)</label>
+        <select id="subsub-select">
+          <option value="">-- Optionnel --</option>
+        </select>
 
-        <input id="slot-name" type="text" placeholder="Nom du créneau" />
-        <input id="slot-location" type="text" placeholder="Lieu (ex : Café du coin, Paris 11e)" />
-        <div class="two-cols">
-          <input id="slot-date" type="date" />
-          <input id="slot-time" type="time" />
-        </div>
+        <input id="slot-name" type="text" placeholder="Nom du créneau" />
+        <input id="slot-location" type="text" placeholder="Lieu (ex : Café du coin, Paris 11e)" />
+        <div class="two-cols">
+          <input id="slot-date" type="date" />
+          <input id="slot-time" type="time" />
+        </div>
 
-        <label class="inline-label"><input id="private-slot" type="checkbox" /> Privé</label>
+        <label class="inline-label"><input id="private-slot" type="checkbox" /> Privé</label>
 
-        <button id="create-slot">Créer</button>
-      </form>
-    </section>
+        <button id="create-slot">Créer</button>
+      </form>
+    </section>
 
-    <!-- Slots list -->
-    <section class="card">
-      <h2>Créneaux disponibles</h2>
-      <ul id="slots-list" aria-live="polite"></ul>
-    </section>
-  </main>
+        <section class="card">
+      <h2>Créneaux disponibles</h2>
+      <ul id="slots-list" aria-live="polite"></ul>
+    </section>
+  </main>
 
-  <script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
