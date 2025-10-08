@@ -38,7 +38,7 @@ body {
     line-height: 1.6;
 }
 
-/* Réduction de l'espace global */
+/* Point 8: Réduction de l'écart entre le header et le main (60% de 15px) */
 main {
     max-width: 900px;
     margin: 6px auto; 
@@ -94,20 +94,23 @@ a {
 */
 .card {
     background: var(--card-bg);
+    /* Point 8: Réduit la marge entre les boîtes de 6px (anc. 15px) */
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     margin-bottom: 6px; 
 }
-/* Point 3: Réduction de la taille de la box (padding et marge) */
+
+/* Point 7: Réduction de la hauteur de la box (padding et marge) */
 .compact-form-card {
-    padding: 12px 20px; /* Réduit le padding vertical de la carte */
-}
-.compact-form-card .form-compact {
-    /* Si besoin de réduire l'intérieur */
+    padding: 10px 20px; /* Réduit le padding vertical de la carte pour réduire la hauteur */
 }
 
 
+/* Point 1: Réduction de la taille de la police des titres H2 (15%) */
+.section-title {
+    font-size: 1.6rem; /* Ancienne taille 1.9rem ou plus, réduite à ~1.6rem */
+}
 .card h2 {
     color: var(--text-color);
     margin-top: 0;
@@ -160,14 +163,15 @@ input[type="tel"],
 select {
     width: calc(100% - 20px);
     padding: 10px;
-    margin: 8px 0;
+    /* Point 3: Aligné avec les autres boxes (marge uniforme) */
+    margin: 4px 0 8px 0; 
     box-sizing: border-box;
     border: 1px solid var(--border-color);
     border-radius: 6px;
     background: var(--input-bg);
     color: var(--text-color);
 }
-/* Réduire l'écart entre le champ lieu et le champ date (si le lien Google Maps est caché) */
+/* Réduire l'écart après le champ Lieu (pour laisser de la place au lien Google Maps) */
 input[id="slot-location"] {
     margin-bottom: 4px; 
 }
@@ -178,14 +182,19 @@ input:focus, select:focus {
 
 label {
     display: block;
-    margin-top: 10px;
+    /* Point 2: Réduction de la marge supérieure des labels */
+    margin-top: 5px; 
     font-size: 0.95rem;
     font-weight: 600;
-    margin-bottom: 5px; /* Rapproche le titre du champ (Point 1 & 2) */
+    margin-bottom: 4px; /* Rapproche le titre du champ */
 }
-/* Corrige la marge du label du lieu */
-label[for="slot-location"] {
-    margin-top: 5px; /* Réduit l'espace après les champs précédents */
+
+/* Pour les éléments juste après l'ouverture du formulaire (Point 2) */
+.form-compact > * {
+    margin-top: 5px; /* S'assure qu'ils sont rapprochés du haut */
+}
+.form-compact .current-activity-line label {
+    margin-top: 0; /* Pour la première ligne d'activité sélectionnée */
 }
 
 
@@ -193,7 +202,7 @@ label[for="slot-location"] {
 .two-cols {
     display: flex;
     gap: 10px;
-    flex-wrap: nowrap; /* Assure que les colonnes restent sur une ligne */
+    flex-wrap: nowrap; 
     margin-top: 4px; 
 }
 
@@ -201,11 +210,10 @@ label[for="slot-location"] {
 .date-col, .time-col {
     display: flex;
     flex-direction: column;
-    /* Point 1 & 2: Augmente la taille du champ de 50% par rapport à l'ancienne taille (qui était de 50%) */
-    flex: 0 0 calc(75% - 5px); /* 75% du conteneur parent moins la moitié du gap */
+    flex: 0 0 calc(75% - 5px); 
 }
 .time-col {
-    flex: 0 0 calc(25% - 5px); /* 25% du conteneur parent moins la moitié du gap */
+    flex: 0 0 calc(25% - 5px); 
 }
 
 
@@ -223,7 +231,6 @@ input[type="date"], input[type="time"] {
     width: 100%; 
     padding-right: 0; 
     text-align: center; 
-    /* Point 1 & 2: Rapproche le texte de l'icône calendrier/horloge */
     padding-left: 5px; 
 }
 
@@ -416,11 +423,11 @@ button:hover:not(:disabled) {
     display: flex;
     align-items: center;
     cursor: pointer;
-    padding: 0; /* Réduit le padding pour la compacité */
-    margin-bottom: 10px;
+    padding: 0; 
+    margin-bottom: 5px; /* Réduction de la marge */
 }
 .create-slot-title {
-    font-size: 1.5rem; 
+    font-size: 1.6rem; /* Point 1: Taille de police réduite */
     font-weight: 800;
     margin: 0; 
 }
@@ -431,7 +438,7 @@ button:hover:not(:disabled) {
 
 .form-compact {
     display: none;
-    padding-top: 10px;
+    padding-top: 5px; /* Réduit le padding supérieur */
     border-top: 1px solid var(--border-color);
 }
 
