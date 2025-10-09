@@ -135,8 +135,8 @@ ul {
     margin-bottom: 20px;
 }
 .create-slot-box {
-    /* Ancien padding: 27px 20px; */
-    padding: 22px 20px; /* Réduction de ~20% */
+    /* Ancien padding: 22px 20px; */
+    padding: 18px 20px; /* Réduction de ~17% */
 }
 
 .auth-section {
