@@ -303,6 +303,17 @@ input:focus, select:focus {
     color: var(--text-primary);
 }
 
+/* NOUVEAU: Style pour les cases à cocher des formulaires */
+.form-checkbox {
+    margin-top: -10px; /* Réduit l'espace au-dessus */
+    margin-bottom: 15px;
+}
+.form-checkbox label {
+    font-size: 0.9em; /* Police légèrement plus petite */
+    color: var(--muted-text);
+}
+
+
 /* Activity Buttons (Filtering) */
 .activity-buttons {
     display: flex;
