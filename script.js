@@ -85,10 +85,8 @@ function extractCity(locationText) {
         }
         return lastPart.replace(/\d{5}/, '').trim(); // Gère aussi le cas sans espace après le CP
     }
-    // Si pas de virgule, on essaie de deviner. Ce n'est pas parfait.
     const words = locationText.split(' ');
     const lastWord = words[words.length -1];
-     // Si le dernier mot ressemble à une ville (commence par une majuscule)
     if (lastWord && lastWord.length > 2 && lastWord[0] === lastWord[0].toUpperCase()) {
         return lastWord;
     }
@@ -126,6 +124,164 @@ function fillProfileFields(user) {
 
 function logout() {
     auth.signOut().catch(error => console.error("Erreur de déconnexion: ", error));
+}
+
+// =======================================================================
+// CORRECTION : La fonction renderSlotItem est maintenant ici, au niveau global,
+// pour être accessible par la page d'accueil ET la page de profil.
+// =======================================================================
+function renderSlotItem(slot, targetListElement) {
+    const li = document.createElement('li'); li.className='slot-item';
+    const info = document.createElement('div'); info.className='slot-info';
+    const activityLine = document.createElement('div'); activityLine.className = 'subsub-line';
+
+    let actPill = document.createElement('span');
+    actPill.className = 'subsub-box';
+    actPill.textContent = slot.activity;
+    actPill.style.border = `1px solid ${COLOR_MAP[slot.activity] || '#9aa9bf'}`;
+    actPill.style.color = COLOR_MAP[slot.activity] || '#9aa9bf';
+    activityLine.appendChild(actPill);
+
+    if (slot.sub) {
+        let subPill = document.createElement('span');
+        subPill.className = 'subsub-box';
+        subPill.textContent = slot.sub;
+        subPill.style.border = `1px solid ${COLOR_MAP[slot.sub] || COLOR_MAP[slot.activity] || '#9aa9bf'}`;
+        subPill.style.color = COLOR_MAP[slot.sub] || COLOR_MAP[slot.activity] || '#9aa9bf';
+        activityLine.appendChild(subPill);
+    }
+
+    if (slot.subsub) {
+        let subsubPill = document.createElement('span');
+        subsubPill.className = 'subsub-box';
+        subsubPill.textContent = slot.subsub;
+        subsubPill.style.border = `1px solid ${COLOR_MAP[slot.subsub] || COLOR_MAP[slot.sub] || COLOR_MAP[slot.activity] || '#9aa9bf'}`;
+        subsubPill.style.color = COLOR_MAP[slot.subsub] || COLOR_MAP[slot.sub] || COLOR_MAP[slot.activity] || '#9aa9bf';
+        activityLine.appendChild(subsubPill);
+    }
+    info.appendChild(activityLine);
+
+    const title = document.createElement('strong'); title.textContent = slot.name;
+    const formattedDate = formatDateToWords(slot.date);
+    const when = document.createElement('div');
+
+    if (slot.location) {
+         when.textContent = `📍 ${slot.location}`;
+    }
+    when.innerHTML += ` — 🗓️ ${formattedDate} à ${slot.time}`;
+
+    const owner = document.createElement('small');
+    owner.textContent = `par ${slot.ownerPseudo}`;
+    if (slot.private) owner.innerHTML += ' <span class="private-slot-lock">🔒 Privé</span>';
+
+    info.appendChild(title); info.appendChild(when);
+
+    const participantsCount = (slot.participants || []).length;
+    const participantsBox = document.createElement('div'); participantsBox.className = 'participants-box';
+    participantsBox.innerHTML = `👤 ${participantsCount} personne${participantsCount > 1 ? 's' : ''}`;
+
+    const gaugeBar = document.createElement('div'); gaugeBar.className = 'gauge-bar';
+    const gaugeFill = document.createElement('div'); gaugeFill.className = 'gauge-fill';
+    const fillPercent = Math.min(100, (participantsCount / MAX_PARTICIPANTS) * 100);
+    gaugeFill.style.width = `${fillPercent}%`;
+    gaugeBar.appendChild(gaugeFill);
+    participantsBox.appendChild(gaugeBar);
+    info.appendChild(participantsBox);
+
+    const participantsList = document.createElement('div'); participantsList.className = 'participants-list';
+    const isParticipant = (slot.participants_uid || []).includes(currentUser.uid);
+    const isOwner = slot.owner === currentUser.uid;
+
+    if (slot.private && !isOwner){
+        participantsList.textContent = 'Participants cachés.';
+    } else {
+        const pseudos = (slot.participants || []).map(p => p.pseudo);
+        participantsList.textContent = 'Membres: ' + pseudos.join(', ');
+    }
+    info.appendChild(participantsList);
+    info.appendChild(owner);
+
+    const actions = document.createElement('div'); actions.className='actions-box';
+
+    const slotRef = db.collection('slots').doc(slot.id);
+
+    const reloadLists = () => {
+        if (typeof loadSlots === 'function' && document.getElementById('slots-list')) loadSlots();
+        if (typeof loadUserSlots === 'function' && document.getElementById('user-slots')) loadUserSlots();
+        if (typeof loadJoinedSlots === 'function' && document.getElementById('joined-slots')) loadJoinedSlots();
+    };
+    
+    // Actions pour la page d'accueil et la page de profil (créneaux créés)
+    if (targetListElement.id === 'slots-list' || targetListElement.id === 'user-slots') {
+        if (!isParticipant){
+            const joinBtn = document.createElement('button');
+            joinBtn.className = 'action-btn join-btn';
+            joinBtn.textContent = '✅ Rejoindre';
+
+            if (!slot.private || isOwner){
+                joinBtn.onclick = ()=> {
+                    if (participantsCount >= MAX_PARTICIPANTS) return alert('Désolé, ce créneau est complet.');
+                    slotRef.update({
+                        participants: firebase.firestore.FieldValue.arrayUnion({uid: currentUser.uid, pseudo: currentUser.pseudo}),
+                        participants_uid: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+                    }).then(reloadLists);
+                };
+                actions.appendChild(joinBtn);
+            } else {
+                joinBtn.textContent = '🔒 Privé';
+                joinBtn.disabled = true;
+                actions.appendChild(joinBtn);
+            }
+        } else if (isParticipant && !isOwner) {
+            const leaveBtn = document.createElement('button');
+            leaveBtn.className = 'action-btn leave-btn';
+            leaveBtn.textContent = '❌ Quitter';
+            leaveBtn.onclick = ()=> {
+                slotRef.update({
+                    participants: firebase.firestore.FieldValue.arrayRemove({uid: currentUser.uid, pseudo: currentUser.pseudo}),
+                    participants_uid: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+                }).then(reloadLists);
+            };
+            actions.appendChild(leaveBtn);
+        }
+    }
+    
+    // Actions spécifiques pour la page de profil (créneaux rejoints)
+    if (targetListElement.id === 'joined-slots') {
+        const leaveBtn = document.createElement('button');
+        leaveBtn.className = 'action-btn leave-btn';
+        leaveBtn.textContent = '❌ Quitter';
+        leaveBtn.onclick = () => {
+             slotRef.update({
+                participants: firebase.firestore.FieldValue.arrayRemove({uid: currentUser.uid, pseudo: currentUser.pseudo}),
+                participants_uid: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+            }).then(reloadLists);
+        };
+        actions.appendChild(leaveBtn);
+    }
+
+
+    if (isOwner){
+        const del = document.createElement('button'); del.textContent='🗑️'; del.title='Supprimer';
+        del.className = 'action-btn ghost-action-btn';
+        del.onclick = ()=> {
+            if (!confirm('Supprimer ce créneau ?')) return;
+            slotRef.delete().then(reloadLists);
+        };
+        actions.appendChild(del);
+    }
+
+    const share = document.createElement('button'); share.textContent='🔗'; share.title='Partager';
+    share.className = 'action-btn ghost-action-btn';
+    share.onclick = ()=> {
+        const link = `${window.location.origin}${window.location.pathname}?slot=${slot.id}`;
+        navigator.clipboard.writeText(link).then(()=>alert('Lien copié !'));
+    };
+    actions.appendChild(share);
+
+    li.appendChild(info);
+    li.appendChild(actions);
+    targetListElement.appendChild(li);
 }
 
 
@@ -199,10 +355,8 @@ function handleIndexPageListeners() {
         const pseudo = document.getElementById('pseudo').value.trim();
         const email = document.getElementById('email-signup').value.trim();
         const password = document.getElementById('password-signup').value.trim();
-        // NOUVEAU: On récupère la confirmation
         const passwordConfirm = document.getElementById('password-confirm-signup').value.trim();
 
-        // NOUVEAU: Vérification de la correspondance des mots de passe
         if (password !== passwordConfirm) {
             return alert('Les mots de passe ne correspondent pas.');
         }
@@ -238,7 +392,6 @@ function handleIndexPageListeners() {
             });
     });
 
-    // NOUVEAU: Logique pour afficher/masquer les mots de passe
     const showPassLoginCheckbox = document.getElementById('show-password-login');
     const passwordLoginInput = document.getElementById('password-login');
     if (showPassLoginCheckbox && passwordLoginInput) {
@@ -277,11 +430,8 @@ function showMain(){
     const createBtn = document.getElementById('create-slot');
     const cityFilterSelect = document.getElementById('city-filter-select');
     const locationInput = document.getElementById('slot-location');
-    const locationLink = document.getElementById('location-link');
-    const locationSuggestionBox = document.getElementById('location-suggestion-box');
     
     let selectedActivity = null;
-    let suggestedAddress = '';
 
     const addressCache = {
         '1 rue de la roquet': '1 rue de la Roquette, 75011 Paris',
@@ -430,142 +580,6 @@ function showMain(){
         };
     }
 
-    function renderSlotItem(slot, targetListElement) {
-        const li = document.createElement('li'); li.className='slot-item';
-        const info = document.createElement('div'); info.className='slot-info';
-        const activityLine = document.createElement('div'); activityLine.className = 'subsub-line';
-
-        let actPill = document.createElement('span');
-        actPill.className = 'subsub-box';
-        actPill.textContent = slot.activity;
-        actPill.style.border = `1px solid ${COLOR_MAP[slot.activity] || '#9aa9bf'}`;
-        actPill.style.color = COLOR_MAP[slot.activity] || '#9aa9bf';
-        activityLine.appendChild(actPill);
-
-        if (slot.sub) {
-            let subPill = document.createElement('span');
-            subPill.className = 'subsub-box';
-            subPill.textContent = slot.sub;
-            subPill.style.border = `1px solid ${COLOR_MAP[slot.sub] || COLOR_MAP[slot.activity] || '#9aa9bf'}`;
-            subPill.style.color = COLOR_MAP[slot.sub] || COLOR_MAP[slot.activity] || '#9aa9bf';
-            activityLine.appendChild(subPill);
-        }
-
-        if (slot.subsub) {
-            let subsubPill = document.createElement('span');
-            subsubPill.className = 'subsub-box';
-            subsubPill.textContent = slot.subsub;
-            subsubPill.style.border = `1px solid ${COLOR_MAP[slot.subsub] || COLOR_MAP[slot.sub] || COLOR_MAP[slot.activity] || '#9aa9bf'}`;
-            subsubPill.style.color = COLOR_MAP[slot.subsub] || COLOR_MAP[slot.sub] || COLOR_MAP[slot.activity] || '#9aa9bf';
-            activityLine.appendChild(subsubPill);
-        }
-        info.appendChild(activityLine);
-
-        const title = document.createElement('strong'); title.textContent = slot.name;
-        const formattedDate = formatDateToWords(slot.date);
-        const when = document.createElement('div');
-
-        if (slot.location) {
-             when.textContent = `📍 ${slot.location}`;
-        }
-        when.innerHTML += ` — 🗓️ ${formattedDate} à ${slot.time}`;
-
-        const owner = document.createElement('small');
-        owner.textContent = `par ${slot.ownerPseudo}`;
-        if (slot.private) owner.innerHTML += ' <span class="private-slot-lock">🔒 Privé</span>';
-
-        info.appendChild(title); info.appendChild(when);
-
-        const participantsCount = (slot.participants || []).length;
-        const participantsBox = document.createElement('div'); participantsBox.className = 'participants-box';
-        participantsBox.innerHTML = `👤 ${participantsCount} personne${participantsCount > 1 ? 's' : ''}`;
-
-        const gaugeBar = document.createElement('div'); gaugeBar.className = 'gauge-bar';
-        const gaugeFill = document.createElement('div'); gaugeFill.className = 'gauge-fill';
-        const fillPercent = Math.min(100, (participantsCount / MAX_PARTICIPANTS) * 100);
-        gaugeFill.style.width = `${fillPercent}%`;
-        gaugeBar.appendChild(gaugeFill);
-        participantsBox.appendChild(gaugeBar);
-        info.appendChild(participantsBox);
-
-        const participantsList = document.createElement('div'); participantsList.className = 'participants-list';
-        const isParticipant = (slot.participants_uid || []).includes(currentUser.uid);
-        const isOwner = slot.owner === currentUser.uid;
-
-        if (slot.private && !isOwner){
-            participantsList.textContent = 'Participants cachés.';
-        } else {
-            const pseudos = (slot.participants || []).map(p => p.pseudo);
-            participantsList.textContent = 'Membres: ' + pseudos.join(', ');
-        }
-        info.appendChild(participantsList);
-        info.appendChild(owner);
-
-        const actions = document.createElement('div'); actions.className='actions-box';
-
-        const slotRef = db.collection('slots').doc(slot.id);
-
-        if (targetListElement.id === 'slots-list' && currentUser) {
-            if (!isParticipant){
-                const joinBtn = document.createElement('button');
-                joinBtn.className = 'action-btn join-btn';
-                joinBtn.textContent = '✅ Rejoindre';
-
-                if (!slot.private || isOwner){
-                    joinBtn.onclick = ()=> {
-                        if (participantsCount >= MAX_PARTICIPANTS) return alert('Désolé, ce créneau est complet.');
-                        slotRef.update({
-                            participants: firebase.firestore.FieldValue.arrayUnion({uid: currentUser.uid, pseudo: currentUser.pseudo}),
-                            participants_uid: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-                        }).then(loadSlots);
-                    };
-                    actions.appendChild(joinBtn);
-                } else {
-                    joinBtn.textContent = '🔒 Privé';
-                    joinBtn.disabled = true;
-                    actions.appendChild(joinBtn);
-                }
-            } else if (isParticipant && !isOwner) {
-                const leaveBtn = document.createElement('button');
-                leaveBtn.className = 'action-btn leave-btn';
-                leaveBtn.textContent = '❌ Quitter';
-                leaveBtn.onclick = ()=> {
-                    slotRef.update({
-                        participants: firebase.firestore.FieldValue.arrayRemove({uid: currentUser.uid, pseudo: currentUser.pseudo}),
-                        participants_uid: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
-                    }).then(loadSlots);
-                };
-                actions.appendChild(leaveBtn);
-            }
-        }
-
-        if (isOwner){
-            const del = document.createElement('button'); del.textContent='🗑️'; del.title='Supprimer';
-            del.className = 'action-btn ghost-action-btn';
-            del.onclick = ()=> {
-                if (!confirm('Supprimer ce créneau ?')) return;
-                slotRef.delete().then(() => {
-                    if(typeof loadSlots === 'function') loadSlots();
-                    if(typeof loadUserSlots === 'function') loadUserSlots();
-                });
-            };
-            actions.appendChild(del);
-        }
-
-        const share = document.createElement('button'); share.textContent='🔗'; share.title='Partager';
-        share.className = 'action-btn ghost-action-btn';
-        share.onclick = ()=> {
-            const link = `${window.location.origin}${window.location.pathname}?slot=${slot.id}`;
-            navigator.clipboard.writeText(link).then(()=>alert('Lien copié !'));
-        };
-        actions.appendChild(share);
-
-        li.appendChild(info);
-        li.appendChild(actions);
-        targetListElement.appendChild(li);
-    }
-
-
     async function loadSlots(){
         const list = document.getElementById('slots-list'); if (!list) return; list.innerHTML='';
         
@@ -692,7 +706,6 @@ function handleProfilePage() {
     if (profileForm) {
         profileForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            // La modification du profil sera pour une prochaine étape
         });
     }
 }
