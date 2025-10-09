@@ -6,18 +6,18 @@ const sortArray = (arr) => arr.sort((a, b) => a.localeCompare(b, 'fr'));
 
 const ACTIVITIES = {
   "Toutes": [],
-  "Autres": [], 
-  "Culture": sortArray(["Cinéma", "Théâtre", "Exposition", "Concert"]), 
-  "Jeux": sortArray(["Jeux de cartes", "Jeux vidéo", "Jeux de société"]), 
-  "Sorties": sortArray(["Bar", "Restaurant", "Picnic"]), 
-  "Sport": sortArray(["Foot", "Padel", "Tennis", "Running", "Badminton"]) 
+  "Autres": [],
+  "Culture": sortArray(["Cinéma", "Théâtre", "Exposition", "Concert"]),
+  "Jeux": sortArray(["Jeux de cartes", "Jeux vidéo", "Jeux de société"]),
+  "Sorties": sortArray(["Bar", "Restaurant", "Picnic"]),
+  "Sport": sortArray(["Foot", "Padel", "Tennis", "Running", "Badminton"])
 };
 
 // Trie le dictionnaire principal par clé (activité), en gardant 'Toutes' en premier
 const sortedActivityKeys = Object.keys(ACTIVITIES).filter(key => key !== "Toutes").sort((a, b) => a.localeCompare(b, 'fr'));
 const tempActivities = { "Toutes": ACTIVITIES["Toutes"] };
 sortedActivityKeys.forEach(key => tempActivities[key] = ACTIVITIES[key]);
-Object.assign(ACTIVITIES, tempActivities); 
+Object.assign(ACTIVITIES, tempActivities);
 
 // Ajout des emojis
 const ACTIVITY_EMOJIS = {
@@ -44,40 +44,35 @@ Object.keys(SUBSUB).forEach(key => {
 
 // Mappage des couleurs pour les boîtes d'activité/sous-activité
 const COLOR_MAP = {
-  "Autres": "#78d6a4", 
-  "Jeux": "#c085f5", 
-  "Culture": "#e67c73", 
-  "Sport": "#f27a7d", 
-  "Sorties": "#f1a66a", 
+  "Autres": "#78d6a4",
+  "Jeux": "#c085f5",
+  "Culture": "#e67c73",
+  "Sport": "#f27a7d",
+  "Sorties": "#f1a66a",
   "Toutes": "#9aa9bf",
-  
+
   // Couleurs pour les sous-activités (nouvelles et anciennes)
   "Jeux de cartes": "#c085f5", "Jeux vidéo": "#6fb2f2", "Jeux de société": "#64e3be",
   "Cinéma": "#e67c73", "Théâtre": "#cc5a4f", "Exposition": "#e39791", "Concert": "#f1b6b3",
   "Foot": "#f27a7d", "Padel": "#cc5a5e", "Tennis": "#e39799", "Running": "#f1b6b7", "Badminton": "#78d6a4",
   "Bar": "#f1a66a", "Restaurant": "#d68e4a", "Picnic": "#f5c399",
-  
+
   // Couleurs des sous-sous-activités
   "Magic The Gathering": "#b294f2", "Pokémon": "#f6d06f", "Yu-Gi-Oh!": "#f1a66a",
 };
 
 
 const MAX_PARTICIPANTS = 10;
-let currentFilterActivity = "Toutes"; 
-let currentFilterSub = "Toutes"; 
-let currentFilterCity = "Toutes"; 
-let currentUser = null; // Remplacé par la gestion de Firebase
+let currentFilterActivity = "Toutes";
+let currentFilterSub = "Toutes";
+let currentFilterCity = "Toutes";
+let currentUser = null; // Contiendra les infos de l'utilisateur connecté
 
-/* ===== FONCTIONS DE STOCKAGE SUPPRIMÉES ===== */
-// Les fonctions encrypt, decrypt, getUsers, saveUsers, getSlots, saveSlots
-// et hashPassword ont été retirées. Firebase s'en occupe.
-
-// NOTE : Les fonctions getSlots() et getUsers() ci-dessous sont temporaires
-// pour ne pas casser le code. Elles seront remplacées par des appels à Firestore.
-function getSlots() { return []; }
-function getUsers() { return []; }
-function saveSlots(s) { console.log("Sauvegarde vers Firestore à implémenter"); }
-function saveUsers(u) { console.log("Sauvegarde vers Firestore à implémenter"); }
+// NOTE : Les fonctions de stockage temporaires sont maintenant inutiles.
+// function getSlots() { return []; }
+// function getUsers() { return []; }
+// function saveSlots(s) { console.log("Sauvegarde vers Firestore à implémenter"); }
+// function saveUsers(u) { console.log("Sauvegarde vers Firestore à implémenter"); }
 
 
 // Helper pour formater la date en mots (e.g., 10 Octobre)
@@ -92,15 +87,6 @@ function formatDateToWords(dateString){
 function updateSlot(slotId, updateFn){
   // Cette fonction sera entièrement réécrite pour utiliser Firestore
   console.log(`Mise à jour du slot ${slotId} à implémenter avec Firestore.`);
-  let slots = getSlots(); // Temporaire
-  const index = slots.findIndex(s => s.id === slotId);
-  if (index !== -1){
-    slots[index] = updateFn(slots[index]);
-    saveSlots(slots);
-    if (typeof loadSlots === 'function' && document.getElementById('slots-list')) loadSlots(); 
-    if (document.getElementById('user-slots')) loadUserSlots(); 
-    if (document.getElementById('joined-slots')) loadJoinedSlots(); 
-  }
 }
 
 /* Fonction pour extraire la ville d'une adresse */
@@ -109,12 +95,12 @@ function extractCity(locationText) {
     const parts = locationText.split(',').map(p => p.trim());
     if (parts.length > 1) {
         const lastPart = parts[parts.length - 1];
-        if (lastPart.match(/\d{5}\s/)) { 
-            return lastPart.replace(/\d{5}\s*/, '').trim(); 
+        if (lastPart.match(/\d{5}\s/)) {
+            return lastPart.replace(/\d{5}\s*/, '').trim();
         }
-        return lastPart; 
+        return lastPart;
     }
-    return locationText.split(' ').pop(); 
+    return locationText.split(' ').pop();
 }
 
 /* ===== CORE DOM INIT & HELPERS ===== */
@@ -129,7 +115,7 @@ function updateHeaderDisplay() {
         if (profileLink) profileLink.style.display = 'inline-block';
         if (logoutBtn) logoutBtn.style.display = 'inline-block';
         if (logoutProfileBtn) logoutProfileBtn.style.display = 'inline-block';
-        
+
     } else {
         if (profileLink) profileLink.style.display = 'none';
         if (logoutBtn) logoutBtn.style.display = 'none';
@@ -140,7 +126,7 @@ function updateHeaderDisplay() {
 // Remplissage des champs de profil (pour index.html et profile.html)
 function fillProfileFields(user) {
     if (!user) return;
-    
+
     const profilePseudo = document.getElementById('profile-pseudo');
     const profileEmail = document.getElementById('profile-email');
     const profilePhone = document.getElementById('profile-phone');
@@ -152,38 +138,156 @@ function fillProfileFields(user) {
 
 // Fonction de déconnexion
 function logout() {
-    // Sera remplacé par auth.signOut() de Firebase
-    console.log("Déconnexion à implémenter avec Firebase");
-    currentUser = null;
-    window.location.href = 'index.html'; 
+    auth.signOut().catch(error => console.error("Erreur de déconnexion: ", error));
 }
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // NOTE : L'état de connexion sera géré ici avec Firebase
-    // auth.onAuthStateChanged(user => { ... });
 
-    updateHeaderDisplay(); 
+    // =======================================================================
+    // NOUVEAU : OBSERVATEUR D'ÉTAT D'AUTHENTIFICATION
+    // C'est le cœur de la gestion de session. Ce code s'exécute à chaque
+    // fois qu'un utilisateur se connecte ou se déconnecte.
+    // =======================================================================
+    auth.onAuthStateChanged(async user => {
+        if (user) {
+            // L'utilisateur est connecté.
+            // On récupère ses informations complémentaires (pseudo, etc.) depuis Firestore.
+            const userDocRef = db.collection('users').doc(user.uid);
+            const userDoc = await userDocRef.get();
 
+            if (userDoc.exists) {
+                // On fusionne les infos de Auth (email, uid) et de Firestore (pseudo, phone)
+                currentUser = { uid: user.uid, email: user.email, ...userDoc.data() };
+            } else {
+                // Cas rare où l'utilisateur existe dans Auth mais pas dans Firestore
+                currentUser = { uid: user.uid, email: user.email, pseudo: user.email.split('@')[0] };
+            }
+
+            // On lance la bonne logique en fonction de la page active
+            if (document.getElementById('profile-main')) {
+                handleProfilePage();
+            } else if (document.getElementById('main-section')) {
+                showMain();
+            }
+        } else {
+            // L'utilisateur est déconnecté.
+            currentUser = null;
+            // On affiche la section d'authentification si on est sur la page d'accueil
+            if (document.getElementById('auth-section')) {
+                 document.getElementById('auth-section').style.display = 'flex';
+                 document.getElementById('main-section').style.display = 'none';
+            } else if (document.getElementById('profile-main')) {
+                 // Si on est sur la page profil sans être connecté, on redirige
+                 window.location.href = 'index.html';
+            }
+        }
+        // On met à jour l'affichage du header dans tous les cas
+        updateHeaderDisplay();
+    });
+
+
+    // Les listeners de déconnexion sont toujours valides
     const logoutIndex = document.getElementById('logout');
     const logoutProfile = document.getElementById('logout-profile');
     if (logoutIndex) logoutIndex.addEventListener('click', logout);
     if (logoutProfile) logoutProfile.addEventListener('click', logout);
 
-    if (document.getElementById('profile-main')) {
-        handleProfilePage();
-    } 
-    else if (document.getElementById('main-section')) {
-        handleIndexPage();
+    // Le chargement initial des pages est maintenant géré par onAuthStateChanged
+    // On peut donc simplifier cette partie. On initialise juste les listeners
+    // des formulaires de la page d'accueil qui sont toujours visibles.
+    if (document.getElementById('main-section')) {
+        handleIndexPageListeners();
     }
 });
 
-/* ===== LOGIQUE DE LA PAGE D'ACCUEIL (index.html) ===== */
-
-function handleIndexPage() {
+// NOTE : La logique de la page d'accueil est séparée en deux.
+// Une fonction pour les listeners (toujours active) et une pour l'affichage (après connexion)
+function handleIndexPageListeners() {
     const signupBtn = document.getElementById('signup');
     const loginBtn = document.getElementById('login');
+    const pseudoInput = document.getElementById('pseudo');
+    const pseudoStatus = document.getElementById('pseudo-status');
+
+    // NOUVEAU : Vérification de l'unicité du pseudo avec Firestore
+    if (pseudoInput && signupBtn) {
+        pseudoInput.addEventListener('input', async () => {
+            const pseudo = pseudoInput.value.trim();
+            if (pseudo.length < 3) {
+                pseudoStatus.textContent = '';
+                signupBtn.disabled = true;
+                return;
+            }
+            // On cherche dans la collection 'users' si un document a ce pseudo
+            const querySnapshot = await db.collection('users').where('pseudo', '==', pseudo).get();
+            if (!querySnapshot.empty) {
+                pseudoStatus.textContent = 'Ce pseudo est déjà pris 😞';
+                pseudoStatus.style.color = '#e67c73';
+                signupBtn.disabled = true;
+            } else {
+                pseudoStatus.textContent = 'Pseudo disponible ! 😊';
+                pseudoStatus.style.color = '#78d6a4';
+                signupBtn.disabled = false;
+            }
+        });
+    }
+
+
+    // NOUVEAU : Logique d'inscription avec Firebase
+    if (signupBtn) signupBtn.addEventListener('click', () => {
+        const pseudo = document.getElementById('pseudo').value.trim();
+        const email = document.getElementById('email-signup').value.trim();
+        const password = document.getElementById('password-signup').value.trim();
+
+        if (!pseudo || !email || !password) return alert('Remplis tous les champs.');
+        if (signupBtn.disabled) return alert('Le pseudo n\'est pas disponible.');
+
+        auth.createUserWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                // L'utilisateur est créé dans Firebase Authentication.
+                // Maintenant, on sauvegarde ses infos (pseudo) dans Firestore.
+                // On utilise son `uid` unique comme identifiant de document.
+                return db.collection('users').doc(userCredential.user.uid).set({
+                    pseudo: pseudo,
+                    email: email,
+                    phone: ''
+                });
+            })
+            .then(() => {
+                // Pas besoin de faire `showMain()` ici, `onAuthStateChanged` s'en chargera.
+                console.log('Utilisateur créé et enregistré !');
+            })
+            .catch((error) => {
+                alert("Erreur lors de l'inscription : " + error.message);
+            });
+    });
+
+    // NOUVEAU : Logique de connexion avec Firebase
+    if (loginBtn) loginBtn.addEventListener('click', () => {
+        const email = document.getElementById('email-login').value.trim();
+        const password = document.getElementById('password-login').value.trim();
+
+        if (!email || !password) return alert('Remplis tous les champs.');
+
+        auth.signInWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                // Connexion réussie. `onAuthStateChanged` va s'occuper du reste.
+                console.log('Utilisateur connecté !');
+            })
+            .catch((error) => {
+                alert("Erreur de connexion : " + error.message);
+            });
+    });
+}
+
+/* ===== LOGIQUE DE LA PAGE D'ACCUEIL (index.html) une fois connecté ===== */
+
+function showMain(){
+    // On cache l'authentification et on montre le contenu principal
+    document.getElementById('auth-section').style.display = 'none';
+    document.getElementById('main-section').style.display = 'block';
+
+    // On initialise le reste de l'interface
     const toggleCreate = document.getElementById('toggle-create-form');
     const createForm = document.getElementById('create-slot-form');
     const arrow = document.querySelector('.arrow');
@@ -198,11 +302,9 @@ function handleIndexPage() {
     const locationInput = document.getElementById('slot-location');
     const locationLink = document.getElementById('location-link');
     const locationSuggestionBox = document.getElementById('location-suggestion-box');
-    const pseudoInput = document.getElementById('pseudo');
-    const pseudoStatus = document.getElementById('pseudo-status');
     
-    let selectedActivity = null; 
-    let suggestedAddress = ''; 
+    let selectedActivity = null;
+    let suggestedAddress = '';
 
     const addressCache = {
         '1 rue de la roquet': '1 rue de la Roquette, 75011 Paris',
@@ -212,14 +314,11 @@ function handleIndexPage() {
         'liberty': 'Le Liberty, 11 Rue de la Tonnellerie, 28000 Chartres'
     };
 
-
-    /* --- Fonctions de rendu et de filtrage --- */
-
     function populateFormActivitySelect(){
         if (!formActivitySelect) return;
         formActivitySelect.innerHTML = '<option value="">-- Choisis une activité --</option>';
         Object.keys(ACTIVITIES).filter(a=>a!=='Toutes').forEach(act => {
-            const emoji = ACTIVITY_EMOJIS[act] || ''; 
+            const emoji = ACTIVITY_EMOJIS[act] || '';
             const o = document.createElement('option'); o.value = act; o.textContent = `${emoji} ${act}`; formActivitySelect.appendChild(o);
         });
         formActivitySelect.value = selectedActivity || '';
@@ -233,28 +332,28 @@ function handleIndexPage() {
             const classNameMap = {
                 "Jeux": 'act-jeux', "Culture": 'act-culture', "Sport": 'act-sport', "Sorties": 'act-sorties', "Autres": 'act-autres', "Toutes": 'act-toutes'
             };
-            const className = classNameMap[act] || `act-${act.toLowerCase().replace(/\s|\//g, '-')}`; 
-            
+            const className = classNameMap[act] || `act-${act.toLowerCase().replace(/\s|\//g, '-')}`;
+
             b.className = 'activity-btn ' + className + (act === currentFilterActivity ? ' active' : '');
-            
-            const emoji = ACTIVITY_EMOJIS[act] || ''; 
+
+            const emoji = ACTIVITY_EMOJIS[act] || '';
             b.textContent = `${emoji} ${act}`;
 
             b.addEventListener('click', ()=> {
                 currentFilterActivity = act;
                 currentFilterSub = "Toutes";
-                loadSlots(); 
+                loadSlots();
 
                 document.querySelectorAll('.activity-buttons > .activity-btn').forEach(btn => btn.classList.remove('active'));
                 b.classList.add('active');
 
                 if(act !== "Toutes") {
                     selectedActivity = act;
-                    currentActivityEl.textContent = `${emoji} ${act}`; 
+                    currentActivityEl.textContent = `${emoji} ${act}`;
                     populateSubActivities(act);
-                    if (formActivitySelect) { 
-                        formActivitySelect.value = act; 
-                        populateSubActivitiesForForm(act); 
+                    if (formActivitySelect) {
+                        formActivitySelect.value = act;
+                        populateSubActivitiesForForm(act);
                     }
                 } else {
                     selectedActivity = null;
@@ -272,7 +371,7 @@ function handleIndexPage() {
 
     function populateSubActivities(act){
         subDiv.innerHTML = '';
-        
+
         const resetBtn = document.createElement('button');
         resetBtn.className = 'activity-btn';
         resetBtn.textContent = '❌ Toutes les sous-activités';
@@ -295,22 +394,22 @@ function handleIndexPage() {
         subs.forEach(s => {
             const btn = document.createElement('button');
             btn.className = 'activity-btn';
-            
+
             const btnColor = COLOR_MAP[s] || COLOR_MAP[act] || 'var(--muted-text)';
             btn.style.borderColor = btnColor;
             btn.style.color = btnColor;
-            
+
             if (s === currentFilterSub) {
                 btn.classList.add('active');
                 btn.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
             }
 
             btn.textContent = s;
-            
+
             btn.addEventListener('click', ()=> {
                 formSubSelect.value = s;
-                populateSubSub(s); 
-                
+                populateSubSub(s);
+
                 currentFilterSub = s;
                 loadSlots();
                 populateSubActivities(act);
@@ -336,15 +435,16 @@ function handleIndexPage() {
 
     function populateCityFilter() {
         if (!cityFilterSelect) return;
-        cityFilterSelect.innerHTML = '<option value="Toutes">Toutes</option>'; 
-        const slots = getSlots(); // Sera remplacé par un appel à Firestore
+        cityFilterSelect.innerHTML = '<option value="Toutes">Toutes</option>';
+        // Sera remplacé par un appel à Firestore
+        const slots = [];
         const cities = new Set(slots.map(s => extractCity(s.location)).filter(c => c.length > 0));
         const sortedCities = Array.from(cities).sort((a, b) => a.localeCompare(b, 'fr'));
 
         sortedCities.forEach(city => {
             const o = document.createElement('option');
             o.value = city;
-            o.textContent = city; 
+            o.textContent = city;
             cityFilterSelect.appendChild(o);
         });
 
@@ -360,27 +460,27 @@ function handleIndexPage() {
         const info = document.createElement('div'); info.className='slot-info';
         const activityLine = document.createElement('div'); activityLine.className = 'subsub-line';
 
-        let actPill = document.createElement('span'); 
+        let actPill = document.createElement('span');
         actPill.className = 'subsub-box';
         actPill.textContent = slot.activity;
-        actPill.style.border = `1px solid ${COLOR_MAP[slot.activity] || '#9aa9bf'}`; 
+        actPill.style.border = `1px solid ${COLOR_MAP[slot.activity] || '#9aa9bf'}`;
         actPill.style.color = COLOR_MAP[slot.activity] || '#9aa9bf';
         activityLine.appendChild(actPill);
 
         if (slot.sub) {
-            let subPill = document.createElement('span'); 
+            let subPill = document.createElement('span');
             subPill.className = 'subsub-box';
             subPill.textContent = slot.sub;
-            subPill.style.border = `1px solid ${COLOR_MAP[slot.sub] || COLOR_MAP[slot.activity] || '#9aa9bf'}`; 
+            subPill.style.border = `1px solid ${COLOR_MAP[slot.sub] || COLOR_MAP[slot.activity] || '#9aa9bf'}`;
             subPill.style.color = COLOR_MAP[slot.sub] || COLOR_MAP[slot.activity] || '#9aa9bf';
             activityLine.appendChild(subPill);
         }
 
         if (slot.subsub) {
-            let subsubPill = document.createElement('span'); 
+            let subsubPill = document.createElement('span');
             subsubPill.className = 'subsub-box';
             subsubPill.textContent = slot.subsub;
-            subsubPill.style.border = `1px solid ${COLOR_MAP[slot.subsub] || COLOR_MAP[slot.sub] || COLOR_MAP[slot.activity] || '#9aa9bf'}`; 
+            subsubPill.style.border = `1px solid ${COLOR_MAP[slot.subsub] || COLOR_MAP[slot.sub] || COLOR_MAP[slot.activity] || '#9aa9bf'}`;
             subsubPill.style.color = COLOR_MAP[slot.subsub] || COLOR_MAP[slot.sub] || COLOR_MAP[slot.activity] || '#9aa9bf';
             activityLine.appendChild(subsubPill);
         }
@@ -389,7 +489,7 @@ function handleIndexPage() {
         const title = document.createElement('strong'); title.textContent = slot.name;
         const formattedDate = formatDateToWords(slot.date);
         const when = document.createElement('div');
-        
+
         if (slot.location) {
             if (slot.location.match(/\d+\s(rue|avenue|boul|place|impasse|allée|quai)/i)) {
                 const locationLinkList = document.createElement('a');
@@ -403,13 +503,13 @@ function handleIndexPage() {
             }
         }
         when.innerHTML += ` — 🗓️ ${formattedDate} à ${slot.time}`;
-        
-        const owner = document.createElement('small'); 
+
+        const owner = document.createElement('small');
         owner.textContent = `par ${slot.ownerPseudo || slot.owner}`;
         if (slot.private) owner.innerHTML += ' <span class="private-slot-lock">🔒 Privé</span>';
 
-        info.appendChild(title); info.appendChild(when); 
-        
+        info.appendChild(title); info.appendChild(when);
+
         const participantsCount = (slot.participants || []).length;
         const participantsBox = document.createElement('div'); participantsBox.className = 'participants-box';
         participantsBox.innerHTML = `👤 ${participantsCount} personne${participantsCount > 1 ? 's' : ''}`;
@@ -421,11 +521,11 @@ function handleIndexPage() {
         gaugeBar.appendChild(gaugeFill);
         participantsBox.appendChild(gaugeBar);
         info.appendChild(participantsBox);
-        
+
         const participantsList = document.createElement('div'); participantsList.className = 'participants-list';
         const isParticipant = (slot.participants || []).some(p => p.email === currentUserEmail);
         const isOwner = slot.owner === currentUserEmail;
-        
+
         if (slot.private && slot.owner !== currentUserEmail){
             participantsList.textContent = 'Participants cachés.';
         } else {
@@ -435,19 +535,19 @@ function handleIndexPage() {
         info.appendChild(participantsList);
         info.appendChild(owner);
 
-        const actions = document.createElement('div'); actions.className='actions-box'; 
-        
+        const actions = document.createElement('div'); actions.className='actions-box';
+
         if (targetListElement.id === 'slots-list' && currentUser) {
             if (!isParticipant){
                 const joinBtn = document.createElement('button');
-                joinBtn.className = 'action-btn join-btn'; 
+                joinBtn.className = 'action-btn join-btn';
                 joinBtn.textContent = '✅ Rejoindre';
-                
-                if (!slot.private || isOwner){ 
+
+                if (!slot.private || isOwner){
                     joinBtn.onclick = ()=> {
                         if (participantsCount >= MAX_PARTICIPANTS) return alert('Désolé, ce créneau est complet.');
                         updateSlot(slot.id, s => {
-                            s.participants = s.participants || []; 
+                            s.participants = s.participants || [];
                             s.participants.push({ email: currentUserEmail, pseudo: currentUserPseudo });
                             return s;
                         });
@@ -460,7 +560,7 @@ function handleIndexPage() {
                 }
             } else if (isParticipant && !isOwner) {
                 const leaveBtn = document.createElement('button');
-                leaveBtn.className = 'action-btn leave-btn'; 
+                leaveBtn.className = 'action-btn leave-btn';
                 leaveBtn.textContent = '❌ Quitter';
                 leaveBtn.onclick = ()=> {
                     updateSlot(slot.id, s => {
@@ -471,26 +571,21 @@ function handleIndexPage() {
                 actions.appendChild(leaveBtn);
             }
         }
-        
+
         if (isOwner){
             const del = document.createElement('button'); del.textContent='🗑️'; del.title='Supprimer';
-            del.className = 'action-btn ghost-action-btn'; 
-            del.onclick = ()=> { 
-                if (!confirm('Supprimer ce créneau ?')) return; 
-                // Sera remplacé par un appel à Firestore
-                const remain = getSlots().filter(s=>s.id!==slot.id); 
-                saveSlots(remain); 
-                if (typeof loadSlots === 'function' && document.getElementById('slots-list')) loadSlots(); 
-                if (document.getElementById('user-slots')) loadUserSlots(); 
-                if (typeof populateCityFilter === 'function') populateCityFilter(); 
+            del.className = 'action-btn ghost-action-btn';
+            del.onclick = ()=> {
+                if (!confirm('Supprimer ce créneau ?')) return;
+                console.log("Suppression à implémenter avec Firestore");
             };
             actions.appendChild(del);
 
             const rem = document.createElement('button'); rem.textContent='⏰'; rem.title='Rappel';
-            rem.className = 'action-btn ghost-action-btn'; 
+            rem.className = 'action-btn ghost-action-btn';
             rem.onclick = ()=> {
                 const notifTime = new Date(slot.date + 'T' + slot.time); const delay = notifTime - new Date();
-                if (delay>0){ alert('Rappel programmé (simple notification navigateur)'); 
+                if (delay>0){ alert('Rappel programmé (simple notification navigateur)');
                 if (Notification.permission === 'granted') {
                     new Notification(`Rappel : ${slot.name}`);
                 } else if (Notification.permission !== 'denied') {
@@ -508,19 +603,19 @@ function handleIndexPage() {
         }
 
         const share = document.createElement('button'); share.textContent='🔗'; share.title='Partager';
-        share.className = 'action-btn ghost-action-btn'; 
-        share.onclick = ()=> { 
-            const link = `${window.location.origin}${window.location.pathname}?slot=${slot.id}`; 
-            navigator.clipboard.writeText(link).then(()=>alert('Lien copié !')); 
+        share.className = 'action-btn ghost-action-btn';
+        share.onclick = ()=> {
+            const link = `${window.location.origin}${window.location.pathname}?slot=${slot.id}`;
+            navigator.clipboard.writeText(link).then(()=>alert('Lien copié !'));
         };
         actions.appendChild(share);
 
-        li.appendChild(info); 
-        
+        li.appendChild(info);
+
         if (targetListElement.id === 'joined-slots') {
             if (isParticipant && !isOwner) {
                 const leaveBtn = document.createElement('button');
-                leaveBtn.className = 'action-btn leave-btn'; 
+                leaveBtn.className = 'action-btn leave-btn';
                 leaveBtn.textContent = '❌ Quitter';
                 leaveBtn.style.width = '70px';
                 leaveBtn.onclick = ()=> {
@@ -529,7 +624,7 @@ function handleIndexPage() {
                         return s;
                     });
                 };
-                const actionsJoined = document.createElement('div'); 
+                const actionsJoined = document.createElement('div');
                 actionsJoined.className='actions-box';
                 actionsJoined.appendChild(leaveBtn);
                 li.appendChild(actionsJoined);
@@ -543,30 +638,16 @@ function handleIndexPage() {
 
     function loadSlots(){
         const list = document.getElementById('slots-list'); if (!list) return; list.innerHTML='';
-        let slots = getSlots() || []; // Sera remplacé par un appel à Firestore
-        
+        let slots = []; // Sera remplacé par un appel à Firestore
+
         if (currentFilterActivity !== "Toutes") {
-            slots = slots.filter(s => s.activity === currentFilterActivity);
-        }
-        
-        if (currentFilterSub !== "Toutes") {
-            slots = slots.filter(s => s.sub === currentFilterSub);
+            // Logique de filtrage à adapter pour Firestore
         }
 
-        if (currentFilterCity !== "Toutes") {
-            slots = slots.filter(s => {
-                const city = extractCity(s.location);
-                return city === currentFilterCity;
-            });
-        }
-
-        slots = slots.filter(s => s.date && s.time).sort((a,b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
-        slots = slots.slice(0,10);
-
-        const current = currentUser; // Utilisation de la variable globale
+        const current = currentUser;
         const currentUserEmail = current ? current.email : null;
-        const currentUserPseudo = current ? current.pseudo || currentUserEmail.split('@')[0] : '';
-        
+        const currentUserPseudo = current ? current.pseudo : '';
+
         if (slots.length === 0) {
             list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Aucun créneau ne correspond à vos filtres.</li>';
             return;
@@ -575,56 +656,10 @@ function handleIndexPage() {
         slots.forEach(slot => renderSlotItem(slot, currentUserEmail, currentUserPseudo, list));
     }
 
-    /* --- Gestion de l'Authentification et des formulaires --- */
-    function showMain(){
-        document.getElementById('auth-section').style.display = 'none';
-        document.getElementById('main-section').style.display = 'block';
-        updateHeaderDisplay();
-        renderActivities();
-        loadSlots();
-        populateCityFilter(); 
-    }
-
-    // NOTE : La logique de `if (currentUser)` sera remplacée par l'observateur Firebase
-    if (currentUser) {
-        showMain();
-    } else {
-        document.getElementById('auth-section').style.display = 'flex';
-        document.getElementById('main-section').style.display = 'none';
-    }
-
-    if (pseudoInput && signupBtn) {
-        pseudoInput.addEventListener('input', () => {
-            const pseudo = pseudoInput.value.trim();
-            if (!pseudo) {
-                pseudoStatus.textContent = '';
-                signupBtn.disabled = true; 
-                return;
-            }
-            // La vérification du pseudo se fera avec une requête à Firestore
-            const isTaken = getUsers().some(u => u.pseudo === pseudo);
-            if (isTaken) {
-                pseudoStatus.textContent = 'Ce pseudo est déjà pris 😞';
-                pseudoStatus.style.color = '#e67c73'; 
-                signupBtn.disabled = true;
-            } else {
-                pseudoStatus.textContent = 'Pseudo disponible ! 😊';
-                pseudoStatus.style.color = '#78d6a4'; 
-                signupBtn.disabled = false;
-            }
-        });
-    }
-
-    // signup/login handlers
-    if (signupBtn) signupBtn.addEventListener('click', async ()=>{
-        // Sera remplacé par auth.createUserWithEmailAndPassword
-        console.log("Inscription à implémenter avec Firebase");
-    });
-
-    if (loginBtn) loginBtn.addEventListener('click', async ()=>{
-        // Sera remplacé par auth.signInWithEmailAndPassword
-        console.log("Connexion à implémenter avec Firebase");
-    });
+    // On lance l'affichage initial
+    renderActivities();
+    loadSlots();
+    populateCityFilter();
 
     if (toggleCreate && createForm) toggleCreate.addEventListener('click', ()=> {
         const visible = createForm.style.display === 'block';
@@ -639,7 +674,7 @@ function handleIndexPage() {
 
     if (formActivitySelect) formActivitySelect.addEventListener('change', ()=>{
         selectedActivity = formActivitySelect.value;
-        const emoji = ACTIVITY_EMOJIS[selectedActivity] || ''; 
+        const emoji = ACTIVITY_EMOJIS[selectedActivity] || '';
         currentActivityEl.textContent = selectedActivity ? `${emoji} ${selectedActivity}` : 'Aucune';
         populateSubActivitiesForForm(selectedActivity);
     });
@@ -665,7 +700,7 @@ function handleIndexPage() {
                 setTimeout(() => {
                     if (mockAddress) {
                         suggestedAddress = mockAddress;
-                        
+
                         locationSuggestionBox.innerHTML = `
                             <span style="font-size:0.8em; color:var(--muted-text);">Adresse exacte ?</span>
                             <button id="suggest-btn" type="button" class="action-btn join-btn" style="width: auto; padding: 5px 10px; margin-left: 5px; margin-top:0;">
@@ -677,10 +712,10 @@ function handleIndexPage() {
                         document.getElementById('suggest-btn').onclick = () => {
                             locationInput.value = suggestedAddress;
                             locationSuggestionBox.style.display = 'none';
-                            updateGoogleMapLink(suggestedAddress, true); 
+                            updateGoogleMapLink(suggestedAddress, true);
                         };
-                        
-                        updateGoogleMapLink(location, false); 
+
+                        updateGoogleMapLink(location, false);
                     } else {
                         updateGoogleMapLink(location, location.match(/\d+\s(rue|avenue|boul|place|impasse|allée|quai)/i));
                     }
@@ -707,7 +742,7 @@ function handleIndexPage() {
 
     if (createBtn) createBtn.addEventListener('click', ()=> {
         if (!currentUser) return alert('Connecte-toi d’abord');
-        
+
         const activity = selectedActivity || formActivitySelect.value;
         const sub = formSubSelect.value || '';
         const subsub = subsubSelect.value || '';
@@ -716,11 +751,10 @@ function handleIndexPage() {
         const date = (document.getElementById('slot-date')?.value||'').trim();
         const time = (document.getElementById('slot-time')?.value||'').trim();
         const isPrivate = !!document.getElementById('private-slot')?.checked;
-        
+
         if (!activity) return alert('Choisis d’abord une activité (ex: Jeux)');
         if (!name || !location || !date || !time) return alert('Remplis les champs nom, lieu, date et heure');
-        
-        // La création du créneau se fera avec un appel à Firestore
+
         console.log("Création de créneau à implémenter avec Firestore");
     });
 
@@ -729,32 +763,24 @@ function handleIndexPage() {
         const params = new URLSearchParams(window.location.search); const sid = params.get('slot');
         if (!sid) return;
         // La recherche de créneau se fera avec un appel à Firestore
-        const s = getSlots().find(x=>String(x.id)===sid);
-        if (!s) return alert('Ce créneau n’existe plus.');
-        if (s.private) return alert('🔒 Ce créneau est privé : détails cachés.');
-        const formattedDate = formatDateToWords(s.date);
-        alert(`Créneau partagé :\n${s.name}\n${s.activity} ${s.sub ? ' - '+s.sub : ''} ${s.subsub ? ' - '+s.subsub : ''}\n📍 ${s.location}\n🕒 ${formattedDate} ${s.time}\npar ${s.ownerPseudo || s.owner}`);
+        console.log("Logique de créneau partagé à implémenter");
     })();
 }
 
 /* ===== LOGIQUE DE LA PAGE PROFIL (profile.html) ===== */
 
 function handleProfilePage() {
-    if (!currentUser) {
-        // La redirection sera gérée par l'observateur Firebase
-        // window.location.href = 'index.html';
-        return;
-    }
-    
+    // onAuthStateChanged garantit que currentUser existe ici
+    if (!currentUser) return;
+
     fillProfileFields(currentUser);
     loadUserSlots();
     loadJoinedSlots();
-    
+
     const profileForm = document.getElementById('profile-form');
     if (profileForm) {
         profileForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            // La modification du profil se fera avec des appels à Firebase Auth et Firestore
             console.log("Modification du profil à implémenter avec Firebase");
         });
     }
@@ -763,14 +789,12 @@ function handleProfilePage() {
 function loadUserSlots(){
     const list = document.getElementById('user-slots'); if (!list) return; list.innerHTML='';
     if (!currentUser) return;
-
     // Sera remplacé par un appel à Firestore
-    let slots = getSlots().filter(s => s.owner === currentUser.email);
-    slots = slots.filter(s => s.date && s.time).sort((a,b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
+    const slots = [];
 
     const currentUserEmail = currentUser.email;
-    const currentUserPseudo = currentUser.pseudo || currentUserEmail.split('@')[0];
-    
+    const currentUserPseudo = currentUser.pseudo;
+
     if (slots.length === 0) {
         list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Vous n\'avez créé aucun créneau.</li>';
         return;
@@ -782,13 +806,11 @@ function loadUserSlots(){
 function loadJoinedSlots(){
     const list = document.getElementById('joined-slots'); if (!list) return; list.innerHTML='';
     if (!currentUser) return;
-
     // Sera remplacé par un appel à Firestore
-    let slots = getSlots().filter(s => s.participants.some(p => p.email === currentUser.email) && s.owner !== currentUser.email);
-    slots = slots.filter(s => s.date && s.time).sort((a,b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
+    const slots = [];
 
     const currentUserEmail = currentUser.email;
-    const currentUserPseudo = currentUser.pseudo || currentUserEmail.split('@')[0];
+    const currentUserPseudo = currentUser.pseudo;
 
     if (slots.length === 0) {
         list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Vous n\'avez rejoint aucun autre créneau.</li>';
