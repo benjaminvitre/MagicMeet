@@ -39,7 +39,6 @@ body {
     background-color: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.6;
-    /* MODIFICATION: Augmentation de 20% (11.5px * 1.2 ≈ 13.8px) */
     font-size: 14px;
 }
 
@@ -64,7 +63,6 @@ h1, h2, h3 {
     color: var(--text-primary);
 }
 .filter-box h2, .create-slot-box h2, .slot-list-card h2 {
-    /* MODIFICATION: Taille relative réduite pour compenser l'augmentation de base */
     font-size: 1.05em;
     margin-bottom: 12px;
 }
@@ -581,7 +579,7 @@ input:focus, select:focus {
 }
 
 /* ====================================
-8. GROUP STYLES
+8. GROUP & INVITATION STYLES
 ====================================
 */
 .create-group-form {
@@ -631,4 +629,43 @@ input:focus, select:focus {
 .add-member-form button {
     width: auto;
     padding: 8px 12px;
+}
+.invite-form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+}
+.invite-form input {
+    flex-grow: 1;
+    margin-bottom: 0;
+}
+.invite-form button {
+    width: auto;
+    padding: 8px 12px;
+}
+
+.invitation-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+.invitation-item:last-child {
+    border-bottom: none;
+}
+.invitation-info small {
+    display: block;
+    color: var(--muted-text);
+}
+.invitation-actions {
+    display: flex;
+    gap: 8px;
+}
+.invitation-actions button {
+    width: auto;
+    padding: 6px 10px;
 }
