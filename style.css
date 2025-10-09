@@ -1,20 +1,33 @@
-/* --- Global Reset & Typography --- */
+/*
+====================================
+0. CUSTOM PROPERTIES (VARIABLES)
+====================================
+*/
 :root {
-    /* Couleurs de base inversées pour le Mode Sombre */
-    --primary-color: #4da6ff;      /* Bleu (inchangé) */
-    --secondary-color: #4da6ff;    /* Bleu clair (inchangé) */
-    --text-color: #f4f7f9;         /* Texte clair */
-    --muted-text: #b0b0b0;         /* Texte gris clair */
-    --background-color: #1a1a1a;   /* Fond très sombre (noir/gris foncé) */
-    --card-background: #252525;    /* Fond des cartes plus clair que l'arrière-plan */
-    
-    /* Ombres plus discrètes */
-    --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.5);
-    --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.7);
-    --success-color: #78d6a4;      /* Vert (inchangé) */
-    --danger-color: #e67c73;       /* Rouge (inchangé) */
+    --bg-primary: #0f1417;
+    --bg-secondary: #1a2024;
+    --text-primary: #e6e8eb;
+    --text-accent: #4da6ff;
+    --muted-text: #9aa9bf;
+    --border-color: #2b353e;
+    --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --hover-bg: #2b353e;
+    --focus-ring: 0 0 0 3px rgba(77, 166, 255, 0.5);
+
+    /* Couleurs Activités (Pastels sur sombre) */
+    --act-autres: #78d6a4; /* Vert menthe */
+    --act-jeux: #c085f5; /* Violet */
+    --act-culture: #e67c73; /* Corail */
+    --act-sport: #f27a7d; /* Rouge pastel */
+    --act-sorties: #f1a66a; /* Orange */
+    --act-toutes: #9aa9bf; /* Gris-bleu */
 }
 
+/*
+====================================
+1. BASE & THEME SOMBRE
+====================================
+*/
 * {
     box-sizing: border-box;
     margin: 0;
@@ -22,365 +35,471 @@
 }
 
 body {
-    font-family: 'Inter', sans-serif;
-    /* UTILISE background-color (qui est maintenant sombre) */
-    background-color: var(--background-color); 
-    color: var(--text-color);
+    font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
     line-height: 1.6;
 }
-/* ... (le reste du CSS reste inchangé) ... */
-main {
-    padding: 20px;
-    max-width: 1200px;
-    margin: 20px auto 40px;
+
+main, .auth-section {
+    max-width: 900px;
+    margin: 6px auto;
+    padding: 0 15px;
 }
 
-h1, h2 {
-    font-weight: 800;
-    margin-bottom: 10px;
+a {
+    color: var(--text-accent);
+    text-decoration: none;
+    transition: color 0.2s;
 }
 
-.card {
-    background-color: var(--card-background);
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: var(--shadow-medium);
-    margin-bottom: 20px;
+a:hover {
+    color: var(--text-primary);
 }
 
-/* --- Header --- */
+h1, h2, h3 {
+    margin-bottom: 15px;
+    color: var(--text-primary);
+}
+.filter-box h2, .create-slot-box h2, .slot-list-card h2 {
+    font-size: 1.275em;
+    margin-bottom: 12px;
+}
+
+
+ul {
+    list-style: none;
+}
+
+/*
+====================================
+2. HEADER & NAVIGATION
+====================================
+*/
 .header {
-    background-color: var(--card-background);
-    padding: 10px 20px;
-    box-shadow: var(--shadow-light);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 10px 15px;
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
 .logo-link {
     display: flex;
     align-items: center;
-    text-decoration: none;
-    margin-right: 20px;
+    width: 56px;
+    height: 56px;
+    margin-right: 15px;
 }
 
 .site-title {
-    font-size: 1.5rem;
-    color: var(--primary-color);
-    flex-grow: 1; /* Permet de prendre l'espace restant */
+    flex-grow: 1;
+    font-size: 1.5em;
+    font-weight: 800;
+    margin-bottom: 0;
+    color: var(--text-primary);
 }
 
 .header-right {
     display: flex;
-    align-items: center;
     gap: 10px;
 }
 
 .home-link {
-    color: var(--text-color);
-    text-decoration: none;
-    font-weight: 600;
+    font-size: 0.9em;
+    margin-right: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    transition: background-color 0.2s;
 }
 
-/* --- Forms & Auth --- */
+.home-link:hover {
+    background-color: var(--hover-bg);
+}
+
+
+/*
+====================================
+3. CARDS & FORMS
+====================================
+*/
+.card {
+    background-color: var(--bg-secondary);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 20px;
+}
+.create-slot-box {
+    padding: 27px 20px;
+}
+
 .auth-section {
     display: flex;
-    justify-content: center;
     gap: 20px;
+    justify-content: center;
     margin-top: 50px;
 }
 
 .auth-card {
-    flex: 1;
-    max-width: 450px;
+    width: 100%;
+    max-width: 400px;
 }
 
-form label {
+label {
     display: block;
     margin-top: 10px;
     margin-bottom: 5px;
-    font-weight: 600;
+    font-size: 0.9em;
+    color: var(--muted-text);
 }
 
-form input, form select {
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="date"],
+input[type="time"],
+select {
     width: 100%;
     padding: 10px;
     margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus, select:focus {
+    border-color: var(--text-accent);
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+/*
+====================================
+4. BUTTONS
+====================================
+*/
+.action-btn {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s, opacity 0.2s;
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Primary actions (Join, Create) */
+.join-btn, #create-slot, #signup, #login, #save-profile-btn {
+    background-color: var(--text-accent);
+    color: var(--bg-primary);
+    width: 100%;
+}
+
+.join-btn:hover:not(:disabled), #create-slot:hover:not(:disabled), #signup:hover:not(:disabled), #login:hover:not(:disabled), #save-profile-btn:hover:not(:disabled) {
+    background-color: #6fb2f2;
+}
+
+/* Secondary actions (Leave, Ghost) */
+.leave-btn, .ghost-btn {
+    background-color: var(--hover-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.leave-btn:hover:not(:disabled), .ghost-btn:hover:not(:disabled) {
+    background-color: var(--border-color);
+}
+
+.ghost-action-btn {
+    background: none;
+    color: var(--muted-text);
+    border: none;
+    padding: 5px;
+    font-size: 1.2em;
+}
+
+.ghost-action-btn:hover {
+    color: var(--text-accent);
+    background-color: transparent;
+}
+
+
+/*
+====================================
+5. INDEX SPECIFIC
+====================================
+*/
+.muted-text {
+    color: var(--muted-text);
+}
+
+.filter-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.filter-controls select {
+    width: auto;
+    max-width: 250px;
+    margin-bottom: 0;
+}
+
+.toggle-header {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0;
+}
+
+.toggle-header:hover {
+    color: var(--text-accent);
+}
+
+.arrow {
+    transition: transform 0.2s;
+    font-size: 1.5em;
+    line-height: 1;
 }
 
 .inline-fields {
     display: flex;
-    gap: 10px;
+    gap: 15px;
 }
 
 .inline-fields > div {
     flex: 1;
 }
 
-/* --- Buttons --- */
-.action-btn {
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background-color 0.2s ease;
-    text-decoration: none; /* Pour les <a> qui utilisent ce style */
-    display: inline-block;
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    margin-top: -5px;
+    margin-bottom: 15px;
 }
 
-.join-btn {
-    background-color: var(--primary-color);
-    color: white;
+.checkbox-group input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
 }
 
-.join-btn:hover {
-    background-color: #3a8cdb;
+.checkbox-group label {
+    margin: 0;
+    font-size: 1em;
+    color: var(--text-primary);
 }
 
-.leave-btn {
-    background-color: var(--danger-color);
-    color: white;
-}
-
-.leave-btn:hover {
-    background-color: #c95d53;
-}
-
-/* --- Activity Filters --- */
+/* Activity Buttons (Filtering) */
 .activity-buttons {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-top: 10px;
     margin-bottom: 15px;
 }
 
 .activity-btn {
-    padding: 8px 12px;
-    border: none;
+    padding: 6px 10px;
     border-radius: 20px;
-    color: white;
-    font-weight: 600;
+    border: 1px solid var(--border-color);
+    background-color: transparent;
+    color: var(--muted-text);
     cursor: pointer;
-    opacity: 0.7;
-    transition: opacity 0.2s, transform 0.1s;
+    font-size: 0.9em;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 
-.activity-btn:hover {
-    opacity: 0.9;
+.activity-btn.active, .activity-btn:hover {
+    background-color: var(--hover-bg);
+    /* La couleur de la bordure et du texte sera surchargée par les classes spécifiques ci-dessous */
+    border-color: var(--text-accent);
+    color: var(--text-primary);
 }
 
-.activity-btn.selected {
-    opacity: 1;
-    box-shadow: var(--shadow-light);
-    transform: scale(1.05);
-}
+/* Specific colors for filtering boxes (using the custom properties) */
+.activity-btn.act-jeux { border-color: var(--act-jeux); color: var(--act-jeux); }
+.activity-btn.act-culture { border-color: var(--act-culture); color: var(--act-culture); }
+.activity-btn.act-sport { border-color: var(--act-sport); color: var(--act-sport); }
+.activity-btn.act-sorties { border-color: var(--act-sorties); color: var(--act-sorties); }
+.activity-btn.act-autres { border-color: var(--act-autres); color: var(--act-autres); }
+.activity-btn.act-toutes { border-color: var(--act-toutes); color: var(--act-toutes); }
 
-.filter-controls {
-    margin-top: 10px;
-}
-.filter-controls select {
-    width: auto;
-    display: inline-block;
-    margin-left: 10px;
-}
+.activity-btn.act-jeux.active, .activity-btn.act-jeux:hover { background-color: rgba(192, 133, 245, 0.2); color: var(--act-jeux); border-color: var(--act-jeux); }
+.activity-btn.act-culture.active, .activity-btn.act-culture:hover { background-color: rgba(230, 124, 115, 0.2); color: var(--act-culture); border-color: var(--act-culture); }
+.activity-btn.act-sport.active, .activity-btn.act-sport:hover { background-color: rgba(242, 122, 125, 0.2); color: var(--act-sport); border-color: var(--act-sport); }
+.activity-btn.act-sorties.active, .activity-btn.act-sorties:hover { background-color: rgba(241, 166, 106, 0.2); color: var(--act-sorties); border-color: var(--act-sorties); }
+.activity-btn.act-autres.active, .activity-btn.act-autres:hover { background-color: rgba(120, 214, 164, 0.2); color: var(--act-autres); border-color: var(--act-autres); }
 
-/* --- Slot List --- */
-#slots-list, #user-slots, #joined-slots {
-    list-style: none;
-    padding: 0;
+
+/* Slot List */
+.slot-list-card h2 {
+    margin-bottom: 5px;
 }
 
 .slot-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px;
-    margin-bottom: 10px;
-    border-radius: 6px;
-    background-color: #fefefe;
-    border-left: 6px solid; /* La couleur est définie par JS */
-    box-shadow: var(--shadow-light);
+    padding: 15px 0;
+    border-bottom: 1px solid var(--border-color);
+    background-color: transparent; /* Assure qu'il n'y a pas de fond blanc */
+}
+
+.slot-item:last-child {
+    border-bottom: none;
 }
 
 .slot-info {
     flex-grow: 1;
+    margin-right: 15px;
 }
 
 .slot-info strong {
-    font-size: 1.1rem;
     display: block;
+    font-size: 1.1em;
     margin-bottom: 5px;
 }
 
-.slot-info p {
-    font-size: 0.9rem;
+.slot-info small {
+    display: block;
     color: var(--muted-text);
-    margin: 2px 0;
+    font-size: 0.8em;
+    margin-top: 5px;
 }
 
-.subsub-line {
-    display: flex;
-    gap: 5px;
-    margin: 5px 0 10px;
+.slot-info a {
+    color: var(--text-primary);
+    text-decoration: underline;
 }
 
-.subsub-box {
-    font-size: 0.7rem;
-    font-weight: 800;
-    padding: 2px 6px;
-    border-radius: 4px;
-    text-transform: uppercase;
+.slot-info a:hover {
+    color: var(--text-accent);
+}
+
+.private-slot-lock {
+    color: var(--text-accent);
+    font-size: 0.9em;
 }
 
 .actions-box {
     display: flex;
-    gap: 10px;
+    gap: 5px;
 }
 
-/* --- Gauge Bar for Participants --- */
+/* Participants Gauge */
 .participants-box {
-    margin-top: 10px;
+    margin-top: 8px;
+    margin-bottom: 5px;
 }
 
 .gauge-bar {
-    width: 100%;
     height: 6px;
-    background-color: #eee;
+    background-color: var(--bg-primary);
     border-radius: 3px;
-    overflow: hidden;
     margin-top: 5px;
+    overflow: hidden;
 }
 
 .gauge-fill {
     height: 100%;
-    background-color: var(--success-color); /* Vert par défaut pour la jauge */
-    transition: width 0.3s ease;
+    background-color: var(--text-accent);
+    transition: width 0.3s;
 }
 
 .participants-list {
-    margin-top: 5px !important;
-    font-size: 0.85rem !important;
-}
-
-/* --- Toast Notification --- */
-#toast-container {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 1000;
-}
-
-.toast {
-    padding: 12px 20px;
-    border-radius: 6px;
-    color: white;
-    margin-top: 10px;
-    box-shadow: var(--shadow-medium);
-    transition: opacity 0.5s, transform 0.5s;
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.toast.success {
-    background-color: var(--success-color);
-}
-
-.toast.error {
-    background-color: var(--danger-color);
-}
-
-.toast.fade-out {
-    opacity: 0;
-    transform: translateY(20px);
-}
-
-/* --- Utilities --- */
-.muted-text {
-    font-size: 0.8rem;
+    font-size: 0.85em;
     color: var(--muted-text);
-    display: block;
+    margin-bottom: 5px;
+}
+
+.suggestion-box {
+    padding: 8px;
     margin-top: -10px;
-}
-
-.checkbox-group {
+    margin-bottom: 15px;
+    background-color: var(--hover-bg);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
     display: flex;
     align-items: center;
-    gap: 5px;
-    margin-bottom: 10px;
+    gap: 10px;
 }
 
-.checkbox-group input[type="checkbox"] {
-    width: auto;
-    margin-bottom: 0;
-}
-
-/* Toggle Header (Créer un créneau) */
-.toggle-header {
-    cursor: pointer;
+.subsub-line {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
 }
 
-.toggle-header .arrow {
-    font-size: 1.5rem;
-    transition: transform 0.3s;
-}
-
-/* --- Profile Page Specifics --- */
-.profile-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-.profile-card {
-    grid-column: 1 / span 2;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.slots-section {
-    grid-column: span 1;
+.subsub-box {
+    font-size: 0.75em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid;
+    font-weight: 500;
 }
 
 
-/* --- Responsive Adjustments --- */
-@media (max-width: 900px) {
-    .profile-container {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 768px) {
-    .auth-section {
-        flex-direction: column;
-    }
-
-    .auth-card {
-        max-width: 100%;
-    }
-
+/*
+====================================
+6. MOBILE RESPONSIVE
+====================================
+*/
+@media (max-width: 600px) {
     .header {
         flex-wrap: wrap;
     }
-
+    .logo-link {
+        order: 0;
+        margin-right: 5px;
+    }
     .site-title {
         order: 1;
-        margin-top: 5px;
-        width: 100%;
-        text-align: center;
+        width: auto;
+        margin-top: 0;
+        text-align: left;
+        font-size: 1.3em;
     }
-
     .header-right {
-        order: 0;
-        gap: 5px;
+        order: 2;
+        margin-left: auto;
+    }
+    .home-link {
+        display: none;
+    }
+    .auth-section {
+        flex-direction: column;
+        margin-top: 20px;
+    }
+    .inline-fields {
+        flex-direction: column;
+    }
+    .slot-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .slot-info {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    .actions-box {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    .ghost-action-btn {
+        padding: 5px 10px;
     }
 }
