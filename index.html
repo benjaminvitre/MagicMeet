@@ -69,16 +69,18 @@
         <section class="card filter-box">
             <h2>Trouver une activité <span class="muted-text">/</span> <span id="current-activity">Aucune</span></h2>
             
-            <div id="activities" class="activity-buttons">
-                </div>
-
-            <div id="subactivities" class="activity-buttons" style="margin-top: 10px;">
-                </div>
+            <div id="activities" class="activity-buttons"></div>
+            <div id="subactivities" class="activity-buttons" style="margin-top: 10px;"></div>
 
             <div class="filter-controls">
-                <label for="city-filter-select">Ville :</label>
-                <select id="city-filter-select">
-                    </select>
+                <div>
+                    <label for="city-filter-select">Ville :</label>
+                    <select id="city-filter-select"></select>
+                </div>
+                <div>
+                    <label for="group-filter-select">Groupe :</label>
+                    <select id="group-filter-select"></select>
+                </div>
             </div>
         </section>
 
@@ -93,16 +95,16 @@
                 <input id="slot-name" type="text" placeholder="Ex: Match de Padel" required />
 
                 <label for="form-activity-select">Activité principale</label>
-                <select id="form-activity-select" required>
-                    </select>
+                <select id="form-activity-select" required></select>
 
                 <label for="sub-select">Sous-activité (optionnel)</label>
-                <select id="sub-select">
-                    </select>
+                <select id="sub-select"></select>
 
                 <label for="subsub-select">Sous-sous-activité (optionnel)</label>
-                <select id="subsub-select">
-                    </select>
+                <select id="subsub-select"></select>
+
+                <label for="form-group-select">Associer à un groupe (optionnel)</label>
+                <select id="form-group-select"></select>
 
                 <label for="slot-location">Lieu <span class="muted-text">(Ex: 10 rue de lappe, Paris)</span></label>
                 <input id="slot-location" type="text" placeholder="Adresse complète ou nom du lieu" required />
@@ -133,8 +135,7 @@
 
         <section class="card slot-list-card">
             <h2>Créneaux disponibles 🎸</h2>
-            <ul id="slots-list">
-                </ul>
+            <ul id="slots-list"></ul>
         </section>
 
     </main>
