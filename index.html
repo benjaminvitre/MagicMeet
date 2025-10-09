@@ -56,7 +56,7 @@
             <input id="email-signup" type="email" placeholder="Email" required />
             <input id="password-signup" type="password" placeholder="Mot de passe" required />
             <input id="password-confirm-signup" type="password" placeholder="Confirmer le mot de passe" required />
-             <div class="checkbox-group form-checkbox">
+            <div class="checkbox-group form-checkbox">
                 <input type="checkbox" id="show-password-signup" />
                 <label for="show-password-signup">Afficher le mot de passe</label>
             </div>
@@ -139,6 +139,19 @@
 
     </main>
 
+    <div id="shared-slot-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Créneau Partagé</h2>
+            <div id="modal-slot-details">
+                </div>
+            <div class="modal-actions">
+                <button id="modal-join-btn" class="action-btn join-btn">✅ Rejoindre</button>
+            </div>
+        </div>
+    </div>
+
+
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -146,7 +159,7 @@
     <script>
       // IMPORTANT: Remplacez ceci par la configuration de VOTRE projet Firebase
       const firebaseConfig = {
-apiKey: "AIzaSyB7jLBW1cS_6DbV4XT0HPZSEvngR0T2PJI",
+  apiKey: "AIzaSyB7jLBW1cS_6DbV4XT0HPZSEvngR0T2PJI",
   authDomain: "magicmeet-947cf.firebaseapp.com",
   projectId: "magicmeet-947cf",
   storageBucket: "magicmeet-947cf.firebasestorage.app",
