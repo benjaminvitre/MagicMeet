@@ -85,7 +85,7 @@
 
         <section class="card create-slot-box">
             <h2 id="toggle-create-form" class="toggle-header">
-                Créer un nouveau créneau 🎸 <span class="arrow">▶</span>
+                Créer un créneau 🎸 <span class="arrow">▶</span>
             </h2>
             <form id="create-slot-form" style="display:none;">
                 
@@ -132,7 +132,7 @@
 
 
         <section class="card slot-list-card">
-            <h2>Créneaux disponibles (10 prochains)</h2>
+            <h2>Créneaux disponibles</h2>
             <ul id="slots-list">
                 </ul>
         </section>
@@ -144,7 +144,7 @@
             <span class="close-btn">&times;</span>
             <h2>Créneau Partagé</h2>
             <div id="modal-slot-details">
-                </div>
+            </div>
             <div class="modal-actions">
                 <button id="modal-join-btn" class="action-btn join-btn">✅ Rejoindre</button>
             </div>
@@ -157,7 +157,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-      // IMPORTANT: Remplacez ceci par la configuration de VOTRE projet Firebase
       const firebaseConfig = {
   apiKey: "AIzaSyB7jLBW1cS_6DbV4XT0HPZSEvngR0T2PJI",
   authDomain: "magicmeet-947cf.firebaseapp.com",
@@ -167,7 +166,6 @@
   appId: "1:400119032453:web:8e84695eea557a5aa5d7ec"
       };
 
-      // Initialiser Firebase
       firebase.initializeApp(firebaseConfig);
       const auth = firebase.auth();
       const db = firebase.firestore();
