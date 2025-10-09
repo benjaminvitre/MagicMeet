@@ -572,3 +572,58 @@ input:focus, select:focus {
 .modal-actions {
     margin-top: 15px;
 }
+
+/* ... (tout le début du CSS est identique) ... */
+
+/* ====================================
+8. GROUP STYLES (NOUVEAU)
+====================================
+*/
+.create-group-form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+.create-group-form input {
+    margin-bottom: 0;
+    flex-grow: 1;
+}
+.create-group-form button {
+    width: auto;
+}
+.form-status {
+    font-size: 0.8em;
+}
+
+.group-item {
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+.group-item h3 {
+    margin-bottom: 10px;
+    font-size: 1.2em;
+}
+.members-list {
+    font-size: 0.9em;
+    color: var(--muted-text);
+    margin-bottom: 15px;
+}
+.members-list strong {
+    color: var(--text-primary);
+}
+.add-member-form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.add-member-form input {
+    flex-grow: 1;
+    margin-bottom: 0;
+}
+.add-member-form button {
+    width: auto;
+    padding: 8px 12px;
+}
