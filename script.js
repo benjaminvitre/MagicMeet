@@ -409,25 +409,30 @@ function showMain(){
     const createBtn = document.getElementById('create-slot');
     const cityFilterSelect = document.getElementById('city-filter-select');
     const groupFilterSelect = document.getElementById('group-filter-select');
-    const formGroupSelect = document.getElementById('form-group-select');
+    const formGroupInput = document.getElementById('form-group-input');
+    const groupSuggestions = document.getElementById('group-suggestions');
     let selectedActivity = null;
 
     async function populateGroupSelects() {
         if (!currentUser) return;
         const groupSnapshot = await db.collection('groups').where('members_uid', 'array-contains', currentUser.uid).get();
-        const optionsHTML = ['<option value="Toutes">-- Aucun --</option>'];
+        const filterOptions = ['<option value="Toutes">Tous</option>'];
+        const suggestionsHTML = [];
         groupSnapshot.forEach(doc => {
-            optionsHTML.push(`<option value="${doc.id}">${doc.data().name}</option>`);
+            const groupName = doc.data().name;
+            filterOptions.push(`<option value="${doc.id}">${groupName}</option>`);
+            suggestionsHTML.push(`<option value="${groupName}">`);
         });
-        if (formGroupSelect) formGroupSelect.innerHTML = optionsHTML.join('');
         if (groupFilterSelect) {
-            const filterOptions = ['<option value="Toutes">Tous</option>', ...optionsHTML.slice(1)];
             groupFilterSelect.innerHTML = filterOptions.join('');
             groupFilterSelect.value = currentFilterGroup;
             groupFilterSelect.onchange = () => {
                 currentFilterGroup = groupFilterSelect.value;
                 loadSlots();
             };
+        }
+        if (groupSuggestions) {
+            groupSuggestions.innerHTML = suggestionsHTML.join('');
         }
     }
 
@@ -602,36 +607,64 @@ function showMain(){
 
     formSubSelect.addEventListener('change', ()=> populateSubSub(formSubSelect.value));
 
-    if (createBtn) createBtn.addEventListener('click', ()=> {
+    // DÉBUT DU BLOC CORRIGÉ
+    if (createBtn) createBtn.addEventListener('click', async ()=> {
         if (!currentUser) return alert('Connecte-toi d’abord');
         const name = (document.getElementById('slot-name')?.value||'').trim();
         const location = (document.getElementById('slot-location')?.value||'').trim();
         const date = (document.getElementById('slot-date')?.value||'').trim();
         const time = (document.getElementById('slot-time')?.value||'').trim();
         const activity = formActivitySelect.value;
-        const selectedGroup = formGroupSelect.options[formGroupSelect.selectedIndex];
+        const groupName = formGroupInput.value.trim();
         if (!activity) return alert('Choisis d’abord une activité (ex: Jeux)');
         if (!name || !location || !date || !time) return alert('Remplis les champs nom, lieu, date et heure');
+
+        let groupId = null;
+
+        if (groupName) {
+            const groupQuery = await db.collection('groups').where('name', '==', groupName).get();
+            if (groupQuery.empty) {
+                const newGroup = {
+                    name: groupName,
+                    owner_uid: currentUser.uid,
+                    owner_pseudo: currentUser.pseudo,
+                    members_uid: [currentUser.uid],
+                    members: [{ uid: currentUser.uid, pseudo: currentUser.pseudo }],
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    private: true
+                };
+                const groupDocRef = await db.collection('groups').add(newGroup);
+                groupId = groupDocRef.id;
+            } else {
+                groupId = groupQuery.docs[0].id;
+            }
+        }
+
         const newSlot = {
             activity: activity, sub: formSubSelect.value || '', subsub: subsubSelect.value || '',
             name: name, location: location, date: date, time: time,
             private: !!document.getElementById('private-slot')?.checked,
-            groupId: formGroupSelect.value !== 'Toutes' ? formGroupSelect.value : null,
-            groupName: formGroupSelect.value !== 'Toutes' ? selectedGroup.text : null,
+            groupId: groupId,
+            groupName: groupName || null,
             owner: currentUser.uid, ownerPseudo: currentUser.pseudo,
             participants: [{uid: currentUser.uid, pseudo: currentUser.pseudo}],
             participants_uid: [currentUser.uid],
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            invited_uids: [],
+            invited_pseudos: []
         };
         db.collection('slots').add(newSlot).then(() => {
             console.log("Créneau créé !");
             createForm.reset();
+            formGroupInput.value = '';
             createForm.style.display = 'none';
             if (arrow) arrow.style.transform = 'rotate(0deg)';
             loadSlots();
             populateCityFilter();
+            populateGroupSelects();
         }).catch(error => { console.error("Erreur: ", error); alert("Une erreur est survenue."); });
     });
+    // FIN DU BLOC CORRIGÉ
 }
 
 function handleProfilePage() {
@@ -643,6 +676,7 @@ function handleProfilePage() {
     loadPendingInvitations();
     const createGroupBtn = document.getElementById('create-group-btn');
     const groupNameInput = document.getElementById('group-name-input');
+    const privateGroupCheckbox = document.getElementById('private-group');
     if (createGroupBtn) {
         createGroupBtn.addEventListener('click', async () => {
             const name = groupNameInput.value.trim();
@@ -653,9 +687,14 @@ function handleProfilePage() {
                 name: name, owner_uid: currentUser.uid, owner_pseudo: currentUser.pseudo,
                 members_uid: [currentUser.uid],
                 members: [{ uid: currentUser.uid, pseudo: currentUser.pseudo }],
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                private: privateGroupCheckbox.checked
             };
-            db.collection('groups').add(newGroup).then(() => { groupNameInput.value = ''; loadUserGroups(); });
+            db.collection('groups').add(newGroup).then(() => { 
+                groupNameInput.value = ''; 
+                privateGroupCheckbox.checked = false;
+                loadUserGroups(); 
+            });
         });
     }
     const profileForm = document.getElementById('profile-form');
@@ -728,14 +767,11 @@ async function loadPendingInvitations() {
     const list = document.getElementById('pending-invitations-list');
     if (!list || !currentUser) return;
     list.innerHTML = '';
-
     const snapshot = await db.collection('slots').where('invited_uids', 'array-contains', currentUser.uid).get();
-
     if (snapshot.empty) {
         list.innerHTML = '<li class="muted-text" style="padding: 10px 0;">Vous n\'avez aucune invitation en attente.</li>';
         return;
     }
-
     let invitationsCount = 0;
     snapshot.forEach(doc => {
         const slot = { id: doc.id, ...doc.data() };
@@ -755,9 +791,7 @@ async function loadPendingInvitations() {
                 </div>
             `;
             list.appendChild(li);
-
             const slotRef = db.collection('slots').doc(slot.id);
-
             li.querySelector(`#accept-${slot.id}`).addEventListener('click', () => {
                 slotRef.update({
                     participants: firebase.firestore.FieldValue.arrayUnion({uid: currentUser.uid, pseudo: currentUser.pseudo}),
@@ -769,7 +803,6 @@ async function loadPendingInvitations() {
                     loadJoinedSlots();
                 });
             });
-
             li.querySelector(`#decline-${slot.id}`).addEventListener('click', () => {
                 slotRef.update({
                     invited_uids: firebase.firestore.FieldValue.arrayRemove(currentUser.uid),
@@ -778,7 +811,6 @@ async function loadPendingInvitations() {
             });
         }
     });
-
     if (invitationsCount === 0) {
         list.innerHTML = '<li class="muted-text" style="padding: 10px 0;">Vous n\'avez aucune invitation en attente.</li>';
     }
@@ -836,7 +868,7 @@ function checkShared(){
                         invited_uids: firebase.firestore.FieldValue.arrayRemove(currentUser.uid),
                         invited_pseudos: firebase.firestore.FieldValue.arrayRemove(currentUser.pseudo)
                     }).then(() => {
-                        alert('Créneau rejoint avec succès !');
+                        alert('Créneau rejoint ! 🤘');
                         closeModal();
                         if (document.getElementById('joined-slots')) { loadJoinedSlots(); }
                     });
