@@ -135,7 +135,8 @@ ul {
     margin-bottom: 20px;
 }
 .create-slot-box {
-    padding: 27px 20px;
+    /* Ancien padding: 27px 20px; */
+    padding: 22px 20px; /* Réduction de ~20% */
 }
 
 .auth-section {
@@ -303,13 +304,12 @@ input:focus, select:focus {
     color: var(--text-primary);
 }
 
-/* NOUVEAU: Style pour les cases à cocher des formulaires */
 .form-checkbox {
-    margin-top: -10px; /* Réduit l'espace au-dessus */
+    margin-top: -10px; 
     margin-bottom: 15px;
 }
 .form-checkbox label {
-    font-size: 0.9em; /* Police légèrement plus petite */
+    font-size: 0.9em; 
     color: var(--muted-text);
 }
 
@@ -335,12 +335,10 @@ input:focus, select:focus {
 
 .activity-btn.active, .activity-btn:hover {
     background-color: var(--hover-bg);
-    /* La couleur de la bordure et du texte sera surchargée par les classes spécifiques ci-dessous */
     border-color: var(--text-accent);
     color: var(--text-primary);
 }
 
-/* Specific colors for filtering boxes (using the custom properties) */
 .activity-btn.act-jeux { border-color: var(--act-jeux); color: var(--act-jeux); }
 .activity-btn.act-culture { border-color: var(--act-culture); color: var(--act-culture); }
 .activity-btn.act-sport { border-color: var(--act-sport); color: var(--act-sport); }
@@ -366,7 +364,7 @@ input:focus, select:focus {
     align-items: center;
     padding: 15px 0;
     border-bottom: 1px solid var(--border-color);
-    background-color: transparent; /* Assure qu'il n'y a pas de fond blanc */
+    background-color: transparent; 
 }
 
 .slot-item:last-child {
@@ -410,7 +408,6 @@ input:focus, select:focus {
     gap: 5px;
 }
 
-/* Participants Gauge */
 .participants-box {
     margin-top: 8px;
     margin-bottom: 5px;
@@ -513,74 +510,22 @@ input:focus, select:focus {
     .ghost-action-btn {
         padding: 5px 10px;
     }
-
-    /* ... (tout le code CSS précédent reste identique) ... */
-
-/*
-====================================
-6. MOBILE RESPONSIVE
-====================================
-*/
-@media (max-width: 600px) {
-    .header {
-        flex-wrap: wrap;
-    }
-    .logo-link {
-        order: 0;
-        margin-right: 5px;
-    }
-    .site-title {
-        order: 1;
-        width: auto;
-        margin-top: 0;
-        text-align: left;
-        font-size: 1.3em;
-    }
-    .header-right {
-        order: 2;
-        margin-left: auto;
-    }
-    .home-link {
-        display: none;
-    }
-    .auth-section {
-        flex-direction: column;
-        margin-top: 20px;
-    }
-    .inline-fields {
-        flex-direction: column;
-    }
-    .slot-item {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .slot-info {
-        width: 100%;
-        margin-bottom: 10px;
-    }
-    .actions-box {
-        width: 100%;
-        justify-content: flex-end;
-    }
-    .ghost-action-btn {
-        padding: 5px 10px;
-    }
 }
 
 /* ====================================
-7. MODAL STYLES (NOUVEAU)
+7. MODAL STYLES
 ====================================
 */
 .modal {
-    display: none; /* Caché par défaut */
-    position: fixed; /* Reste en place même si on scrolle */
-    z-index: 2000; /* Au-dessus de tout le reste */
+    display: none; 
+    position: fixed; 
+    z-index: 2000; 
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    overflow: auto; /* Permet de scroller si le contenu est trop grand */
-    background-color: rgba(0,0,0,0.7); /* Fond noir semi-transparent */
+    overflow: auto; 
+    background-color: rgba(0,0,0,0.7); 
 }
 
 .modal-content {
