@@ -83,7 +83,7 @@ function extractCity(locationText) {
         if (lastPart.match(/\d{5}\s/)) {
             return lastPart.replace(/\d{5}\s*/, '').trim();
         }
-        return lastPart.replace(/\d{5}/, '').trim();
+        return lastPart.replace(/\d{5}/, '').trim(); // Gère aussi le cas sans espace après le CP
     }
     const words = locationText.split(' ');
     const lastWord = words[words.length -1];
@@ -126,6 +126,10 @@ function logout() {
     auth.signOut().catch(error => console.error("Erreur de déconnexion: ", error));
 }
 
+// =======================================================================
+// CORRECTION : La fonction renderSlotItem est maintenant ici, au niveau global,
+// pour être accessible par la page d'accueil ET la page de profil.
+// =======================================================================
 function renderSlotItem(slot, targetListElement) {
     const li = document.createElement('li'); li.className='slot-item';
     const info = document.createElement('div'); info.className='slot-info';
@@ -185,8 +189,8 @@ function renderSlotItem(slot, targetListElement) {
     info.appendChild(participantsBox);
 
     const participantsList = document.createElement('div'); participantsList.className = 'participants-list';
-    const isParticipant = currentUser && (slot.participants_uid || []).includes(currentUser.uid);
-    const isOwner = currentUser && slot.owner === currentUser.uid;
+    const isParticipant = (slot.participants_uid || []).includes(currentUser.uid);
+    const isOwner = slot.owner === currentUser.uid;
 
     if (slot.private && !isOwner){
         participantsList.textContent = 'Participants cachés.';
@@ -207,64 +211,64 @@ function renderSlotItem(slot, targetListElement) {
         if (typeof loadJoinedSlots === 'function' && document.getElementById('joined-slots')) loadJoinedSlots();
     };
     
-    // On n'affiche les boutons que si un utilisateur est connecté
-    if (currentUser) {
-        if (targetListElement.id === 'slots-list' || targetListElement.id === 'user-slots') {
-            if (!isParticipant){
-                const joinBtn = document.createElement('button');
-                joinBtn.className = 'action-btn join-btn';
-                joinBtn.textContent = '✅ Rejoindre';
+    // Actions pour la page d'accueil et la page de profil (créneaux créés)
+    if (targetListElement.id === 'slots-list' || targetListElement.id === 'user-slots') {
+        if (!isParticipant){
+            const joinBtn = document.createElement('button');
+            joinBtn.className = 'action-btn join-btn';
+            joinBtn.textContent = '✅ Rejoindre';
 
-                if (!slot.private || isOwner){
-                    joinBtn.onclick = ()=> {
-                        if (participantsCount >= MAX_PARTICIPANTS) return alert('Désolé, ce créneau est complet.');
-                        slotRef.update({
-                            participants: firebase.firestore.FieldValue.arrayUnion({uid: currentUser.uid, pseudo: currentUser.pseudo}),
-                            participants_uid: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-                        }).then(reloadLists);
-                    };
-                    actions.appendChild(joinBtn);
-                } else {
-                    joinBtn.textContent = '🔒 Privé';
-                    joinBtn.disabled = true;
-                    actions.appendChild(joinBtn);
-                }
-            } else if (isParticipant && !isOwner) {
-                const leaveBtn = document.createElement('button');
-                leaveBtn.className = 'action-btn leave-btn';
-                leaveBtn.textContent = '❌ Quitter';
-                leaveBtn.onclick = ()=> {
+            if (!slot.private || isOwner){
+                joinBtn.onclick = ()=> {
+                    if (participantsCount >= MAX_PARTICIPANTS) return alert('Désolé, ce créneau est complet.');
                     slotRef.update({
-                        participants: firebase.firestore.FieldValue.arrayRemove({uid: currentUser.uid, pseudo: currentUser.pseudo}),
-                        participants_uid: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+                        participants: firebase.firestore.FieldValue.arrayUnion({uid: currentUser.uid, pseudo: currentUser.pseudo}),
+                        participants_uid: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
                     }).then(reloadLists);
                 };
-                actions.appendChild(leaveBtn);
+                actions.appendChild(joinBtn);
+            } else {
+                joinBtn.textContent = '🔒 Privé';
+                joinBtn.disabled = true;
+                actions.appendChild(joinBtn);
             }
-        }
-        
-        if (targetListElement.id === 'joined-slots') {
+        } else if (isParticipant && !isOwner) {
             const leaveBtn = document.createElement('button');
             leaveBtn.className = 'action-btn leave-btn';
             leaveBtn.textContent = '❌ Quitter';
-            leaveBtn.onclick = () => {
-                 slotRef.update({
+            leaveBtn.onclick = ()=> {
+                slotRef.update({
                     participants: firebase.firestore.FieldValue.arrayRemove({uid: currentUser.uid, pseudo: currentUser.pseudo}),
                     participants_uid: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
                 }).then(reloadLists);
             };
             actions.appendChild(leaveBtn);
         }
+    }
+    
+    // Actions spécifiques pour la page de profil (créneaux rejoints)
+    if (targetListElement.id === 'joined-slots') {
+        const leaveBtn = document.createElement('button');
+        leaveBtn.className = 'action-btn leave-btn';
+        leaveBtn.textContent = '❌ Quitter';
+        leaveBtn.onclick = () => {
+             slotRef.update({
+                participants: firebase.firestore.FieldValue.arrayRemove({uid: currentUser.uid, pseudo: currentUser.pseudo}),
+                participants_uid: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+            }).then(reloadLists);
+        };
+        actions.appendChild(leaveBtn);
+    }
 
-        if (isOwner){
-            const del = document.createElement('button'); del.textContent='🗑️'; del.title='Supprimer';
-            del.className = 'action-btn ghost-action-btn';
-            del.onclick = ()=> {
-                if (!confirm('Supprimer ce créneau ?')) return;
-                slotRef.delete().then(reloadLists);
-            };
-            actions.appendChild(del);
-        }
+
+    if (isOwner){
+        const del = document.createElement('button'); del.textContent='🗑️'; del.title='Supprimer';
+        del.className = 'action-btn ghost-action-btn';
+        del.onclick = ()=> {
+            if (!confirm('Supprimer ce créneau ?')) return;
+            slotRef.delete().then(reloadLists);
+        };
+        actions.appendChild(del);
     }
 
     const share = document.createElement('button'); share.textContent='🔗'; share.title='Partager';
@@ -292,8 +296,6 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 currentUser = { uid: user.uid, email: user.email, pseudo: user.email.split('@')[0] };
             }
-            
-            checkShared();
 
             if (document.getElementById('profile-main')) {
                 handleProfilePage();
@@ -302,8 +304,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             currentUser = null;
-            checkShared();
-
             if (document.getElementById('auth-section')) {
                  document.getElementById('auth-section').style.display = 'flex';
                  document.getElementById('main-section').style.display = 'none';
@@ -433,6 +433,14 @@ function showMain(){
     
     let selectedActivity = null;
 
+    const addressCache = {
+        '1 rue de la roquet': '1 rue de la Roquette, 75011 Paris',
+        'cafe du coin': '4 rue des Canettes, 75006 Paris',
+        'tour eiffel': 'Champ de Mars, 5 Av. Anatole France, 75007 Paris',
+        '10 rue de lappe': '10 Rue de Lappe, 75011 Paris',
+        'liberty': 'Le Liberty, 11 Rue de la Tonnellerie, 28000 Chartres'
+    };
+
     function populateFormActivitySelect(){
         if (!formActivitySelect) return;
         formActivitySelect.innerHTML = '<option value="">-- Choisis une activité --</option>';
@@ -548,7 +556,7 @@ function showMain(){
     async function populateCityFilter() {
         if (!cityFilterSelect) return;
         
-        const snapshot = await db.collection('slots').where('private', '==', false).get();
+        const snapshot = await db.collection('slots').get();
         const cities = new Set();
         snapshot.forEach(doc => {
             const city = extractCity(doc.data().location);
@@ -577,9 +585,6 @@ function showMain(){
         
         let query = db.collection('slots');
         
-        // NOUVEAU: On n'affiche que les créneaux publics sur la page d'accueil
-        query = query.where('private', '==', false);
-
         if (currentFilterActivity !== "Toutes") {
             query = query.where('activity', '==', currentFilterActivity);
         }
@@ -600,7 +605,7 @@ function showMain(){
         slots = slots.slice(0, 10);
 
         if (slots.length === 0) {
-            list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Aucun créneau public ne correspond à vos filtres.</li>';
+            list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Aucun créneau ne correspond à vos filtres.</li>';
             return;
         }
 
@@ -675,6 +680,18 @@ function showMain(){
             alert("Une erreur est survenue.");
         });
     });
+
+    (function checkShared(){
+        const params = new URLSearchParams(window.location.search); const sid = params.get('slot');
+        if (!sid) return;
+        db.collection('slots').doc(sid).get().then(doc => {
+            if(!doc.exists) return alert('Ce créneau n’existe plus.');
+            const s = doc.data();
+            if (s.private) return alert('🔒 Ce créneau est privé : détails cachés.');
+            const formattedDate = formatDateToWords(s.date);
+            alert(`Créneau partagé :\n${s.name}\n${s.activity} ${s.sub ? ' - '+s.sub : ''} ${s.subsub ? ' - '+s.subsub : ''}\n📍 ${s.location}\n🕒 ${formattedDate} ${s.time}\npar ${s.ownerPseudo}`);
+        });
+    })();
 }
 
 /* ===== LOGIQUE DE LA PAGE PROFIL (profile.html) ===== */
@@ -736,86 +753,4 @@ async function loadJoinedSlots(){
     if (!hasJoinedSlots) {
          list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Vous n\'avez rejoint aucun autre créneau.</li>';
     }
-}
-
-function checkShared(){
-    const params = new URLSearchParams(window.location.search);
-    const slotId = params.get('slot');
-    if (!slotId) return;
-
-    const modal = document.getElementById('shared-slot-modal');
-    if (!modal) return;
-    
-    const closeBtn = modal.querySelector('.close-btn');
-    const detailsDiv = document.getElementById('modal-slot-details');
-    const joinBtn = document.getElementById('modal-join-btn');
-
-    const closeModal = () => {
-        modal.style.display = 'none';
-        window.history.replaceState({}, document.title, window.location.pathname);
-    };
-
-    closeBtn.onclick = closeModal;
-    window.onclick = (event) => {
-        if (event.target == modal) {
-            closeModal();
-        }
-    };
-
-    db.collection('slots').doc(slotId).get().then(doc => {
-        if(!doc.exists) return;
-
-        const slot = { id: doc.id, ...doc.data() };
-        if (slot.private && (!currentUser || !slot.participants_uid.includes(currentUser.uid))) return;
-
-        const formattedDate = formatDateToWords(slot.date);
-        detailsDiv.innerHTML = `
-            <strong>${slot.name}</strong>
-            Activité: ${slot.activity} ${slot.sub ? ' - '+slot.sub : ''}<br>
-            Lieu: ${slot.location}<br>
-            Le: ${formattedDate} à ${slot.time}<br>
-            Organisé par: ${slot.ownerPseudo}
-        `;
-
-        if (!currentUser) {
-            joinBtn.textContent = 'Connectez-vous pour rejoindre';
-            joinBtn.disabled = true;
-        } else {
-            const isParticipant = (slot.participants_uid || []).includes(currentUser.uid);
-            const isFull = (slot.participants || []).length >= MAX_PARTICIPANTS;
-
-            if (isParticipant) {
-                joinBtn.textContent = '✅ Déjà rejoint';
-                joinBtn.disabled = true;
-            } else if (isFull) {
-                joinBtn.textContent = ' Complet';
-                joinBtn.disabled = true;
-            } else {
-                joinBtn.textContent = '✅ Rejoindre';
-                joinBtn.disabled = false;
-                
-                const newJoinBtn = joinBtn.cloneNode(true);
-                joinBtn.parentNode.replaceChild(newJoinBtn, joinBtn);
-
-                newJoinBtn.addEventListener('click', () => {
-                    const slotRef = db.collection('slots').doc(slot.id);
-                    slotRef.update({
-                        participants: firebase.firestore.FieldValue.arrayUnion({uid: currentUser.uid, pseudo: currentUser.pseudo}),
-                        participants_uid: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-                    }).then(() => {
-                        alert('Créneau rejoint avec succès !');
-                        closeModal();
-                        if (document.getElementById('joined-slots')) {
-                            loadJoinedSlots();
-                        }
-                    });
-                });
-            }
-        }
-        
-        modal.style.display = 'block';
-
-    }).catch(error => {
-        console.error("Erreur lors de la récupération du créneau partagé:", error);
-    });
 }
