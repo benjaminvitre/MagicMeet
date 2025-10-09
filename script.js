@@ -356,7 +356,6 @@ function handleIndexPageListeners() {
 function showMain(){
     document.getElementById('auth-section').style.display = 'none';
     document.getElementById('main-section').style.display = 'block';
-
     const toggleCreate = document.getElementById('toggle-create-form');
     const createForm = document.getElementById('create-slot-form');
     const arrow = document.querySelector('.arrow');
@@ -370,8 +369,6 @@ function showMain(){
     const cityFilterSelect = document.getElementById('city-filter-select');
     const groupFilterSelect = document.getElementById('group-filter-select');
     const formGroupSelect = document.getElementById('form-group-select');
-    const locationInput = document.getElementById('slot-location');
-    
     let selectedActivity = null;
 
     async function populateGroupSelects() {
@@ -586,21 +583,42 @@ function handleProfilePage() {
     loadUserSlots();
     loadJoinedSlots();
     loadUserGroups();
+
+    // DÉBUT DU BLOC CORRIGÉ / AJOUTÉ
     const createGroupBtn = document.getElementById('create-group-btn');
     const groupNameInput = document.getElementById('group-name-input');
+    
     if (createGroupBtn) {
         createGroupBtn.addEventListener('click', async () => {
             const name = groupNameInput.value.trim();
             if (name.length < 3) return alert('Le nom du groupe doit faire au moins 3 caractères.');
+    
             const existingGroup = await db.collection('groups').where('name', '==', name).get();
-            if (!existingGroup.empty) { return alert('Ce nom de groupe est déjà pris.'); }
+            if (!existingGroup.empty) {
+                return alert('Ce nom de groupe est déjà pris.');
+            }
+    
             const newGroup = {
-                name: name, owner_uid: currentUser.uid, owner_pseudo: currentUser.pseudo,
+                name: name,
+                owner_uid: currentUser.uid,
+                owner_pseudo: currentUser.pseudo,
                 members_uid: [currentUser.uid],
                 members: [{ uid: currentUser.uid, pseudo: currentUser.pseudo }],
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
-            db.collection('groups').add(newGroup).then(() => { groupNameInput.value = ''; loadUserGroups(); });
+    
+            db.collection('groups').add(newGroup).then(() => {
+                groupNameInput.value = '';
+                loadUserGroups();
+            });
+        });
+    }
+    // FIN DU BLOC CORRIGÉ / AJOUTÉ
+
+    const profileForm = document.getElementById('profile-form');
+    if (profileForm) {
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
         });
     }
 }
@@ -626,8 +644,8 @@ async function loadJoinedSlots(){
 
 async function loadUserGroups() {
     const list = document.getElementById('groups-list'); if (!list || !currentUser) return; list.innerHTML = '';
-    const snapshot = await db.collection('groups').where('members_uid', 'array-contains', currentUser.uid).get();
-    if (snapshot.empty) { list.innerHTML = '<li class="muted-text">Vous ne faites partie d\'aucun groupe.</li>'; return; }
+    const snapshot = await db.collection('groups').where('members_uid', 'array-contains', currentUser.uid).orderBy('createdAt', 'desc').get();
+    if (snapshot.empty) { list.innerHTML = '<li class="muted-text" style="padding: 10px 0;">Vous ne faites partie d\'aucun groupe.</li>'; return; }
     snapshot.forEach(doc => renderGroupItem({ id: doc.id, ...doc.data() }));
 }
 
