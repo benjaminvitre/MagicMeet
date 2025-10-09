@@ -39,8 +39,8 @@ body {
     background-color: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.6;
-    /* NOUVEAU: Réduction de 30% de la taille de police de base */
-    font-size: 11.5px;
+    /* MODIFICATION: Augmentation de 20% (11.5px * 1.2 ≈ 13.8px) */
+    font-size: 14px;
 }
 
 main, .auth-section {
@@ -64,7 +64,8 @@ h1, h2, h3 {
     color: var(--text-primary);
 }
 .filter-box h2, .create-slot-box h2, .slot-list-card h2 {
-    font-size: 1.275em;
+    /* MODIFICATION: Taille relative réduite pour compenser l'augmentation de base */
+    font-size: 1.05em;
     margin-bottom: 12px;
 }
 
@@ -177,7 +178,6 @@ select {
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-/* NOUVEAU: Correction de la couleur des icônes de date/heure */
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator {
     filter: invert(1);
