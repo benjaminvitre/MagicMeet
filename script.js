@@ -507,22 +507,48 @@ function showMain(){
 
     async function loadSlots(){
         const list = document.getElementById('slots-list'); if (!list) return; list.innerHTML='';
-        let query = db.collection('slots');
-        query = query.where('private', '==', false);
-        if (currentFilterActivity !== "Toutes") { query = query.where('activity', '==', currentFilterActivity); }
-        if (currentFilterSub !== "Toutes") { query = query.where('sub', '==', currentFilterSub); }
-        if (currentFilterGroup !== "Toutes") { query = query.where('groupId', '==', currentFilterGroup); }
-        const snapshot = await query.orderBy('date', 'asc').get();
-        let slots = [];
-        snapshot.forEach(doc => { slots.push({ id: doc.id, ...doc.data() }); });
+        
+        let publicQuery = db.collection('slots').where('private', '==', false);
+        if (currentFilterActivity !== "Toutes") { publicQuery = publicQuery.where('activity', '==', currentFilterActivity); }
+        if (currentFilterSub !== "Toutes") { publicQuery = publicQuery.where('sub', '==', currentFilterSub); }
+        if (currentFilterGroup !== "Toutes") { publicQuery = publicQuery.where('groupId', '==', currentFilterGroup); }
+        const publicPromise = publicQuery.orderBy('date', 'asc').get();
+
+        const promises = [publicPromise];
+
+        if (currentUser) {
+            let privateQuery = db.collection('slots')
+                .where('private', '==', true)
+                .where('owner', '==', currentUser.uid);
+            if (currentFilterActivity !== "Toutes") { privateQuery = privateQuery.where('activity', '==', currentFilterActivity); }
+            if (currentFilterSub !== "Toutes") { privateQuery = privateQuery.where('sub', '==', currentFilterSub); }
+            if (currentFilterGroup !== "Toutes") { privateQuery = privateQuery.where('groupId', '==', currentFilterGroup); }
+            promises.push(privateQuery.orderBy('date', 'asc').get());
+        }
+
+        const snapshots = await Promise.all(promises);
+
+        const slotsMap = new Map();
+        snapshots.forEach(snapshot => {
+            snapshot.forEach(doc => {
+                slotsMap.set(doc.id, { id: doc.id, ...doc.data() });
+            });
+        });
+
+        let slots = Array.from(slotsMap.values());
+        slots.sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
+
         if (currentFilterCity !== "Toutes") {
             slots = slots.filter(s => extractCity(s.location) === currentFilterCity);
         }
+        
         slots = slots.slice(0, 10);
+
         if (slots.length === 0) {
-            list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Aucun créneau public ne correspond à vos filtres.</li>';
+            list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Aucun créneau ne correspond à vos filtres.</li>';
             return;
         }
+
         slots.forEach(slot => renderSlotItem(slot, list));
     }
 
@@ -735,27 +761,23 @@ function checkShared(){
 function openEditModal(slot) {
     const modal = document.getElementById('edit-slot-modal');
     if (!modal) return;
-
     const closeBtn = modal.querySelector('.close-btn');
     const saveBtn = document.getElementById('save-slot-changes');
     const activitySelect = document.getElementById('edit-form-activity-select');
     const subSelect = document.getElementById('edit-sub-select');
     const subsubSelect = document.getElementById('edit-subsub-select');
-
     document.getElementById('edit-slot-id').value = slot.id;
     document.getElementById('edit-slot-name').value = slot.name;
     document.getElementById('edit-slot-location').value = slot.location;
     document.getElementById('edit-slot-date').value = slot.date;
     document.getElementById('edit-slot-time').value = slot.time;
     document.getElementById('edit-private-slot').checked = slot.private;
-
     activitySelect.innerHTML = '';
     Object.keys(ACTIVITIES).filter(a=>a!=='Toutes').forEach(act => {
         const o = document.createElement('option'); o.value = act; o.textContent = act;
         activitySelect.appendChild(o);
     });
     activitySelect.value = slot.activity;
-
     const populateSubs = (activity) => {
         subSelect.innerHTML = '<option value="">-- Optionnel --</option>';
         (ACTIVITIES[activity] || []).forEach(s => {
@@ -763,7 +785,6 @@ function openEditModal(slot) {
         });
         subSelect.value = slot.sub;
     };
-
     const populateSubSubs = (subActivity) => {
         subsubSelect.innerHTML = '<option value="">-- Optionnel --</option>';
         (SUBSUB[subActivity] || []).forEach(ss => {
@@ -771,22 +792,16 @@ function openEditModal(slot) {
         });
         subsubSelect.value = slot.subsub;
     };
-    
     populateSubs(slot.activity);
     populateSubSubs(slot.sub);
-
     activitySelect.onchange = () => populateSubs(activitySelect.value);
     subSelect.onchange = () => populateSubSubs(subSelect.value);
-
     modal.style.display = 'block';
-
     const closeModal = () => modal.style.display = 'none';
     closeBtn.onclick = closeModal;
     window.onclick = (event) => { if (event.target == modal) closeModal(); };
-
     const newSaveBtn = saveBtn.cloneNode(true);
     saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
-
     newSaveBtn.addEventListener('click', () => {
         const updatedSlot = {
             name: document.getElementById('edit-slot-name').value,
@@ -798,7 +813,6 @@ function openEditModal(slot) {
             sub: subSelect.value,
             subsub: subsubSelect.value,
         };
-
         const slotId = document.getElementById('edit-slot-id').value;
         db.collection('slots').doc(slotId).update(updatedSlot)
             .then(() => {
