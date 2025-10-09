@@ -39,6 +39,8 @@ body {
     background-color: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.6;
+    /* NOUVEAU: Réduction de 30% de la taille de police de base */
+    font-size: 11.5px;
 }
 
 main, .auth-section {
@@ -175,6 +177,12 @@ select {
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+/* NOUVEAU: Correction de la couleur des icônes de date/heure */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}
+
 input:focus, select:focus {
     border-color: var(--text-accent);
     outline: none;
@@ -200,18 +208,16 @@ input:focus, select:focus {
     cursor: not-allowed;
 }
 
-/* Primary actions (Join, Create) */
-.join-btn, #create-slot, #signup, #login, #save-profile-btn {
+.join-btn, #create-slot, #signup, #login, #save-profile-btn, #save-slot-changes {
     background-color: var(--text-accent);
     color: var(--bg-primary);
     width: 100%;
 }
 
-.join-btn:hover:not(:disabled), #create-slot:hover:not(:disabled), #signup:hover:not(:disabled), #login:hover:not(:disabled), #save-profile-btn:hover:not(:disabled) {
+.join-btn:hover:not(:disabled), #create-slot:hover:not(:disabled), #signup:hover:not(:disabled), #login:hover:not(:disabled), #save-profile-btn:hover:not(:disabled), #save-slot-changes:hover:not(:disabled) {
     background-color: #6fb2f2;
 }
 
-/* Secondary actions (Leave, Ghost) */
 .leave-btn, .ghost-btn {
     background-color: var(--hover-bg);
     color: var(--text-primary);
@@ -320,7 +326,6 @@ input:focus, select:focus {
 }
 
 
-/* Activity Buttons (Filtering) */
 .activity-buttons {
     display: flex;
     flex-wrap: wrap;
@@ -359,7 +364,6 @@ input:focus, select:focus {
 .activity-btn.act-autres.active, .activity-btn.act-autres:hover { background-color: rgba(120, 214, 164, 0.2); color: var(--act-autres); border-color: var(--act-autres); }
 
 
-/* Slot List */
 .slot-list-card h2 {
     margin-bottom: 5px;
 }
@@ -533,7 +537,7 @@ input:focus, select:focus {
 
 .modal-content {
     background-color: var(--bg-secondary);
-    margin: 15% auto;
+    margin: 10% auto;
     padding: 25px;
     border: 1px solid var(--border-color);
     border-radius: 12px;
