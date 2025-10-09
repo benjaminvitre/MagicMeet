@@ -126,10 +126,6 @@ function logout() {
     auth.signOut().catch(error => console.error("Erreur de déconnexion: ", error));
 }
 
-// =======================================================================
-// CORRECTION : La fonction renderSlotItem est maintenant ici, au niveau global,
-// pour être accessible par la page d'accueil ET la page de profil.
-// =======================================================================
 function renderSlotItem(slot, targetListElement) {
     const li = document.createElement('li'); li.className='slot-item';
     const info = document.createElement('div'); info.className='slot-info';
@@ -296,6 +292,8 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 currentUser = { uid: user.uid, email: user.email, pseudo: user.email.split('@')[0] };
             }
+            
+            checkShared();
 
             if (document.getElementById('profile-main')) {
                 handleProfilePage();
@@ -304,6 +302,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             currentUser = null;
+            checkShared();
+
             if (document.getElementById('auth-section')) {
                  document.getElementById('auth-section').style.display = 'flex';
                  document.getElementById('main-section').style.display = 'none';
@@ -432,14 +432,6 @@ function showMain(){
     const locationInput = document.getElementById('slot-location');
     
     let selectedActivity = null;
-
-    const addressCache = {
-        '1 rue de la roquet': '1 rue de la Roquette, 75011 Paris',
-        'cafe du coin': '4 rue des Canettes, 75006 Paris',
-        'tour eiffel': 'Champ de Mars, 5 Av. Anatole France, 75007 Paris',
-        '10 rue de lappe': '10 Rue de Lappe, 75011 Paris',
-        'liberty': 'Le Liberty, 11 Rue de la Tonnellerie, 28000 Chartres'
-    };
 
     function populateFormActivitySelect(){
         if (!formActivitySelect) return;
@@ -680,18 +672,6 @@ function showMain(){
             alert("Une erreur est survenue.");
         });
     });
-
-    (function checkShared(){
-        const params = new URLSearchParams(window.location.search); const sid = params.get('slot');
-        if (!sid) return;
-        db.collection('slots').doc(sid).get().then(doc => {
-            if(!doc.exists) return alert('Ce créneau n’existe plus.');
-            const s = doc.data();
-            if (s.private) return alert('🔒 Ce créneau est privé : détails cachés.');
-            const formattedDate = formatDateToWords(s.date);
-            alert(`Créneau partagé :\n${s.name}\n${s.activity} ${s.sub ? ' - '+s.sub : ''} ${s.subsub ? ' - '+s.subsub : ''}\n📍 ${s.location}\n🕒 ${formattedDate} ${s.time}\npar ${s.ownerPseudo}`);
-        });
-    })();
 }
 
 /* ===== LOGIQUE DE LA PAGE PROFIL (profile.html) ===== */
@@ -753,4 +733,87 @@ async function loadJoinedSlots(){
     if (!hasJoinedSlots) {
          list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Vous n\'avez rejoint aucun autre créneau.</li>';
     }
+}
+
+function checkShared(){
+    const params = new URLSearchParams(window.location.search);
+    const slotId = params.get('slot');
+    if (!slotId) return;
+
+    const modal = document.getElementById('shared-slot-modal');
+    // Si la modale n'existe pas sur la page (ex: profile.html), on ne fait rien
+    if (!modal) return;
+    
+    const closeBtn = modal.querySelector('.close-btn');
+    const detailsDiv = document.getElementById('modal-slot-details');
+    const joinBtn = document.getElementById('modal-join-btn');
+
+    const closeModal = () => {
+        modal.style.display = 'none';
+        window.history.replaceState({}, document.title, window.location.pathname);
+    };
+
+    closeBtn.onclick = closeModal;
+    window.onclick = (event) => {
+        if (event.target == modal) {
+            closeModal();
+        }
+    };
+
+    db.collection('slots').doc(slotId).get().then(doc => {
+        if(!doc.exists) return;
+
+        const slot = { id: doc.id, ...doc.data() };
+        if (slot.private) return;
+
+        const formattedDate = formatDateToWords(slot.date);
+        detailsDiv.innerHTML = `
+            <strong>${slot.name}</strong>
+            Activité: ${slot.activity} ${slot.sub ? ' - '+slot.sub : ''}<br>
+            Lieu: ${slot.location}<br>
+            Le: ${formattedDate} à ${slot.time}<br>
+            Organisé par: ${slot.ownerPseudo}
+        `;
+
+        if (!currentUser) {
+            joinBtn.textContent = 'Connectez-vous pour rejoindre';
+            joinBtn.disabled = true;
+        } else {
+            const isParticipant = (slot.participants_uid || []).includes(currentUser.uid);
+            const isFull = (slot.participants || []).length >= MAX_PARTICIPANTS;
+
+            if (isParticipant) {
+                joinBtn.textContent = '✅ Déjà rejoint';
+                joinBtn.disabled = true;
+            } else if (isFull) {
+                joinBtn.textContent = ' Complet';
+                joinBtn.disabled = true;
+            } else {
+                joinBtn.textContent = '✅ Rejoindre';
+                joinBtn.disabled = false;
+                
+                const newJoinBtn = joinBtn.cloneNode(true);
+                joinBtn.parentNode.replaceChild(newJoinBtn, joinBtn);
+
+                newJoinBtn.addEventListener('click', () => {
+                    const slotRef = db.collection('slots').doc(slot.id);
+                    slotRef.update({
+                        participants: firebase.firestore.FieldValue.arrayUnion({uid: currentUser.uid, pseudo: currentUser.pseudo}),
+                        participants_uid: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+                    }).then(() => {
+                        alert('Créneau rejoint avec succès !');
+                        closeModal();
+                        if (document.getElementById('joined-slots')) {
+                            loadJoinedSlots();
+                        }
+                    });
+                });
+            }
+        }
+        
+        modal.style.display = 'block';
+
+    }).catch(error => {
+        console.error("Erreur lors de la récupération du créneau partagé:", error);
+    });
 }
