@@ -4,6 +4,15 @@ const ADMIN_EMAIL = "benjamin.vitre@gmail.com";
 // Triez les sous-activités
 const sortArray = (arr) => arr.sort((a, b) => a.localeCompare(b, 'fr'));
 
+const firebaseConfig = {
+  apiKey: "AIzaSyB...xxxxxxxxxxxxxxxxxxx",
+  authDomain: "magic-meet-app-1a2b3.firebaseapp.com",
+  projectId: "magic-meet-app-1a2b3",
+  storageBucket: "magic-meet-app-1a2b3.appspot.com",
+  messagingSenderId: "123456789012",
+  appId: "1:123456789012:web:a1b2c3d4e5f6a7b8c9d0e1"
+};
+
 const ACTIVITIES = {
   "Toutes": [],
   "Autres": [], 
