@@ -83,7 +83,7 @@ function extractCity(locationText) {
         if (lastPart.match(/\d{5}\s/)) {
             return lastPart.replace(/\d{5}\s*/, '').trim();
         }
-        return lastPart.replace(/\d{5}/, '').trim(); // Gère aussi le cas sans espace après le CP
+        return lastPart.replace(/\d{5}/, '').trim();
     }
     const words = locationText.split(' ');
     const lastWord = words[words.length -1];
@@ -185,8 +185,8 @@ function renderSlotItem(slot, targetListElement) {
     info.appendChild(participantsBox);
 
     const participantsList = document.createElement('div'); participantsList.className = 'participants-list';
-    const isParticipant = (slot.participants_uid || []).includes(currentUser.uid);
-    const isOwner = slot.owner === currentUser.uid;
+    const isParticipant = currentUser && (slot.participants_uid || []).includes(currentUser.uid);
+    const isOwner = currentUser && slot.owner === currentUser.uid;
 
     if (slot.private && !isOwner){
         participantsList.textContent = 'Participants cachés.';
@@ -207,64 +207,64 @@ function renderSlotItem(slot, targetListElement) {
         if (typeof loadJoinedSlots === 'function' && document.getElementById('joined-slots')) loadJoinedSlots();
     };
     
-    // Actions pour la page d'accueil et la page de profil (créneaux créés)
-    if (targetListElement.id === 'slots-list' || targetListElement.id === 'user-slots') {
-        if (!isParticipant){
-            const joinBtn = document.createElement('button');
-            joinBtn.className = 'action-btn join-btn';
-            joinBtn.textContent = '✅ Rejoindre';
+    // On n'affiche les boutons que si un utilisateur est connecté
+    if (currentUser) {
+        if (targetListElement.id === 'slots-list' || targetListElement.id === 'user-slots') {
+            if (!isParticipant){
+                const joinBtn = document.createElement('button');
+                joinBtn.className = 'action-btn join-btn';
+                joinBtn.textContent = '✅ Rejoindre';
 
-            if (!slot.private || isOwner){
-                joinBtn.onclick = ()=> {
-                    if (participantsCount >= MAX_PARTICIPANTS) return alert('Désolé, ce créneau est complet.');
+                if (!slot.private || isOwner){
+                    joinBtn.onclick = ()=> {
+                        if (participantsCount >= MAX_PARTICIPANTS) return alert('Désolé, ce créneau est complet.');
+                        slotRef.update({
+                            participants: firebase.firestore.FieldValue.arrayUnion({uid: currentUser.uid, pseudo: currentUser.pseudo}),
+                            participants_uid: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+                        }).then(reloadLists);
+                    };
+                    actions.appendChild(joinBtn);
+                } else {
+                    joinBtn.textContent = '🔒 Privé';
+                    joinBtn.disabled = true;
+                    actions.appendChild(joinBtn);
+                }
+            } else if (isParticipant && !isOwner) {
+                const leaveBtn = document.createElement('button');
+                leaveBtn.className = 'action-btn leave-btn';
+                leaveBtn.textContent = '❌ Quitter';
+                leaveBtn.onclick = ()=> {
                     slotRef.update({
-                        participants: firebase.firestore.FieldValue.arrayUnion({uid: currentUser.uid, pseudo: currentUser.pseudo}),
-                        participants_uid: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+                        participants: firebase.firestore.FieldValue.arrayRemove({uid: currentUser.uid, pseudo: currentUser.pseudo}),
+                        participants_uid: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
                     }).then(reloadLists);
                 };
-                actions.appendChild(joinBtn);
-            } else {
-                joinBtn.textContent = '🔒 Privé';
-                joinBtn.disabled = true;
-                actions.appendChild(joinBtn);
+                actions.appendChild(leaveBtn);
             }
-        } else if (isParticipant && !isOwner) {
+        }
+        
+        if (targetListElement.id === 'joined-slots') {
             const leaveBtn = document.createElement('button');
             leaveBtn.className = 'action-btn leave-btn';
             leaveBtn.textContent = '❌ Quitter';
-            leaveBtn.onclick = ()=> {
-                slotRef.update({
+            leaveBtn.onclick = () => {
+                 slotRef.update({
                     participants: firebase.firestore.FieldValue.arrayRemove({uid: currentUser.uid, pseudo: currentUser.pseudo}),
                     participants_uid: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
                 }).then(reloadLists);
             };
             actions.appendChild(leaveBtn);
         }
-    }
-    
-    // Actions spécifiques pour la page de profil (créneaux rejoints)
-    if (targetListElement.id === 'joined-slots') {
-        const leaveBtn = document.createElement('button');
-        leaveBtn.className = 'action-btn leave-btn';
-        leaveBtn.textContent = '❌ Quitter';
-        leaveBtn.onclick = () => {
-             slotRef.update({
-                participants: firebase.firestore.FieldValue.arrayRemove({uid: currentUser.uid, pseudo: currentUser.pseudo}),
-                participants_uid: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
-            }).then(reloadLists);
-        };
-        actions.appendChild(leaveBtn);
-    }
 
-
-    if (isOwner){
-        const del = document.createElement('button'); del.textContent='🗑️'; del.title='Supprimer';
-        del.className = 'action-btn ghost-action-btn';
-        del.onclick = ()=> {
-            if (!confirm('Supprimer ce créneau ?')) return;
-            slotRef.delete().then(reloadLists);
-        };
-        actions.appendChild(del);
+        if (isOwner){
+            const del = document.createElement('button'); del.textContent='🗑️'; del.title='Supprimer';
+            del.className = 'action-btn ghost-action-btn';
+            del.onclick = ()=> {
+                if (!confirm('Supprimer ce créneau ?')) return;
+                slotRef.delete().then(reloadLists);
+            };
+            actions.appendChild(del);
+        }
     }
 
     const share = document.createElement('button'); share.textContent='🔗'; share.title='Partager';
@@ -548,7 +548,7 @@ function showMain(){
     async function populateCityFilter() {
         if (!cityFilterSelect) return;
         
-        const snapshot = await db.collection('slots').get();
+        const snapshot = await db.collection('slots').where('private', '==', false).get();
         const cities = new Set();
         snapshot.forEach(doc => {
             const city = extractCity(doc.data().location);
@@ -577,6 +577,9 @@ function showMain(){
         
         let query = db.collection('slots');
         
+        // NOUVEAU: On n'affiche que les créneaux publics sur la page d'accueil
+        query = query.where('private', '==', false);
+
         if (currentFilterActivity !== "Toutes") {
             query = query.where('activity', '==', currentFilterActivity);
         }
@@ -597,7 +600,7 @@ function showMain(){
         slots = slots.slice(0, 10);
 
         if (slots.length === 0) {
-            list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Aucun créneau ne correspond à vos filtres.</li>';
+            list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Aucun créneau public ne correspond à vos filtres.</li>';
             return;
         }
 
@@ -741,7 +744,6 @@ function checkShared(){
     if (!slotId) return;
 
     const modal = document.getElementById('shared-slot-modal');
-    // Si la modale n'existe pas sur la page (ex: profile.html), on ne fait rien
     if (!modal) return;
     
     const closeBtn = modal.querySelector('.close-btn');
@@ -764,7 +766,7 @@ function checkShared(){
         if(!doc.exists) return;
 
         const slot = { id: doc.id, ...doc.data() };
-        if (slot.private) return;
+        if (slot.private && (!currentUser || !slot.participants_uid.includes(currentUser.uid))) return;
 
         const formattedDate = formatDateToWords(slot.date);
         detailsDiv.innerHTML = `
