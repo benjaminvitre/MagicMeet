@@ -233,7 +233,6 @@ function renderSlotItem(slot, targetListElement) {
             editBtn.className = 'action-btn ghost-action-btn';
             editBtn.onclick = () => openEditModal(slot);
             actions.appendChild(editBtn);
-
             const del = document.createElement('button'); del.textContent='🗑️'; del.title='Supprimer';
             del.className = 'action-btn ghost-action-btn';
             del.onclick = ()=> {
@@ -293,11 +292,295 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function handleIndexPageListeners() {
-    // ... (fonction identique au message #18)
+    const signupBtn = document.getElementById('signup');
+    const loginBtn = document.getElementById('login');
+    const pseudoInput = document.getElementById('pseudo');
+    const pseudoStatus = document.getElementById('pseudo-status');
+    if (pseudoInput && signupBtn) {
+        pseudoInput.addEventListener('input', async () => {
+            const pseudo = pseudoInput.value.trim();
+            if (pseudo.length < 3) {
+                pseudoStatus.textContent = '';
+                signupBtn.disabled = true;
+                return;
+            }
+            const querySnapshot = await db.collection('users').where('pseudo', '==', pseudo).get();
+            if (!querySnapshot.empty) {
+                pseudoStatus.textContent = 'Ce pseudo est déjà pris 😞';
+                pseudoStatus.style.color = '#e67c73';
+                signupBtn.disabled = true;
+            } else {
+                pseudoStatus.textContent = 'Pseudo disponible ! 😊';
+                pseudoStatus.style.color = '#78d6a4';
+                signupBtn.disabled = false;
+            }
+        });
+    }
+    if (signupBtn) signupBtn.addEventListener('click', () => {
+        const pseudo = document.getElementById('pseudo').value.trim();
+        const email = document.getElementById('email-signup').value.trim();
+        const password = document.getElementById('password-signup').value.trim();
+        const passwordConfirm = document.getElementById('password-confirm-signup').value.trim();
+        if (password !== passwordConfirm) { return alert('Les mots de passe ne correspondent pas.'); }
+        if (!pseudo || !email || !password) return alert('Remplis tous les champs.');
+        if (signupBtn.disabled) return alert('Le pseudo n\'est pas disponible.');
+        auth.createUserWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                return db.collection('users').doc(userCredential.user.uid).set({
+                    pseudo: pseudo, email: email, phone: ''
+                });
+            })
+            .then(() => { console.log('Utilisateur créé et enregistré !'); })
+            .catch((error) => { alert("Erreur lors de l'inscription : " + error.message); });
+    });
+    if (loginBtn) loginBtn.addEventListener('click', () => {
+        const email = document.getElementById('email-login').value.trim();
+        const password = document.getElementById('password-login').value.trim();
+        if (!email || !password) return alert('Remplis tous les champs.');
+        auth.signInWithEmailAndPassword(email, password)
+            .catch((error) => { alert("Erreur de connexion : " + error.message); });
+    });
+    const showPassLoginCheckbox = document.getElementById('show-password-login');
+    const passwordLoginInput = document.getElementById('password-login');
+    if (showPassLoginCheckbox && passwordLoginInput) {
+        showPassLoginCheckbox.addEventListener('change', () => {
+            passwordLoginInput.type = showPassLoginCheckbox.checked ? 'text' : 'password';
+        });
+    }
+    const showPassSignupCheckbox = document.getElementById('show-password-signup');
+    const passwordSignupInput = document.getElementById('password-signup');
+    const passwordConfirmInput = document.getElementById('password-confirm-signup');
+    if (showPassSignupCheckbox && passwordSignupInput && passwordConfirmInput) {
+        showPassSignupCheckbox.addEventListener('change', () => {
+            const type = showPassSignupCheckbox.checked ? 'text' : 'password';
+            passwordSignupInput.type = type;
+            passwordConfirmInput.type = type;
+        });
+    }
 }
 
 function showMain(){
-    // ... (fonction identique au message #18)
+    document.getElementById('auth-section').style.display = 'none';
+    document.getElementById('main-section').style.display = 'block';
+    const toggleCreate = document.getElementById('toggle-create-form');
+    const createForm = document.getElementById('create-slot-form');
+    const arrow = document.querySelector('.arrow');
+    const activitiesDiv = document.getElementById('activities');
+    const subDiv = document.getElementById('subactivities');
+    const currentActivityEl = document.getElementById('current-activity');
+    const formActivitySelect = document.getElementById('form-activity-select');
+    const formSubSelect = document.getElementById('sub-select');
+    const subsubSelect = document.getElementById('subsub-select');
+    const createBtn = document.getElementById('create-slot');
+    const cityFilterSelect = document.getElementById('city-filter-select');
+    const groupFilterSelect = document.getElementById('group-filter-select');
+    const formGroupSelect = document.getElementById('form-group-select');
+    let selectedActivity = null;
+
+    async function populateGroupSelects() {
+        if (!currentUser) return;
+        const groupSnapshot = await db.collection('groups').where('members_uid', 'array-contains', currentUser.uid).get();
+        const optionsHTML = ['<option value="Toutes">-- Aucun --</option>'];
+        groupSnapshot.forEach(doc => {
+            optionsHTML.push(`<option value="${doc.id}">${doc.data().name}</option>`);
+        });
+        if (formGroupSelect) formGroupSelect.innerHTML = optionsHTML.join('');
+        if (groupFilterSelect) {
+            const filterOptions = ['<option value="Toutes">Tous</option>', ...optionsHTML.slice(1)];
+            groupFilterSelect.innerHTML = filterOptions.join('');
+            groupFilterSelect.value = currentFilterGroup;
+            groupFilterSelect.onchange = () => {
+                currentFilterGroup = groupFilterSelect.value;
+                loadSlots();
+            };
+        }
+    }
+
+    function populateFormActivitySelect(){
+        if (!formActivitySelect) return;
+        formActivitySelect.innerHTML = '<option value="">-- Choisis une activité --</option>';
+        Object.keys(ACTIVITIES).filter(a=>a!=='Toutes').forEach(act => {
+            const emoji = ACTIVITY_EMOJIS[act] || '';
+            const o = document.createElement('option'); o.value = act; o.textContent = `${emoji} ${act}`; formActivitySelect.appendChild(o);
+        });
+        formActivitySelect.value = selectedActivity || '';
+        populateSubActivitiesForForm(formActivitySelect.value);
+    }
+
+    function renderActivities(){
+        activitiesDiv.innerHTML = '';
+        Object.keys(ACTIVITIES).forEach(act => {
+            const b = document.createElement('button');
+            const classNameMap = { "Jeux": 'act-jeux', "Culture": 'act-culture', "Sport": 'act-sport', "Sorties": 'act-sorties', "Autres": 'act-autres', "Toutes": 'act-toutes' };
+            const className = classNameMap[act] || `act-${act.toLowerCase().replace(/\s|\//g, '-')}`;
+            b.className = 'activity-btn ' + className + (act === currentFilterActivity ? ' active' : '');
+            const emoji = ACTIVITY_EMOJIS[act] || '';
+            b.textContent = `${emoji} ${act}`;
+            b.addEventListener('click', ()=> {
+                currentFilterActivity = act;
+                currentFilterSub = "Toutes";
+                loadSlots();
+                document.querySelectorAll('.activity-buttons > .activity-btn').forEach(btn => btn.classList.remove('active'));
+                b.classList.add('active');
+                if(act !== "Toutes") {
+                    selectedActivity = act;
+                    currentActivityEl.textContent = `${emoji} ${act}`;
+                    populateSubActivities(act);
+                    if (formActivitySelect) { formActivitySelect.value = act; populateSubActivitiesForForm(act); }
+                } else {
+                    selectedActivity = null;
+                    currentActivityEl.textContent = 'Aucune';
+                    subDiv.innerHTML = '';
+                }
+            });
+            activitiesDiv.appendChild(b);
+        });
+        populateFormActivitySelect();
+        if (currentFilterActivity !== "Toutes") { populateSubActivities(currentFilterActivity); }
+    }
+
+    function populateSubActivities(act){
+        subDiv.innerHTML = '';
+        const resetBtn = document.createElement('button');
+        resetBtn.className = 'activity-btn';
+        resetBtn.textContent = '❌ Toutes les sous-activités';
+        const actColor = COLOR_MAP[act] || '#9aa9bf';
+        resetBtn.style.borderColor = actColor;
+        resetBtn.style.color = actColor;
+        if (currentFilterSub === "Toutes") {
+             resetBtn.classList.add('active');
+             resetBtn.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+        }
+        resetBtn.addEventListener('click', () => { currentFilterSub = "Toutes"; loadSlots(); populateSubActivities(act); });
+        subDiv.appendChild(resetBtn);
+        const subs = ACTIVITIES[act] || [];
+        subs.forEach(s => {
+            const btn = document.createElement('button');
+            btn.className = 'activity-btn';
+            const btnColor = COLOR_MAP[s] || COLOR_MAP[act] || 'var(--muted-text)';
+            btn.style.borderColor = btnColor;
+            btn.style.color = btnColor;
+            if (s === currentFilterSub) {
+                btn.classList.add('active');
+                btn.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+            }
+            btn.textContent = s;
+            btn.addEventListener('click', ()=> {
+                formSubSelect.value = s;
+                populateSubSub(s);
+                currentFilterSub = s;
+                loadSlots();
+                populateSubActivities(act);
+            });
+            subDiv.appendChild(btn);
+        });
+    }
+
+    function populateSubActivitiesForForm(act){
+        formSubSelect.innerHTML = '<option value="">-- Choisis une sous-activité --</option>';
+        (ACTIVITIES[act]||[]).forEach(s => {
+            const o = document.createElement('option'); o.value = s; o.textContent = s; formSubSelect.appendChild(o);
+        });
+        populateSubSub(formSubSelect.value);
+    }
+
+    function populateSubSub(sub){
+        subsubSelect.innerHTML = '<option value="">-- Optionnel --</option>';
+        (SUBSUB[sub]||[]).forEach(ss=>{
+            const o = document.createElement('option'); o.value = ss; o.textContent = ss; subsubSelect.appendChild(o);
+        });
+    }
+
+    async function populateCityFilter() {
+        if (!cityFilterSelect) return;
+        const snapshot = await db.collection('slots').where('private', '==', false).get();
+        const cities = new Set();
+        snapshot.forEach(doc => { if(doc.data().location) cities.add(extractCity(doc.data().location)); });
+        const sortedCities = Array.from(cities).sort((a, b) => a.localeCompare(b, 'fr'));
+        cityFilterSelect.innerHTML = '<option value="Toutes">Toutes</option>';
+        sortedCities.forEach(city => {
+            const o = document.createElement('option'); o.value = city; o.textContent = city; cityFilterSelect.appendChild(o);
+        });
+        cityFilterSelect.value = currentFilterCity;
+        cityFilterSelect.onchange = () => { currentFilterCity = cityFilterSelect.value; loadSlots(); };
+    }
+
+    async function loadSlots(){
+        const list = document.getElementById('slots-list'); if (!list) return; list.innerHTML='';
+        let query = db.collection('slots');
+        query = query.where('private', '==', false);
+        if (currentFilterActivity !== "Toutes") { query = query.where('activity', '==', currentFilterActivity); }
+        if (currentFilterSub !== "Toutes") { query = query.where('sub', '==', currentFilterSub); }
+        if (currentFilterGroup !== "Toutes") { query = query.where('groupId', '==', currentFilterGroup); }
+        const snapshot = await query.orderBy('date', 'asc').get();
+        let slots = [];
+        snapshot.forEach(doc => { slots.push({ id: doc.id, ...doc.data() }); });
+        if (currentFilterCity !== "Toutes") {
+            slots = slots.filter(s => extractCity(s.location) === currentFilterCity);
+        }
+        slots = slots.slice(0, 10);
+        if (slots.length === 0) {
+            list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Aucun créneau public ne correspond à vos filtres.</li>';
+            return;
+        }
+        slots.forEach(slot => renderSlotItem(slot, list));
+    }
+
+    renderActivities();
+    loadSlots();
+    populateCityFilter();
+    populateGroupSelects();
+
+    if (toggleCreate && createForm) toggleCreate.addEventListener('click', ()=> {
+        const visible = createForm.style.display === 'block';
+        createForm.style.display = visible ? 'none' : 'block';
+        arrow.style.transform = visible ? 'rotate(0deg)' : 'rotate(90deg)';
+        if (!visible) {
+            populateFormActivitySelect();
+            formActivitySelect.value = selectedActivity || '';
+            populateSubActivitiesForForm(formActivitySelect.value);
+        }
+    });
+
+    if (formActivitySelect) formActivitySelect.addEventListener('change', ()=>{
+        selectedActivity = formActivitySelect.value;
+        const emoji = ACTIVITY_EMOJIS[selectedActivity] || '';
+        currentActivityEl.textContent = selectedActivity ? `${emoji} ${selectedActivity}` : 'Aucune';
+        populateSubActivitiesForForm(selectedActivity);
+    });
+
+    formSubSelect.addEventListener('change', ()=> populateSubSub(formSubSelect.value));
+
+    if (createBtn) createBtn.addEventListener('click', ()=> {
+        if (!currentUser) return alert('Connecte-toi d’abord');
+        const name = (document.getElementById('slot-name')?.value||'').trim();
+        const location = (document.getElementById('slot-location')?.value||'').trim();
+        const date = (document.getElementById('slot-date')?.value||'').trim();
+        const time = (document.getElementById('slot-time')?.value||'').trim();
+        const activity = formActivitySelect.value;
+        const selectedGroup = formGroupSelect.options[formGroupSelect.selectedIndex];
+        if (!activity) return alert('Choisis d’abord une activité (ex: Jeux)');
+        if (!name || !location || !date || !time) return alert('Remplis les champs nom, lieu, date et heure');
+        const newSlot = {
+            activity: activity, sub: formSubSelect.value || '', subsub: subsubSelect.value || '',
+            name: name, location: location, date: date, time: time,
+            private: !!document.getElementById('private-slot')?.checked,
+            groupId: formGroupSelect.value !== 'Toutes' ? formGroupSelect.value : null,
+            groupName: formGroupSelect.value !== 'Toutes' ? selectedGroup.text : null,
+            owner: currentUser.uid, ownerPseudo: currentUser.pseudo,
+            participants: [{uid: currentUser.uid, pseudo: currentUser.pseudo}],
+            participants_uid: [currentUser.uid],
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        db.collection('slots').add(newSlot).then(() => {
+            console.log("Créneau créé !");
+            createForm.reset();
+            createForm.style.display = 'none';
+            if (arrow) arrow.style.transform = 'rotate(0deg)';
+            loadSlots();
+            populateCityFilter();
+        }).catch(error => { console.error("Erreur: ", error); alert("Une erreur est survenue."); });
+    });
 }
 
 function handleProfilePage() {
@@ -332,26 +615,123 @@ function handleProfilePage() {
 }
 
 async function loadUserSlots(){
-    // ... (fonction identique au message #18)
+    const list = document.getElementById('user-slots'); if (!list || !currentUser) return; list.innerHTML='';
+    const snapshot = await db.collection('slots').where('owner', '==', currentUser.uid).orderBy('date', 'asc').get();
+    if (snapshot.empty) { list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Vous n\'avez créé aucun créneau.</li>'; return; }
+    snapshot.forEach(doc => renderSlotItem({id: doc.id, ...doc.data()}, list));
 }
 
 async function loadJoinedSlots(){
-    // ... (fonction identique au message #18)
+    const list = document.getElementById('joined-slots'); if (!list || !currentUser) return; list.innerHTML='';
+    const snapshot = await db.collection('slots').where('participants_uid', 'array-contains', currentUser.uid).orderBy('date', 'asc').get();
+    if (snapshot.empty) { list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Vous n\'avez rejoint aucun créneau.</li>'; return; }
+    let hasJoinedSlots = false;
+    snapshot.forEach(doc => {
+        const slot = {id: doc.id, ...doc.data()};
+        if(slot.owner !== currentUser.uid) { hasJoinedSlots = true; renderSlotItem(slot, list); }
+    });
+    if (!hasJoinedSlots) { list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Vous n\'avez rejoint aucun autre créneau.</li>'; }
 }
 
 async function loadUserGroups() {
-    // ... (fonction identique au message #18)
+    const list = document.getElementById('groups-list'); if (!list || !currentUser) return; list.innerHTML = '';
+    const snapshot = await db.collection('groups').where('members_uid', 'array-contains', currentUser.uid).orderBy('createdAt', 'desc').get();
+    if (snapshot.empty) { list.innerHTML = '<li class="muted-text" style="padding: 10px 0;">Vous ne faites partie d\'aucun groupe.</li>'; return; }
+    snapshot.forEach(doc => renderGroupItem({ id: doc.id, ...doc.data() }));
 }
 
 function renderGroupItem(group) {
-    // ... (fonction identique au message #18)
+    const list = document.getElementById('groups-list');
+    const li = document.createElement('li');
+    li.className = 'group-item';
+    const membersPseudos = group.members.map(m => m.pseudo).join(', ');
+    li.innerHTML = `<h3>${group.name}</h3>
+        <div class="members-list"><strong>Membres :</strong> ${membersPseudos}</div>
+        <div class="add-member-form">
+            <input type="text" id="add-member-input-${group.id}" placeholder="Pseudo de l'utilisateur à ajouter">
+            <button id="add-member-btn-${group.id}" class="action-btn">Ajouter</button>
+        </div>`;
+    list.appendChild(li);
+    const addBtn = document.getElementById(`add-member-btn-${group.id}`);
+    const addInput = document.getElementById(`add-member-input-${group.id}`);
+    addBtn.addEventListener('click', async () => {
+        const pseudoToAdd = addInput.value.trim();
+        if (!pseudoToAdd) return;
+        const userQuery = await db.collection('users').where('pseudo', '==', pseudoToAdd).get();
+        if (userQuery.empty) { return alert("Utilisateur non trouvé."); }
+        const userToAdd = userQuery.docs[0].data();
+        const userToAddId = userQuery.docs[0].id;
+        if (group.members_uid.includes(userToAddId)) { return alert('Cet utilisateur est déjà dans le groupe.'); }
+        const groupRef = db.collection('groups').doc(group.id);
+        await groupRef.update({
+            members_uid: firebase.firestore.FieldValue.arrayUnion(userToAddId),
+            members: firebase.firestore.FieldValue.arrayUnion({ uid: userToAddId, pseudo: userToAdd.pseudo })
+        });
+        addInput.value = '';
+        loadUserGroups();
+    });
 }
 
 function checkShared(){
-    // ... (fonction identique au message #18)
+    const params = new URLSearchParams(window.location.search);
+    const slotId = params.get('slot');
+    if (!slotId) return;
+    const modal = document.getElementById('shared-slot-modal');
+    if (!modal) return;
+    const closeBtn = modal.querySelector('.close-btn');
+    const detailsDiv = document.getElementById('modal-slot-details');
+    const joinBtn = document.getElementById('modal-join-btn');
+    const closeModal = () => {
+        modal.style.display = 'none';
+        window.history.replaceState({}, document.title, window.location.pathname);
+    };
+    closeBtn.onclick = closeModal;
+    window.onclick = (event) => { if (event.target == modal) { closeModal(); } };
+    db.collection('slots').doc(slotId).get().then(doc => {
+        if(!doc.exists) return;
+        const slot = { id: doc.id, ...doc.data() };
+        const isParticipant = currentUser && (slot.participants_uid || []).includes(currentUser.uid);
+        if (slot.private && !isParticipant) return;
+        detailsDiv.innerHTML = ''; 
+        const title = document.createElement('strong'); title.textContent = slot.name;
+        const activity = document.createElement('p'); activity.textContent = `Activité: ${slot.activity} ${slot.sub ? ' - '+slot.sub : ''}`;
+        const location = document.createElement('p'); location.textContent = `Lieu: ${slot.location}`;
+        const date = document.createElement('p'); date.textContent = `Le: ${formatDateToWords(slot.date)} à ${slot.time}`;
+        const owner = document.createElement('p'); owner.textContent = `Organisé par: ${slot.ownerPseudo}`;
+        detailsDiv.appendChild(title); detailsDiv.appendChild(activity); detailsDiv.appendChild(location); detailsDiv.appendChild(date); detailsDiv.appendChild(owner);
+        if (!currentUser) {
+            joinBtn.textContent = 'Connectez-vous pour rejoindre';
+            joinBtn.disabled = true;
+        } else {
+            const isFull = (slot.participants || []).length >= MAX_PARTICIPANTS;
+            if (isParticipant) {
+                joinBtn.textContent = '✅ Déjà rejoint';
+                joinBtn.disabled = true;
+            } else if (isFull) {
+                joinBtn.textContent = ' Complet';
+                joinBtn.disabled = true;
+            } else {
+                joinBtn.textContent = '✅ Rejoindre';
+                joinBtn.disabled = false;
+                const newJoinBtn = joinBtn.cloneNode(true);
+                joinBtn.parentNode.replaceChild(newJoinBtn, joinBtn);
+                newJoinBtn.addEventListener('click', () => {
+                    const slotRef = db.collection('slots').doc(slot.id);
+                    slotRef.update({
+                        participants: firebase.firestore.FieldValue.arrayUnion({uid: currentUser.uid, pseudo: currentUser.pseudo}),
+                        participants_uid: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+                    }).then(() => {
+                        alert('Créneau rejoint avec succès !');
+                        closeModal();
+                        if (document.getElementById('joined-slots')) { loadJoinedSlots(); }
+                    });
+                });
+            }
+        }
+        modal.style.display = 'block';
+    }).catch(error => { console.error("Erreur:", error); });
 }
 
-// NOUVELLE FONCTION
 function openEditModal(slot) {
     const modal = document.getElementById('edit-slot-modal');
     if (!modal) return;
