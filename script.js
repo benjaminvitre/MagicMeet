@@ -199,6 +199,13 @@ function handleIndexPageListeners() {
         const pseudo = document.getElementById('pseudo').value.trim();
         const email = document.getElementById('email-signup').value.trim();
         const password = document.getElementById('password-signup').value.trim();
+        // NOUVEAU: On récupère la confirmation
+        const passwordConfirm = document.getElementById('password-confirm-signup').value.trim();
+
+        // NOUVEAU: Vérification de la correspondance des mots de passe
+        if (password !== passwordConfirm) {
+            return alert('Les mots de passe ne correspondent pas.');
+        }
 
         if (!pseudo || !email || !password) return alert('Remplis tous les champs.');
         if (signupBtn.disabled) return alert('Le pseudo n\'est pas disponible.');
@@ -230,6 +237,26 @@ function handleIndexPageListeners() {
                 alert("Erreur de connexion : " + error.message);
             });
     });
+
+    // NOUVEAU: Logique pour afficher/masquer les mots de passe
+    const showPassLoginCheckbox = document.getElementById('show-password-login');
+    const passwordLoginInput = document.getElementById('password-login');
+    if (showPassLoginCheckbox && passwordLoginInput) {
+        showPassLoginCheckbox.addEventListener('change', () => {
+            passwordLoginInput.type = showPassLoginCheckbox.checked ? 'text' : 'password';
+        });
+    }
+
+    const showPassSignupCheckbox = document.getElementById('show-password-signup');
+    const passwordSignupInput = document.getElementById('password-signup');
+    const passwordConfirmInput = document.getElementById('password-confirm-signup');
+    if (showPassSignupCheckbox && passwordSignupInput && passwordConfirmInput) {
+        showPassSignupCheckbox.addEventListener('change', () => {
+            const type = showPassSignupCheckbox.checked ? 'text' : 'password';
+            passwordSignupInput.type = type;
+            passwordConfirmInput.type = type;
+        });
+    }
 }
 
 /* ===== LOGIQUE DE LA PAGE D'ACCUEIL (index.html) une fois connecté ===== */
@@ -379,7 +406,6 @@ function showMain(){
     async function populateCityFilter() {
         if (!cityFilterSelect) return;
         
-        // On récupère tous les créneaux juste pour extraire les villes
         const snapshot = await db.collection('slots').get();
         const cities = new Set();
         snapshot.forEach(doc => {
@@ -488,7 +514,6 @@ function showMain(){
                 if (!slot.private || isOwner){
                     joinBtn.onclick = ()=> {
                         if (participantsCount >= MAX_PARTICIPANTS) return alert('Désolé, ce créneau est complet.');
-                        // NOUVEAU: Utilisation de arrayUnion pour une mise à jour atomique
                         slotRef.update({
                             participants: firebase.firestore.FieldValue.arrayUnion({uid: currentUser.uid, pseudo: currentUser.pseudo}),
                             participants_uid: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
@@ -505,7 +530,6 @@ function showMain(){
                 leaveBtn.className = 'action-btn leave-btn';
                 leaveBtn.textContent = '❌ Quitter';
                 leaveBtn.onclick = ()=> {
-                     // NOUVEAU: Utilisation de arrayRemove pour une mise à jour atomique
                     slotRef.update({
                         participants: firebase.firestore.FieldValue.arrayRemove({uid: currentUser.uid, pseudo: currentUser.pseudo}),
                         participants_uid: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
@@ -521,7 +545,6 @@ function showMain(){
             del.onclick = ()=> {
                 if (!confirm('Supprimer ce créneau ?')) return;
                 slotRef.delete().then(() => {
-                    // On recharge les listes sur toutes les pages
                     if(typeof loadSlots === 'function') loadSlots();
                     if(typeof loadUserSlots === 'function') loadUserSlots();
                 });
@@ -546,17 +569,14 @@ function showMain(){
     async function loadSlots(){
         const list = document.getElementById('slots-list'); if (!list) return; list.innerHTML='';
         
-        // NOUVEAU: Construction de la requête Firestore
         let query = db.collection('slots');
         
-        // Filtrage dynamique
         if (currentFilterActivity !== "Toutes") {
             query = query.where('activity', '==', currentFilterActivity);
         }
         if (currentFilterSub !== "Toutes") {
             query = query.where('sub', '==', currentFilterSub);
         }
-        // Le filtrage par ville est plus complexe, on le fait côté client pour l'instant
         
         const snapshot = await query.orderBy('date', 'asc').get();
         let slots = [];
@@ -564,12 +584,10 @@ function showMain(){
             slots.push({ id: doc.id, ...doc.data() });
         });
         
-        // On garde le filtre ville côté client
         if (currentFilterCity !== "Toutes") {
             slots = slots.filter(s => extractCity(s.location) === currentFilterCity);
         }
         
-        // On limite après avoir tout récupéré
         slots = slots.slice(0, 10);
 
         if (slots.length === 0) {
@@ -608,7 +626,6 @@ function showMain(){
         // ... (code de suggestion d'adresse inchangé) ...
     }
 
-    // NOUVEAU: Création de créneau avec Firestore
     if (createBtn) createBtn.addEventListener('click', ()=> {
         if (!currentUser) return alert('Connecte-toi d’abord');
 
@@ -630,21 +647,18 @@ function showMain(){
             date: date,
             time: time,
             private: !!document.getElementById('private-slot')?.checked,
-            owner: currentUser.uid, // On utilise l'UID, c'est plus fiable
+            owner: currentUser.uid,
             ownerPseudo: currentUser.pseudo,
-            // On stocke un tableau d'objets (pour l'affichage) et un tableau d'UID (pour les requêtes)
             participants: [{uid: currentUser.uid, pseudo: currentUser.pseudo}],
             participants_uid: [currentUser.uid],
-            createdAt: firebase.firestore.FieldValue.serverTimestamp() // Pour trier par date de création si besoin
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
         db.collection('slots').add(newSlot).then(() => {
             console.log("Créneau créé !");
-            // Vider le formulaire
             createForm.reset();
             createForm.style.display = 'none';
             if (arrow) arrow.style.transform = 'rotate(0deg)';
-            // Recharger la liste
             loadSlots();
             populateCityFilter();
         }).catch(error => {
@@ -714,11 +728,16 @@ async function loadJoinedSlots(){
         return;
     }
     
-    // On filtre pour ne pas afficher les créneaux dont on est propriétaire
+    let hasJoinedSlots = false;
     snapshot.forEach(doc => {
         const slot = {id: doc.id, ...doc.data()};
         if(slot.owner !== currentUser.uid) {
+            hasJoinedSlots = true;
             renderSlotItem(slot, list);
         }
     });
+
+    if (!hasJoinedSlots) {
+         list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Vous n\'avez rejoint aucun autre créneau.</li>';
+    }
 }
