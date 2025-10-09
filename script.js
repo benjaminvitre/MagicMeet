@@ -171,6 +171,13 @@ function renderSlotItem(slot, targetListElement) {
     } else {
         const pseudos = (slot.participants || []).map(p => p.pseudo);
         participantsList.textContent = 'Membres: ' + pseudos.join(', ');
+        if (isOwner && slot.invited_pseudos && slot.invited_pseudos.length > 0) {
+            const invitedText = document.createElement('div');
+            invitedText.className = 'participants-list';
+            invitedText.style.marginTop = '4px';
+            invitedText.textContent = 'Invités: ' + slot.invited_pseudos.join(', ');
+            info.appendChild(invitedText);
+        }
     }
     info.appendChild(participantsList);
     info.appendChild(owner);
@@ -251,6 +258,34 @@ function renderSlotItem(slot, targetListElement) {
     actions.appendChild(share);
     li.appendChild(info);
     li.appendChild(actions);
+
+    if (isOwner && slot.private && targetListElement.id === 'user-slots') {
+        const inviteForm = document.createElement('div');
+        inviteForm.className = 'invite-form';
+        inviteForm.innerHTML = `
+            <input type="text" id="invite-input-${slot.id}" placeholder="Inviter par pseudo">
+            <button id="invite-btn-${slot.id}" class="action-btn">Inviter</button>
+        `;
+        li.appendChild(inviteForm);
+
+        const inviteBtn = li.querySelector(`#invite-btn-${slot.id}`);
+        const inviteInput = li.querySelector(`#invite-input-${slot.id}`);
+
+        inviteBtn.addEventListener('click', async () => {
+            const pseudoToInvite = inviteInput.value.trim();
+            if (!pseudoToInvite) return;
+            const userQuery = await db.collection('users').where('pseudo', '==', pseudoToInvite).get();
+            if (userQuery.empty) return alert("Utilisateur non trouvé.");
+            const userToInviteId = userQuery.docs[0].id;
+            const userToInvitePseudo = userQuery.docs[0].data().pseudo;
+            await slotRef.update({
+                invited_uids: firebase.firestore.FieldValue.arrayUnion(userToInviteId),
+                invited_pseudos: firebase.firestore.FieldValue.arrayUnion(userToInvitePseudo)
+            });
+            inviteInput.value = '';
+            loadUserSlots();
+        });
+    }
     targetListElement.appendChild(li);
 }
 
@@ -507,15 +542,12 @@ function showMain(){
 
     async function loadSlots(){
         const list = document.getElementById('slots-list'); if (!list) return; list.innerHTML='';
-        
         let publicQuery = db.collection('slots').where('private', '==', false);
         if (currentFilterActivity !== "Toutes") { publicQuery = publicQuery.where('activity', '==', currentFilterActivity); }
         if (currentFilterSub !== "Toutes") { publicQuery = publicQuery.where('sub', '==', currentFilterSub); }
         if (currentFilterGroup !== "Toutes") { publicQuery = publicQuery.where('groupId', '==', currentFilterGroup); }
         const publicPromise = publicQuery.orderBy('date', 'asc').get();
-
         const promises = [publicPromise];
-
         if (currentUser) {
             let privateQuery = db.collection('slots')
                 .where('private', '==', true)
@@ -525,30 +557,23 @@ function showMain(){
             if (currentFilterGroup !== "Toutes") { privateQuery = privateQuery.where('groupId', '==', currentFilterGroup); }
             promises.push(privateQuery.orderBy('date', 'asc').get());
         }
-
         const snapshots = await Promise.all(promises);
-
         const slotsMap = new Map();
         snapshots.forEach(snapshot => {
             snapshot.forEach(doc => {
                 slotsMap.set(doc.id, { id: doc.id, ...doc.data() });
             });
         });
-
         let slots = Array.from(slotsMap.values());
         slots.sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
-
         if (currentFilterCity !== "Toutes") {
             slots = slots.filter(s => extractCity(s.location) === currentFilterCity);
         }
-        
         slots = slots.slice(0, 10);
-
         if (slots.length === 0) {
             list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Aucun créneau ne correspond à vos filtres.</li>';
             return;
         }
-
         slots.forEach(slot => renderSlotItem(slot, list));
     }
 
@@ -615,6 +640,7 @@ function handleProfilePage() {
     loadUserSlots();
     loadJoinedSlots();
     loadUserGroups();
+    loadPendingInvitations();
     const createGroupBtn = document.getElementById('create-group-btn');
     const groupNameInput = document.getElementById('group-name-input');
     if (createGroupBtn) {
@@ -698,6 +724,66 @@ function renderGroupItem(group) {
     });
 }
 
+async function loadPendingInvitations() {
+    const list = document.getElementById('pending-invitations-list');
+    if (!list || !currentUser) return;
+    list.innerHTML = '';
+
+    const snapshot = await db.collection('slots').where('invited_uids', 'array-contains', currentUser.uid).get();
+
+    if (snapshot.empty) {
+        list.innerHTML = '<li class="muted-text" style="padding: 10px 0;">Vous n\'avez aucune invitation en attente.</li>';
+        return;
+    }
+
+    let invitationsCount = 0;
+    snapshot.forEach(doc => {
+        const slot = { id: doc.id, ...doc.data() };
+        if (!slot.participants_uid.includes(currentUser.uid)) {
+            invitationsCount++;
+            const li = document.createElement('li');
+            li.className = 'invitation-item';
+            
+            li.innerHTML = `
+                <div class="invitation-info">
+                    <strong>${slot.name}</strong>
+                    <small>par ${slot.ownerPseudo}</small>
+                </div>
+                <div class="invitation-actions">
+                    <button class="action-btn join-btn" id="accept-${slot.id}">Accepter</button>
+                    <button class="action-btn leave-btn" id="decline-${slot.id}">Refuser</button>
+                </div>
+            `;
+            list.appendChild(li);
+
+            const slotRef = db.collection('slots').doc(slot.id);
+
+            li.querySelector(`#accept-${slot.id}`).addEventListener('click', () => {
+                slotRef.update({
+                    participants: firebase.firestore.FieldValue.arrayUnion({uid: currentUser.uid, pseudo: currentUser.pseudo}),
+                    participants_uid: firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
+                    invited_uids: firebase.firestore.FieldValue.arrayRemove(currentUser.uid),
+                    invited_pseudos: firebase.firestore.FieldValue.arrayRemove(currentUser.pseudo)
+                }).then(() => {
+                    loadPendingInvitations();
+                    loadJoinedSlots();
+                });
+            });
+
+            li.querySelector(`#decline-${slot.id}`).addEventListener('click', () => {
+                slotRef.update({
+                    invited_uids: firebase.firestore.FieldValue.arrayRemove(currentUser.uid),
+                    invited_pseudos: firebase.firestore.FieldValue.arrayRemove(currentUser.pseudo)
+                }).then(loadPendingInvitations);
+            });
+        }
+    });
+
+    if (invitationsCount === 0) {
+        list.innerHTML = '<li class="muted-text" style="padding: 10px 0;">Vous n\'avez aucune invitation en attente.</li>';
+    }
+}
+
 function checkShared(){
     const params = new URLSearchParams(window.location.search);
     const slotId = params.get('slot');
@@ -717,7 +803,8 @@ function checkShared(){
         if(!doc.exists) return;
         const slot = { id: doc.id, ...doc.data() };
         const isParticipant = currentUser && (slot.participants_uid || []).includes(currentUser.uid);
-        if (slot.private && !isParticipant) return;
+        const isInvited = currentUser && (slot.invited_uids || []).includes(currentUser.uid);
+        if (slot.private && !isParticipant && !isInvited) return;
         detailsDiv.innerHTML = ''; 
         const title = document.createElement('strong'); title.textContent = slot.name;
         const activity = document.createElement('p'); activity.textContent = `Activité: ${slot.activity} ${slot.sub ? ' - '+slot.sub : ''}`;
@@ -745,7 +832,9 @@ function checkShared(){
                     const slotRef = db.collection('slots').doc(slot.id);
                     slotRef.update({
                         participants: firebase.firestore.FieldValue.arrayUnion({uid: currentUser.uid, pseudo: currentUser.pseudo}),
-                        participants_uid: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+                        participants_uid: firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
+                        invited_uids: firebase.firestore.FieldValue.arrayRemove(currentUser.uid),
+                        invited_pseudos: firebase.firestore.FieldValue.arrayRemove(currentUser.pseudo)
                     }).then(() => {
                         alert('Créneau rejoint avec succès !');
                         closeModal();
