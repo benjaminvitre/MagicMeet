@@ -34,15 +34,12 @@ const SUBSUB = {
   "Jeux vidéo": [],
   "Jeux de société": []
 };
-// On trie aussi les sous-sous-activités pour être cohérent
 Object.keys(SUBSUB).forEach(key => {
   if (SUBSUB[key].length > 0) {
     SUBSUB[key] = sortArray(SUBSUB[key]);
   }
 });
 
-
-// Mappage des couleurs pour les boîtes d'activité/sous-activité
 const COLOR_MAP = {
   "Autres": "#78d6a4",
   "Jeux": "#c085f5",
@@ -50,23 +47,19 @@ const COLOR_MAP = {
   "Sport": "#f27a7d",
   "Sorties": "#f1a66a",
   "Toutes": "#9aa9bf",
-
   "Jeux de cartes": "#c085f5", "Jeux vidéo": "#6fb2f2", "Jeux de société": "#64e3be",
   "Cinéma": "#e67c73", "Théâtre": "#cc5a4f", "Exposition": "#e39791", "Concert": "#f1b6b3",
   "Foot": "#f27a7d", "Padel": "#cc5a5e", "Tennis": "#e39799", "Running": "#f1b6b7", "Badminton": "#78d6a4",
   "Bar": "#f1a66a", "Restaurant": "#d68e4a", "Picnic": "#f5c399",
-
   "Magic The Gathering": "#b294f2", "Pokémon": "#f6d06f", "Yu-Gi-Oh!": "#f1a66a",
 };
-
 
 const MAX_PARTICIPANTS = 10;
 let currentFilterActivity = "Toutes";
 let currentFilterSub = "Toutes";
 let currentFilterCity = "Toutes";
-let currentUser = null; // Contiendra les infos de l'utilisateur connecté
+let currentUser = null;
 
-// Helper pour formater la date en mots (e.g., 10 Octobre)
 function formatDateToWords(dateString){
   const date = new Date(dateString + 'T00:00:00');
   if (isNaN(date)) return dateString;
@@ -74,7 +67,6 @@ function formatDateToWords(dateString){
   return date.toLocaleDateString('fr-FR', options);
 }
 
-/* Fonction pour extraire la ville d'une adresse */
 function extractCity(locationText) {
     if (!locationText) return '';
     const parts = locationText.split(',').map(p => p.trim());
@@ -83,7 +75,7 @@ function extractCity(locationText) {
         if (lastPart.match(/\d{5}\s/)) {
             return lastPart.replace(/\d{5}\s*/, '').trim();
         }
-        return lastPart.replace(/\d{5}/, '').trim(); // Gère aussi le cas sans espace après le CP
+        return lastPart.replace(/\d{5}/, '').trim();
     }
     const words = locationText.split(' ');
     const lastWord = words[words.length -1];
@@ -92,8 +84,6 @@ function extractCity(locationText) {
     }
     return locationText;
 }
-
-/* ===== CORE DOM INIT & HELPERS ===== */
 
 function updateHeaderDisplay() {
     const profileLink = document.getElementById('profile-link');
@@ -126,10 +116,6 @@ function logout() {
     auth.signOut().catch(error => console.error("Erreur de déconnexion: ", error));
 }
 
-// =======================================================================
-// CORRECTION : La fonction renderSlotItem est maintenant ici, au niveau global,
-// pour être accessible par la page d'accueil ET la page de profil.
-// =======================================================================
 function renderSlotItem(slot, targetListElement) {
     const li = document.createElement('li'); li.className='slot-item';
     const info = document.createElement('div'); info.className='slot-info';
@@ -164,11 +150,21 @@ function renderSlotItem(slot, targetListElement) {
     const title = document.createElement('strong'); title.textContent = slot.name;
     const formattedDate = formatDateToWords(slot.date);
     const when = document.createElement('div');
-
+    
+    // MODIFICATION: Adresse cliquable
     if (slot.location) {
-         when.textContent = `📍 ${slot.location}`;
+        const locationLink = document.createElement('a');
+        locationLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(slot.location)}`;
+        locationLink.textContent = `📍 ${slot.location}`;
+        locationLink.target = '_blank';
+        locationLink.rel = 'noopener noreferrer';
+        when.appendChild(locationLink);
+        const dateSpan = document.createElement('span');
+        dateSpan.textContent = ` — 🗓️ ${formattedDate} à ${slot.time}`;
+        when.appendChild(dateSpan);
+    } else {
+        when.textContent = `🗓️ ${formattedDate} à ${slot.time}`;
     }
-    when.innerHTML += ` — 🗓️ ${formattedDate} à ${slot.time}`;
 
     const owner = document.createElement('small');
     owner.textContent = `par ${slot.ownerPseudo}`;
@@ -189,10 +185,10 @@ function renderSlotItem(slot, targetListElement) {
     info.appendChild(participantsBox);
 
     const participantsList = document.createElement('div'); participantsList.className = 'participants-list';
-    const isParticipant = (slot.participants_uid || []).includes(currentUser.uid);
-    const isOwner = slot.owner === currentUser.uid;
+    const isParticipant = currentUser && (slot.participants_uid || []).includes(currentUser.uid);
+    const isOwner = currentUser && slot.owner === currentUser.uid;
 
-    if (slot.private && !isOwner){
+    if (slot.private && !isOwner && !isParticipant) {
         participantsList.textContent = 'Participants cachés.';
     } else {
         const pseudos = (slot.participants || []).map(p => p.pseudo);
@@ -211,64 +207,63 @@ function renderSlotItem(slot, targetListElement) {
         if (typeof loadJoinedSlots === 'function' && document.getElementById('joined-slots')) loadJoinedSlots();
     };
     
-    // Actions pour la page d'accueil et la page de profil (créneaux créés)
-    if (targetListElement.id === 'slots-list' || targetListElement.id === 'user-slots') {
-        if (!isParticipant){
-            const joinBtn = document.createElement('button');
-            joinBtn.className = 'action-btn join-btn';
-            joinBtn.textContent = '✅ Rejoindre';
+    if (currentUser) {
+        if (targetListElement.id === 'slots-list' || targetListElement.id === 'user-slots') {
+            if (!isParticipant){
+                const joinBtn = document.createElement('button');
+                joinBtn.className = 'action-btn join-btn';
+                joinBtn.textContent = '✅ Rejoindre';
 
-            if (!slot.private || isOwner){
-                joinBtn.onclick = ()=> {
-                    if (participantsCount >= MAX_PARTICIPANTS) return alert('Désolé, ce créneau est complet.');
+                if (!slot.private || isOwner){
+                    joinBtn.onclick = ()=> {
+                        if (participantsCount >= MAX_PARTICIPANTS) return alert('Désolé, ce créneau est complet.');
+                        slotRef.update({
+                            participants: firebase.firestore.FieldValue.arrayUnion({uid: currentUser.uid, pseudo: currentUser.pseudo}),
+                            participants_uid: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+                        }).then(reloadLists);
+                    };
+                    actions.appendChild(joinBtn);
+                } else {
+                    joinBtn.textContent = '🔒 Privé';
+                    joinBtn.disabled = true;
+                    actions.appendChild(joinBtn);
+                }
+            } else if (isParticipant && !isOwner) {
+                const leaveBtn = document.createElement('button');
+                leaveBtn.className = 'action-btn leave-btn';
+                leaveBtn.textContent = '❌ Quitter';
+                leaveBtn.onclick = ()=> {
                     slotRef.update({
-                        participants: firebase.firestore.FieldValue.arrayUnion({uid: currentUser.uid, pseudo: currentUser.pseudo}),
-                        participants_uid: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+                        participants: firebase.firestore.FieldValue.arrayRemove({uid: currentUser.uid, pseudo: currentUser.pseudo}),
+                        participants_uid: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
                     }).then(reloadLists);
                 };
-                actions.appendChild(joinBtn);
-            } else {
-                joinBtn.textContent = '🔒 Privé';
-                joinBtn.disabled = true;
-                actions.appendChild(joinBtn);
+                actions.appendChild(leaveBtn);
             }
-        } else if (isParticipant && !isOwner) {
+        }
+        
+        if (targetListElement.id === 'joined-slots') {
             const leaveBtn = document.createElement('button');
             leaveBtn.className = 'action-btn leave-btn';
             leaveBtn.textContent = '❌ Quitter';
-            leaveBtn.onclick = ()=> {
-                slotRef.update({
+            leaveBtn.onclick = () => {
+                 slotRef.update({
                     participants: firebase.firestore.FieldValue.arrayRemove({uid: currentUser.uid, pseudo: currentUser.pseudo}),
                     participants_uid: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
                 }).then(reloadLists);
             };
             actions.appendChild(leaveBtn);
         }
-    }
-    
-    // Actions spécifiques pour la page de profil (créneaux rejoints)
-    if (targetListElement.id === 'joined-slots') {
-        const leaveBtn = document.createElement('button');
-        leaveBtn.className = 'action-btn leave-btn';
-        leaveBtn.textContent = '❌ Quitter';
-        leaveBtn.onclick = () => {
-             slotRef.update({
-                participants: firebase.firestore.FieldValue.arrayRemove({uid: currentUser.uid, pseudo: currentUser.pseudo}),
-                participants_uid: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
-            }).then(reloadLists);
-        };
-        actions.appendChild(leaveBtn);
-    }
 
-
-    if (isOwner){
-        const del = document.createElement('button'); del.textContent='🗑️'; del.title='Supprimer';
-        del.className = 'action-btn ghost-action-btn';
-        del.onclick = ()=> {
-            if (!confirm('Supprimer ce créneau ?')) return;
-            slotRef.delete().then(reloadLists);
-        };
-        actions.appendChild(del);
+        if (isOwner){
+            const del = document.createElement('button'); del.textContent='🗑️'; del.title='Supprimer';
+            del.className = 'action-btn ghost-action-btn';
+            del.onclick = ()=> {
+                if (!confirm('Supprimer ce créneau ?')) return;
+                slotRef.delete().then(reloadLists);
+            };
+            actions.appendChild(del);
+        }
     }
 
     const share = document.createElement('button'); share.textContent='🔗'; share.title='Partager';
@@ -296,6 +291,8 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 currentUser = { uid: user.uid, email: user.email, pseudo: user.email.split('@')[0] };
             }
+            
+            checkShared();
 
             if (document.getElementById('profile-main')) {
                 handleProfilePage();
@@ -304,6 +301,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             currentUser = null;
+            checkShared();
+
             if (document.getElementById('auth-section')) {
                  document.getElementById('auth-section').style.display = 'flex';
                  document.getElementById('main-section').style.display = 'none';
@@ -412,8 +411,6 @@ function handleIndexPageListeners() {
     }
 }
 
-/* ===== LOGIQUE DE LA PAGE D'ACCUEIL (index.html) une fois connecté ===== */
-
 function showMain(){
     document.getElementById('auth-section').style.display = 'none';
     document.getElementById('main-section').style.display = 'block';
@@ -432,14 +429,6 @@ function showMain(){
     const locationInput = document.getElementById('slot-location');
     
     let selectedActivity = null;
-
-    const addressCache = {
-        '1 rue de la roquet': '1 rue de la Roquette, 75011 Paris',
-        'cafe du coin': '4 rue des Canettes, 75006 Paris',
-        'tour eiffel': 'Champ de Mars, 5 Av. Anatole France, 75007 Paris',
-        '10 rue de lappe': '10 Rue de Lappe, 75011 Paris',
-        'liberty': 'Le Liberty, 11 Rue de la Tonnellerie, 28000 Chartres'
-    };
 
     function populateFormActivitySelect(){
         if (!formActivitySelect) return;
@@ -556,7 +545,7 @@ function showMain(){
     async function populateCityFilter() {
         if (!cityFilterSelect) return;
         
-        const snapshot = await db.collection('slots').get();
+        const snapshot = await db.collection('slots').where('private', '==', false).get();
         const cities = new Set();
         snapshot.forEach(doc => {
             const city = extractCity(doc.data().location);
@@ -585,6 +574,8 @@ function showMain(){
         
         let query = db.collection('slots');
         
+        query = query.where('private', '==', false);
+
         if (currentFilterActivity !== "Toutes") {
             query = query.where('activity', '==', currentFilterActivity);
         }
@@ -605,7 +596,7 @@ function showMain(){
         slots = slots.slice(0, 10);
 
         if (slots.length === 0) {
-            list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Aucun créneau ne correspond à vos filtres.</li>';
+            list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Aucun créneau public ne correspond à vos filtres.</li>';
             return;
         }
 
@@ -635,10 +626,6 @@ function showMain(){
     });
 
     formSubSelect.addEventListener('change', ()=> populateSubSub(formSubSelect.value));
-
-    if (locationInput) {
-        // ... (code de suggestion d'adresse inchangé) ...
-    }
 
     if (createBtn) createBtn.addEventListener('click', ()=> {
         if (!currentUser) return alert('Connecte-toi d’abord');
@@ -680,21 +667,7 @@ function showMain(){
             alert("Une erreur est survenue.");
         });
     });
-
-    (function checkShared(){
-        const params = new URLSearchParams(window.location.search); const sid = params.get('slot');
-        if (!sid) return;
-        db.collection('slots').doc(sid).get().then(doc => {
-            if(!doc.exists) return alert('Ce créneau n’existe plus.');
-            const s = doc.data();
-            if (s.private) return alert('🔒 Ce créneau est privé : détails cachés.');
-            const formattedDate = formatDateToWords(s.date);
-            alert(`Créneau partagé :\n${s.name}\n${s.activity} ${s.sub ? ' - '+s.sub : ''} ${s.subsub ? ' - '+s.subsub : ''}\n📍 ${s.location}\n🕒 ${formattedDate} ${s.time}\npar ${s.ownerPseudo}`);
-        });
-    })();
 }
-
-/* ===== LOGIQUE DE LA PAGE PROFIL (profile.html) ===== */
 
 function handleProfilePage() {
     if (!currentUser) return;
@@ -753,4 +726,103 @@ async function loadJoinedSlots(){
     if (!hasJoinedSlots) {
          list.innerHTML = '<li style="color:var(--muted-text); padding: 10px 0;">Vous n\'avez rejoint aucun autre créneau.</li>';
     }
+}
+
+function checkShared(){
+    const params = new URLSearchParams(window.location.search);
+    const slotId = params.get('slot');
+    if (!slotId) return;
+
+    const modal = document.getElementById('shared-slot-modal');
+    if (!modal) return;
+    
+    const closeBtn = modal.querySelector('.close-btn');
+    const detailsDiv = document.getElementById('modal-slot-details');
+    const joinBtn = document.getElementById('modal-join-btn');
+
+    const closeModal = () => {
+        modal.style.display = 'none';
+        window.history.replaceState({}, document.title, window.location.pathname);
+    };
+
+    closeBtn.onclick = closeModal;
+    window.onclick = (event) => {
+        if (event.target == modal) {
+            closeModal();
+        }
+    };
+
+    db.collection('slots').doc(slotId).get().then(doc => {
+        if(!doc.exists) return;
+
+        const slot = { id: doc.id, ...doc.data() };
+        
+        const isPublic = slot.private === false;
+        const isParticipant = currentUser && (slot.participants_uid || []).includes(currentUser.uid);
+        if (slot.private && !isParticipant) return; // Sécurité
+
+        // CORRECTION XSS: On vide la div et on crée les éléments proprement
+        detailsDiv.innerHTML = ''; 
+
+        const title = document.createElement('strong');
+        title.textContent = slot.name;
+        
+        const activity = document.createElement('p');
+        activity.textContent = `Activité: ${slot.activity} ${slot.sub ? ' - '+slot.sub : ''}`;
+        
+        const location = document.createElement('p');
+        location.textContent = `Lieu: ${slot.location}`;
+        
+        const date = document.createElement('p');
+        date.textContent = `Le: ${formatDateToWords(slot.date)} à ${slot.time}`;
+        
+        const owner = document.createElement('p');
+        owner.textContent = `Organisé par: ${slot.ownerPseudo}`;
+
+        detailsDiv.appendChild(title);
+        detailsDiv.appendChild(activity);
+        detailsDiv.appendChild(location);
+        detailsDiv.appendChild(date);
+        detailsDiv.appendChild(owner);
+
+        if (!currentUser) {
+            joinBtn.textContent = 'Connectez-vous pour rejoindre';
+            joinBtn.disabled = true;
+        } else {
+            const isFull = (slot.participants || []).length >= MAX_PARTICIPANTS;
+
+            if (isParticipant) {
+                joinBtn.textContent = '✅ Déjà rejoint';
+                joinBtn.disabled = true;
+            } else if (isFull) {
+                joinBtn.textContent = ' Complet';
+                joinBtn.disabled = true;
+            } else {
+                joinBtn.textContent = '✅ Rejoindre';
+                joinBtn.disabled = false;
+                
+                const newJoinBtn = joinBtn.cloneNode(true);
+                joinBtn.parentNode.replaceChild(newJoinBtn, joinBtn);
+
+                newJoinBtn.addEventListener('click', () => {
+                    const slotRef = db.collection('slots').doc(slot.id);
+                    slotRef.update({
+                        participants: firebase.firestore.FieldValue.arrayUnion({uid: currentUser.uid, pseudo: currentUser.pseudo}),
+                        participants_uid: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+                    }).then(() => {
+                        alert('Créneau rejoint avec succès !');
+                        closeModal();
+                        if (document.getElementById('joined-slots')) {
+                            loadJoinedSlots();
+                        }
+                    });
+                });
+            }
+        }
+        
+        modal.style.display = 'block';
+
+    }).catch(error => {
+        console.error("Erreur lors de la récupération du créneau partagé:", error);
+    });
 }
