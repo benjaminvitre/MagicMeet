@@ -1110,3 +1110,44 @@ async function startChat(otherUserId, otherUserPseudo) {
     }
     window.location.href = `messagerie.html?chatId=${chatId}`;
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    auth.onAuthStateChanged(async user => {
+        if (user) {
+            const userDocRef = db.collection('users').doc(user.uid);
+            const userDoc = await userDocRef.get();
+            if (userDoc.exists) {
+                currentUser = { uid: user.uid, email: user.email, ...userDoc.data() };
+            } else {
+                currentUser = { uid: user.uid, email: user.email, pseudo: user.email.split('@')[0] };
+            }
+            checkShared();
+            if (document.getElementById('profile-main')) {
+                handleProfilePage();
+            } else if (document.getElementById('main-section')) {
+                showMain();
+            } else if (document.querySelector('.messaging-container')) {
+                handleMessagingPage();
+            }
+        } else {
+            currentUser = null;
+            checkShared();
+            if (document.getElementById('auth-section')) {
+                 document.getElementById('auth-section').style.display = 'flex';
+                 document.getElementById('main-section').style.display = 'none';
+            } else if (document.getElementById('profile-main')) {
+                 window.location.href = 'index.html';
+            } else if (document.querySelector('.messaging-container')) {
+                window.location.href = 'index.html';
+            }
+        }
+        updateHeaderDisplay();
+    });
+    const logoutIndex = document.getElementById('logout');
+    const logoutProfile = document.getElementById('logout-profile');
+    if (logoutIndex) logoutIndex.addEventListener('click', logout);
+    if (logoutProfile) logoutProfile.addEventListener('click', logout);
+    if (document.getElementById('main-section')) {
+        handleIndexPageListeners();
+    }
+});
