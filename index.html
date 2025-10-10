@@ -9,65 +9,15 @@
 <body>
 
     <header class="header">
-        <a class="logo-link" href="index.html" aria-label="Accueil">
-            <svg width="56" height="56" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img">
-                <rect rx="18" ry="18" width="120" height="120" fill="#0f1417"/>
-                <circle cx="20" cy="18" r="6" fill="#b294f2"/>
-                <circle cx="40" cy="10" r="3" fill="#f6d06f"/>
-                <circle cx="60" cy="16" r="8" fill="#f5b88b"/>
-                <circle cx="88" cy="20" r="5" fill="#9fe3cc"/>
-                <circle cx="18" cy="92" r="6" fill="#f5b0d0"/>
-                <circle cx="36" cy="100" r="3" fill="#c085f5"/>
-                <circle cx="60" cy="98" r="10" fill="#6fb2f2"/>
-                <circle cx="92" cy="94" r="4" fill="#f6d06f"/>
-                <circle cx="100" cy="40" r="5" fill="#f5b88b"/>
-                <circle cx="98" cy="70" r="3" fill="#78d6a4"/>
-                <circle cx="30" cy="30" r="4" fill="#f1a66a"/>
-                <circle cx="80" cy="60" r="6" fill="#b294f2"/>
-                <g transform="translate(12,18)" fill="#ffffff">
-                    <text x="0" y="58" font-family="Inter,Arial" font-weight="800" font-size="72" fill="#4da6ff" style="letter-spacing:-4px">M</text>
-                    <text x="46" y="58" font-family="Inter,Arial" font-weight="800" font-size="72" fill="#48d28a" style="letter-spacing:-4px">M</text>
-                </g>
-            </svg>
-        </a>
-        <h1 class="site-title">MagicMeet!</h1>
-        <nav class="header-right">
-            <a id="profile-link" href="profile.html" class="ghost-btn" style="display:none;">Mon profil</a>
-            <button id="logout" class="ghost-btn" style="display:none;">Se déconnecter</button>
-        </nav>
-    </header>
-
+        </header>
 
     <section id="auth-section" class="auth-section">
-        <div class="card auth-card">
-            <h2>Se connecter</h2>
-            <input id="email-login" type="email" placeholder="Email" required />
-            <input id="password-login" type="password" placeholder="Mot de passe" required />
-            <div class="checkbox-group form-checkbox">
-                <input type="checkbox" id="show-password-login" />
-                <label for="show-password-login">Afficher le mot de passe</label>
-            </div>
-            <button id="login" class="action-btn">Connexion</button>
-        </div>
-        <div class="card auth-card">
-            <h2>S'inscrire</h2>
-            <input id="pseudo" type="text" placeholder="Pseudo" required />
-            <span id="pseudo-status" style="font-size: 0.8em; margin-bottom: 5px;"></span>
-            <input id="email-signup" type="email" placeholder="Email" required />
-            <input id="password-signup" type="password" placeholder="Mot de passe" required />
-            <input id="password-confirm-signup" type="password" placeholder="Confirmer le mot de passe" required />
-            <div class="checkbox-group form-checkbox">
-                <input type="checkbox" id="show-password-signup" />
-                <label for="show-password-signup">Afficher le mot de passe</label>
-            </div>
-            <button id="signup" class="action-btn" disabled>Créer mon compte</button>
-        </div>
-    </section>
+        </section>
 
     <main id="main-section" style="display:none;">
 
         <section class="card filter-box">
-            <h2>Trouver une activité <span class="muted-text">/</span> <span id="current-activity">Aucune</span></h2>
+            <h2>Trouver une activité <span class="muted-text" id="activity-separator" style="display: none;">/</span> <span id="current-activity"></span></h2>
             
             <div id="activities" class="activity-buttons"></div>
             <div id="subactivities" class="activity-buttons" style="margin-top: 10px;"></div>
@@ -86,52 +36,7 @@
 
 
         <section class="card create-slot-box">
-            <h2 id="toggle-create-form" class="toggle-header">
-                Créer un créneau ✨ <span class="arrow">▶</span>
-            </h2>
-            <form id="create-slot-form" style="display:none;">
-                
-                <label for="slot-name">Nom du créneau</label>
-                <input id="slot-name" type="text" placeholder="Ex: Match de Padel" required />
-
-                <label for="form-activity-select">Activité principale</label>
-                <select id="form-activity-select" required></select>
-
-                <label for="sub-select">Sous-activité (optionnel)</label>
-                <select id="sub-select"></select>
-
-                <label for="subsub-select">Sous-sous-activité (optionnel)</label>
-                <select id="subsub-select"></select>
-
-                <label for="form-group-input">Associer ou créer un groupe (optionnel)</label>
-                <input type="text" id="form-group-input" list="group-suggestions" placeholder="Choisir ou créer un groupe..." />
-                <datalist id="group-suggestions"></datalist>
-
-                <label for="slot-location">Lieu <span class="muted-text">(Ex: 10 rue de lappe, Paris)</span></label>
-                <input id="slot-location" type="text" placeholder="Adresse complète ou nom du lieu" required />
-                <div id="location-suggestion-box" class="suggestion-box" style="display:none;"></div>
-                <a id="location-link" href="#" target="_blank" style="display:none; font-size: 0.8em; margin-bottom: 10px;">Voir sur Google Maps</a>
-
-
-                <div class="inline-fields">
-                    <div>
-                        <label for="slot-date">Date</label>
-                        <input id="slot-date" type="date" required />
-                    </div>
-                    <div>
-                        <label for="slot-time">Heure</label>
-                        <input id="slot-time" type="time" required />
-                    </div>
-                </div>
-
-                <div class="checkbox-group">
-                    <input type="checkbox" id="private-slot" />
-                    <label for="private-slot">Créneau privé (Participants cachés)</label>
-                </div>
-
-                <button id="create-slot" type="button">Créer le créneau</button>
-            </form>
-        </section>
+             </section>
 
 
         <section class="card slot-list-card">
@@ -140,80 +45,6 @@
         </section>
 
     </main>
-
-    <div id="shared-slot-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn">×</span>
-            <h2>Créneau Partagé</h2>
-            <div id="modal-slot-details">
-            </div>
-            <div class="modal-actions">
-                <button id="modal-join-btn" class="action-btn join-btn">✅ Rejoindre</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="edit-slot-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn">×</span>
-            <h2>Modifier le créneau</h2>
-            <form id="edit-slot-form">
-                <input type="hidden" id="edit-slot-id">
-                
-                <label for="edit-slot-name">Nom du créneau</label>
-                <input id="edit-slot-name" type="text" required />
-
-                <label for="edit-form-activity-select">Activité principale</label>
-                <select id="edit-form-activity-select" required></select>
-
-                <label for="edit-sub-select">Sous-activité (optionnel)</label>
-                <select id="edit-sub-select"></select>
-
-                <label for="edit-subsub-select">Sous-sous-activité (optionnel)</label>
-                <select id="edit-subsub-select"></select>
-
-                <label for="edit-slot-location">Lieu</label>
-                <input id="edit-slot-location" type="text" required />
-
-                <div class="inline-fields">
-                    <div>
-                        <label for="edit-slot-date">Date</label>
-                        <input id="edit-slot-date" type="date" required />
-                    </div>
-                    <div>
-                        <label for="edit-slot-time">Heure</label>
-                        <input id="edit-slot-time" type="time" required />
-                    </div>
-                </div>
-
-                <div class="checkbox-group">
-                    <input type="checkbox" id="edit-private-slot" />
-                    <label for="edit-private-slot">Créneau privé (Participants cachés)</label>
-                </div>
-
-                <button id="save-slot-changes" type="button" class="action-btn">Enregistrer</button>
-            </form>
-        </div>
-    </div>
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
-    <script>
-      const firebaseConfig = {
-  apiKey: "AIzaSyB7jLBW1cS_6DbV4XT0HPZSEvngR0T2PJI",
-  authDomain: "magicmeet-947cf.firebaseapp.com",
-  projectId: "magicmeet-947cf",
-  storageBucket: "magicmeet-947cf.firebasestorage.app",
-  messagingSenderId: "400119032453",
-  appId: "1:400119032453:web:8e84695eea557a5aa5d7ec",
-      };
-
-      firebase.initializeApp(firebaseConfig);
-      const auth = firebase.auth();
-      const db = firebase.firestore();
-    </script>
 
     <script src="script.js"></script>
 </body>
