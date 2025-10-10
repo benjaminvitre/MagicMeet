@@ -157,7 +157,15 @@ function renderSlotItem(slot, targetListElement) {
         when.textContent = `🗓️ ${formattedDate} à ${slot.time}`;
     }
     const owner = document.createElement('small');
-    owner.textContent = `par ${slot.ownerPseudo}`;
+    owner.innerHTML = 'par ';
+    const ownerPseudoSpan = document.createElement('span');
+    if (currentUser && slot.owner !== currentUser.uid) {
+        ownerPseudoSpan.className = 'clickable-pseudo';
+        ownerPseudoSpan.onclick = () => startChat(slot.owner, slot.ownerPseudo);
+    }
+    ownerPseudoSpan.textContent = slot.ownerPseudo;
+    owner.appendChild(ownerPseudoSpan);
+
     if (slot.private) owner.innerHTML += ' <span class="private-slot-lock">🔒 Privé</span>';
     info.appendChild(title); info.appendChild(when);
     const participantsCount = (slot.participants || []).length;
@@ -176,8 +184,19 @@ function renderSlotItem(slot, targetListElement) {
     if (slot.private && !isOwner && !isParticipant) {
         participantsList.textContent = 'Participants cachés.';
     } else {
-        const pseudos = (slot.participants || []).map(p => p.pseudo);
-        participantsList.textContent = 'Membres: ' + pseudos.join(', ');
+        participantsList.innerHTML = 'Membres: ';
+        slot.participants.forEach((p, index) => {
+            const pseudoSpan = document.createElement('span');
+            if (currentUser && p.uid !== currentUser.uid) {
+                pseudoSpan.className = 'clickable-pseudo';
+                pseudoSpan.onclick = () => startChat(p.uid, p.pseudo);
+            }
+            pseudoSpan.textContent = p.pseudo;
+            participantsList.appendChild(pseudoSpan);
+            if (index < slot.participants.length - 1) {
+                participantsList.append(', ');
+            }
+        });
         if (isOwner && slot.invited_pseudos && slot.invited_pseudos.length > 0) {
             const invitedText = document.createElement('div');
             invitedText.className = 'participants-list';
@@ -711,10 +730,25 @@ function renderGroupItem(group) {
     const list = document.getElementById('groups-list');
     const li = document.createElement('li');
     li.className = 'group-item';
-    const membersPseudos = group.members.map(m => m.pseudo).join(', ');
-    li.innerHTML = `<h3>${group.name}</h3>
-        <div class="members-list"><strong>Membres :</strong> ${membersPseudos}</div>
-        <div class="add-member-form">
+    const membersListDiv = document.createElement('div');
+    membersListDiv.className = 'members-list';
+    membersListDiv.innerHTML = '<strong>Membres :</strong> ';
+    group.members.forEach((m, index) => {
+        const pseudoSpan = document.createElement('span');
+        if (currentUser && m.uid !== currentUser.uid) {
+            pseudoSpan.className = 'clickable-pseudo';
+            pseudoSpan.onclick = () => startChat(m.uid, m.pseudo);
+        }
+        pseudoSpan.textContent = m.pseudo;
+        membersListDiv.appendChild(pseudoSpan);
+        if (index < group.members.length - 1) {
+            membersListDiv.append(', ');
+        }
+    });
+
+    li.innerHTML = `<h3>${group.name}</h3>`;
+    li.appendChild(membersListDiv);
+    li.innerHTML += `<div class="add-member-form">
             <input type="text" id="add-member-input-${group.id}" placeholder="Pseudo de l'utilisateur à ajouter">
             <button id="add-member-btn-${group.id}" class="action-btn">Ajouter</button>
         </div>`;
@@ -918,4 +952,155 @@ function openEditModal(slot) {
             })
             .catch(error => console.error("Erreur lors de la mise à jour: ", error));
     });
+}
+
+function handleMessagingPage() {
+    if (!currentUser) {
+        window.location.href = 'index.html';
+        return;
+    }
+
+    const convList = document.getElementById('conv-list');
+    const chatWithName = document.getElementById('chat-with-name');
+    const messagesArea = document.getElementById('messages-area');
+    const messageInput = document.getElementById('message-input');
+    const sendMessageBtn = document.getElementById('send-message-btn');
+
+    let currentChatId = null;
+    let unsubscribeMessages = null;
+
+    async function loadConversations() {
+        convList.innerHTML = '';
+        const query = db.collection('chats')
+            .where('members_uid', 'array-contains', currentUser.uid)
+            .orderBy('lastMessageTimestamp', 'desc');
+
+        const snapshot = await query.get();
+
+        if (snapshot.empty) {
+            convList.innerHTML = '<li class="muted-text">Aucune conversation.</li>';
+            return;
+        }
+
+        snapshot.forEach(doc => {
+            const chat = doc.data();
+            const otherUser = chat.participants.find(p => p.uid !== currentUser.uid);
+            if (!otherUser) return;
+
+            const li = document.createElement('li');
+            li.className = 'conv-item';
+            li.dataset.chatId = doc.id;
+            li.innerHTML = `
+                <strong>${otherUser.pseudo}</strong><br>
+                <small>${chat.lastMessageText || '...'}</small>
+            `;
+
+            li.addEventListener('click', () => {
+                document.querySelectorAll('.conv-item').forEach(item => item.classList.remove('active'));
+                li.classList.add('active');
+                loadMessages(doc.id, otherUser.pseudo);
+            });
+            convList.appendChild(li);
+        });
+    }
+
+    function loadMessages(chatId, otherUserName) {
+        currentChatId = chatId;
+        chatWithName.textContent = otherUserName;
+        messagesArea.innerHTML = '';
+        messageInput.disabled = false;
+        sendMessageBtn.disabled = false;
+        
+        if (unsubscribeMessages) {
+            unsubscribeMessages();
+        }
+
+        const query = db.collection('chats').doc(chatId).collection('messages').orderBy('timestamp', 'asc');
+
+        unsubscribeMessages = query.onSnapshot(snapshot => {
+            messagesArea.innerHTML = '';
+            snapshot.forEach(doc => {
+                const message = doc.data();
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message';
+                messageDiv.classList.add(message.senderId === currentUser.uid ? 'sent' : 'received');
+                messageDiv.textContent = message.text;
+                messagesArea.prepend(messageDiv);
+            });
+        });
+    }
+
+    async function sendMessage() {
+        const text = messageInput.value.trim();
+        if (!text || !currentChatId) return;
+
+        const newMessage = {
+            text: text,
+            senderId: currentUser.uid,
+            senderPseudo: currentUser.pseudo,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        const chatRef = db.collection('chats').doc(currentChatId);
+        
+        await chatRef.collection('messages').add(newMessage);
+
+        await chatRef.update({
+            lastMessageText: text,
+            lastMessageTimestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        messageInput.value = '';
+        messageInput.focus();
+    }
+
+    sendMessageBtn.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keyup', (event) => {
+        if (event.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    const params = new URLSearchParams(window.location.search);
+    const initialChatId = params.get('chatId');
+
+    if (initialChatId) {
+        db.collection('chats').doc(initialChatId).get().then(doc => {
+            if (doc.exists) {
+                const chat = doc.data();
+                const otherUser = chat.participants.find(p => p.uid !== currentUser.uid);
+                if (otherUser) {
+                    loadMessages(initialChatId, otherUser.pseudo);
+                    setTimeout(() => {
+                        document.querySelector(`.conv-item[data-chat-id="${initialChatId}"]`)?.classList.add('active');
+                    }, 500);
+                }
+            }
+        });
+    }
+
+    loadConversations();
+}
+
+async function startChat(otherUserId, otherUserPseudo) {
+    if (!currentUser || currentUser.uid === otherUserId) return;
+
+    const chatId = [currentUser.uid, otherUserId].sort().join('_');
+    const chatRef = db.collection('chats').doc(chatId);
+    
+    const chatDoc = await chatRef.get();
+
+    if (!chatDoc.exists) {
+        await chatRef.set({
+            members_uid: [currentUser.uid, otherUserId],
+            participants: [
+                { uid: currentUser.uid, pseudo: currentUser.pseudo },
+                { uid: otherUserId, pseudo: otherUserPseudo }
+            ],
+            lastMessageText: "Début de la conversation...",
+            lastMessageTimestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    }
+
+    window.location.href = `messagerie.html?chatId=${chatId}`;
 }
