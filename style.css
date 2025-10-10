@@ -525,7 +525,7 @@ input:focus, select:focus {
         padding: 5px 10px;
     }
 
-    /* CORRECTION POUR L'AFFICHAGE MOBILE DE LA MESSAGERIE */
+    /* VERSION CORRIGÉE ET FIABLE POUR L'AFFICHAGE MOBILE DE LA MESSAGERIE */
     .messaging-container {
         position: relative;
         overflow: hidden;
@@ -544,6 +544,7 @@ input:focus, select:focus {
         transition: transform 0.3s ease-in-out;
         margin: 0;
         border-radius: 0;
+        background-color: var(--bg-secondary);
     }
     .messaging-container.chat-active .chat-window {
         transform: translateX(0);
