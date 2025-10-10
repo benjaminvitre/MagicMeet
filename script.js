@@ -323,7 +323,7 @@ function renderSlotItem(slot, targetListElement) {
 // =======================================================================
 
 function handleIndexPageListeners() {
-    console.log("Initialisation des listeners de la page d'accueil...");
+    console.log("DEBUG: Initialisation des listeners de la page d'accueil...");
     const signupBtn = document.getElementById('signup');
     const loginBtn = document.getElementById('login');
     const pseudoInput = document.getElementById('pseudo');
@@ -336,34 +336,60 @@ function handleIndexPageListeners() {
                 signupBtn.disabled = true;
                 return;
             }
-            const querySnapshot = await db.collection('users').where('pseudo', '==', pseudo).get();
-            if (!querySnapshot.empty) {
-                pseudoStatus.textContent = 'Ce pseudo est déjà pris 😞';
-                pseudoStatus.style.color = '#e67c73';
-                signupBtn.disabled = true;
-            } else {
-                pseudoStatus.textContent = 'Pseudo disponible ! 😊';
-                pseudoStatus.style.color = '#78d6a4';
-                signupBtn.disabled = false;
+            console.log(`DEBUG: Vérification du pseudo '${pseudo}' dans Firestore...`);
+            try {
+                const querySnapshot = await db.collection('users').where('pseudo', '==', pseudo).get();
+                console.log("DEBUG: Requête de vérification du pseudo réussie.");
+                if (!querySnapshot.empty) {
+                    pseudoStatus.textContent = 'Ce pseudo est déjà pris 😞';
+                    pseudoStatus.style.color = '#e67c73';
+                    signupBtn.disabled = true;
+                } else {
+                    pseudoStatus.textContent = 'Pseudo disponible ! 😊';
+                    pseudoStatus.style.color = '#78d6a4';
+                    signupBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error("ERREUR lors de la vérification du pseudo:", error);
             }
         });
     }
     if (signupBtn) signupBtn.addEventListener('click', () => {
+        console.log("DEBUG: 1. Clic sur le bouton d'inscription détecté.");
         const pseudo = document.getElementById('pseudo').value.trim();
         const email = document.getElementById('email-signup').value.trim();
         const password = document.getElementById('password-signup').value.trim();
         const passwordConfirm = document.getElementById('password-confirm-signup').value.trim();
-        if (password !== passwordConfirm) { return alert('Les mots de passe ne correspondent pas.'); }
-        if (!pseudo || !email || !password) return alert('Remplis tous les champs.');
-        if (signupBtn.disabled) return alert('Le pseudo n\'est pas disponible.');
+        
+        if (password !== passwordConfirm) {
+            console.error("DEBUG: Erreur de validation - Les mots de passe ne correspondent pas.");
+            return alert('Les mots de passe ne correspondent pas.');
+        }
+        if (!pseudo || !email || !password) {
+            console.error("DEBUG: Erreur de validation - Champs manquants.");
+            return alert('Remplis tous les champs.');
+        }
+        if (signupBtn.disabled) {
+            console.error("DEBUG: Erreur de validation - Pseudo non disponible.");
+            return alert('Le pseudo n\'est pas disponible.');
+        }
+
+        console.log("DEBUG: 2. Validation côté client réussie. Tentative de création de l'utilisateur dans Firebase Auth...");
         auth.createUserWithEmailAndPassword(email, password)
             .then((userCredential) => {
+                console.log("DEBUG: 3. Utilisateur créé avec succès dans Firebase Auth. UID:", userCredential.user.uid);
+                console.log("DEBUG: 4. Tentative d'écriture du profil dans Firestore...");
                 return db.collection('users').doc(userCredential.user.uid).set({
                     pseudo: pseudo, email: email, phone: ''
                 });
             })
-            .then(() => { console.log('Utilisateur créé et enregistré !'); })
-            .catch((error) => { alert("Erreur lors de l'inscription : " + error.message); });
+            .then(() => {
+                console.log("DEBUG: 5. Profil écrit avec succès dans Firestore ! L'inscription est terminée.");
+            })
+            .catch((error) => {
+                console.error("ERREUR GLOBALE LORS DE L'INSCRIPTION:", error);
+                alert("Erreur lors de l'inscription : " + error.message);
+            });
     });
     if (loginBtn) loginBtn.addEventListener('click', () => {
         const email = document.getElementById('email-login').value.trim();
