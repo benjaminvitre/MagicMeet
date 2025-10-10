@@ -79,14 +79,17 @@ function extractCity(locationText) {
 
 function updateHeaderDisplay() {
     const profileLink = document.getElementById('profile-link');
+    const messagerieLink = document.getElementById('messagerie-link');
     const logoutBtn = document.getElementById('logout');
     const logoutProfileBtn = document.getElementById('logout-profile');
     if (currentUser) {
         if (profileLink) profileLink.style.display = 'inline-block';
+        if (messagerieLink) messagerieLink.style.display = 'inline-block';
         if (logoutBtn) logoutBtn.style.display = 'inline-block';
         if (logoutProfileBtn) logoutProfileBtn.style.display = 'inline-block';
     } else {
         if (profileLink) profileLink.style.display = 'none';
+        if (messagerieLink) messagerieLink.style.display = 'none';
         if (logoutBtn) logoutBtn.style.display = 'none';
         if (logoutProfileBtn) logoutProfileBtn.style.display = 'none';
     }
@@ -607,6 +610,7 @@ function showMain(){
     if (formActivitySelect) formActivitySelect.addEventListener('change', ()=>{
         selectedActivity = formActivitySelect.value;
         const emoji = ACTIVITY_EMOJIS[selectedActivity] || '';
+        activitySeparator.style.display = 'inline';
         currentActivityEl.textContent = selectedActivity ? `${emoji} ${selectedActivity}` : 'Aucune';
         populateSubActivitiesForForm(selectedActivity);
     });
