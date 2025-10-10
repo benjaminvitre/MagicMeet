@@ -323,7 +323,6 @@ function renderSlotItem(slot, targetListElement) {
 // =======================================================================
 
 function handleIndexPageListeners() {
-    console.log("Initialisation des listeners de la page d'accueil...");
     const signupBtn = document.getElementById('signup');
     const loginBtn = document.getElementById('login');
     const pseudoInput = document.getElementById('pseudo');
