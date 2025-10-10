@@ -310,6 +310,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 handleProfilePage();
             } else if (document.getElementById('main-section')) {
                 showMain();
+            } else if (document.querySelector('.messaging-container')) {
+                handleMessagingPage();
             }
         } else {
             currentUser = null;
@@ -319,6 +321,8 @@ document.addEventListener('DOMContentLoaded', () => {
                  document.getElementById('main-section').style.display = 'none';
             } else if (document.getElementById('profile-main')) {
                  window.location.href = 'index.html';
+            } else if (document.querySelector('.messaging-container')) {
+                window.location.href = 'index.html';
             }
         }
         updateHeaderDisplay();
