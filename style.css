@@ -524,13 +524,16 @@ input:focus, select:focus {
     .ghost-action-btn {
         padding: 5px 10px;
     }
+
+    /* CORRECTION POUR L'AFFICHAGE MOBILE DE LA MESSAGERIE */
     .messaging-container {
         position: relative;
-        overflow-x: hidden;
+        overflow: hidden;
+        /* On retire flex-direction: column pour que les éléments restent côte à côte */
     }
     .conversations-list {
         width: 100%;
-        flex-shrink: 0;
+        height: calc(100vh - 100px);
     }
     .chat-window {
         position: absolute;
@@ -538,12 +541,13 @@ input:focus, select:focus {
         height: 100%;
         top: 0;
         left: 0;
-        transform: translateX(100%);
+        transform: translateX(100%); /* Commence hors de l'écran à droite */
         transition: transform 0.3s ease-in-out;
         margin: 0;
+        border-radius: 0;
     }
     .messaging-container.chat-active .chat-window {
-        transform: translateX(0);
+        transform: translateX(0); /* Glisse pour se mettre à l'écran */
     }
     .back-btn {
         display: inline-block;
