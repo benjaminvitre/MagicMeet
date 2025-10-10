@@ -200,7 +200,10 @@ function renderSlotItem(slot, targetListElement) {
                         slotRef.update({
                             participants: firebase.firestore.FieldValue.arrayUnion({uid: currentUser.uid, pseudo: currentUser.pseudo}),
                             participants_uid: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-                        }).then(reloadLists);
+                        }).then(() => {
+                            alert('Créneau rejoint !');
+                            reloadLists();
+                        });
                     };
                     actions.appendChild(joinBtn);
                 } else {
@@ -403,6 +406,7 @@ function showMain(){
     const activitiesDiv = document.getElementById('activities');
     const subDiv = document.getElementById('subactivities');
     const currentActivityEl = document.getElementById('current-activity');
+    const activitySeparator = document.getElementById('activity-separator');
     const formActivitySelect = document.getElementById('form-activity-select');
     const formSubSelect = document.getElementById('sub-select');
     const subsubSelect = document.getElementById('subsub-select');
@@ -464,12 +468,14 @@ function showMain(){
                 b.classList.add('active');
                 if(act !== "Toutes") {
                     selectedActivity = act;
+                    activitySeparator.style.display = 'inline';
                     currentActivityEl.textContent = `${emoji} ${act}`;
                     populateSubActivities(act);
                     if (formActivitySelect) { formActivitySelect.value = act; populateSubActivitiesForForm(act); }
                 } else {
                     selectedActivity = null;
-                    currentActivityEl.textContent = 'Aucune';
+                    activitySeparator.style.display = 'none';
+                    currentActivityEl.textContent = '';
                     subDiv.innerHTML = '';
                 }
             });
@@ -607,7 +613,6 @@ function showMain(){
 
     formSubSelect.addEventListener('change', ()=> populateSubSub(formSubSelect.value));
 
-    // DÉBUT DU BLOC CORRIGÉ
     if (createBtn) createBtn.addEventListener('click', async ()=> {
         if (!currentUser) return alert('Connecte-toi d’abord');
         const name = (document.getElementById('slot-name')?.value||'').trim();
@@ -618,9 +623,7 @@ function showMain(){
         const groupName = formGroupInput.value.trim();
         if (!activity) return alert('Choisis d’abord une activité (ex: Jeux)');
         if (!name || !location || !date || !time) return alert('Remplis les champs nom, lieu, date et heure');
-
         let groupId = null;
-
         if (groupName) {
             const groupQuery = await db.collection('groups').where('name', '==', groupName).get();
             if (groupQuery.empty) {
@@ -639,7 +642,6 @@ function showMain(){
                 groupId = groupQuery.docs[0].id;
             }
         }
-
         const newSlot = {
             activity: activity, sub: formSubSelect.value || '', subsub: subsubSelect.value || '',
             name: name, location: location, date: date, time: time,
@@ -664,7 +666,6 @@ function showMain(){
             populateGroupSelects();
         }).catch(error => { console.error("Erreur: ", error); alert("Une erreur est survenue."); });
     });
-    // FIN DU BLOC CORRIGÉ
 }
 
 function handleProfilePage() {
