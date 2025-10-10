@@ -323,6 +323,7 @@ function renderSlotItem(slot, targetListElement) {
 // =======================================================================
 
 function handleIndexPageListeners() {
+    console.log("Initialisation des listeners de la page d'accueil...");
     const signupBtn = document.getElementById('signup');
     const loginBtn = document.getElementById('login');
     const pseudoInput = document.getElementById('pseudo');
@@ -959,13 +960,11 @@ function handleMessagingPage() {
         window.location.href = 'index.html';
         return;
     }
-
     const convList = document.getElementById('conv-list');
     const chatWithName = document.getElementById('chat-with-name');
     const messagesArea = document.getElementById('messages-area');
     const messageInput = document.getElementById('message-input');
     const sendMessageBtn = document.getElementById('send-message-btn');
-
     let currentChatId = null;
     let unsubscribeMessages = null;
 
@@ -974,19 +973,15 @@ function handleMessagingPage() {
         const query = db.collection('chats')
             .where('members_uid', 'array-contains', currentUser.uid)
             .orderBy('lastMessageTimestamp', 'desc');
-
         const snapshot = await query.get();
-
         if (snapshot.empty) {
             convList.innerHTML = '<li class="muted-text">Aucune conversation.</li>';
             return;
         }
-
         snapshot.forEach(doc => {
             const chat = doc.data();
             const otherUser = chat.participants.find(p => p.uid !== currentUser.uid);
             if (!otherUser) return;
-
             const li = document.createElement('li');
             li.className = 'conv-item';
             li.dataset.chatId = doc.id;
@@ -994,7 +989,6 @@ function handleMessagingPage() {
                 <strong>${otherUser.pseudo}</strong><br>
                 <small>${chat.lastMessageText || '...'}</small>
             `;
-
             li.addEventListener('click', () => {
                 document.querySelectorAll('.conv-item').forEach(item => item.classList.remove('active'));
                 li.classList.add('active');
@@ -1010,13 +1004,10 @@ function handleMessagingPage() {
         messagesArea.innerHTML = '';
         messageInput.disabled = false;
         sendMessageBtn.disabled = false;
-        
         if (unsubscribeMessages) {
             unsubscribeMessages();
         }
-
         const query = db.collection('chats').doc(chatId).collection('messages').orderBy('timestamp', 'asc');
-
         unsubscribeMessages = query.onSnapshot(snapshot => {
             messagesArea.innerHTML = '';
             snapshot.forEach(doc => {
@@ -1033,23 +1024,18 @@ function handleMessagingPage() {
     async function sendMessage() {
         const text = messageInput.value.trim();
         if (!text || !currentChatId) return;
-
         const newMessage = {
             text: text,
             senderId: currentUser.uid,
             senderPseudo: currentUser.pseudo,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         };
-
         const chatRef = db.collection('chats').doc(currentChatId);
-        
         await chatRef.collection('messages').add(newMessage);
-
         await chatRef.update({
             lastMessageText: text,
             lastMessageTimestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-        
         messageInput.value = '';
         messageInput.focus();
     }
@@ -1063,7 +1049,6 @@ function handleMessagingPage() {
 
     const params = new URLSearchParams(window.location.search);
     const initialChatId = params.get('chatId');
-
     if (initialChatId) {
         db.collection('chats').doc(initialChatId).get().then(doc => {
             if (doc.exists) {
@@ -1078,18 +1063,14 @@ function handleMessagingPage() {
             }
         });
     }
-
     loadConversations();
 }
 
 async function startChat(otherUserId, otherUserPseudo) {
     if (!currentUser || currentUser.uid === otherUserId) return;
-
     const chatId = [currentUser.uid, otherUserId].sort().join('_');
     const chatRef = db.collection('chats').doc(chatId);
-    
     const chatDoc = await chatRef.get();
-
     if (!chatDoc.exists) {
         await chatRef.set({
             members_uid: [currentUser.uid, otherUserId],
@@ -1101,6 +1082,5 @@ async function startChat(otherUserId, otherUserPseudo) {
             lastMessageTimestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
     }
-
     window.location.href = `messagerie.html?chatId=${chatId}`;
 }
