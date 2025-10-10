@@ -525,37 +525,29 @@ input:focus, select:focus {
         padding: 5px 10px;
     }
 
+    /* CORRECTION POUR L'AFFICHAGE MOBILE DE LA MESSAGERIE */
     .messaging-container {
         position: relative;
         overflow: hidden;
-        flex-direction: column;
-        height: auto;
+        /* On retire flex-direction: column pour que les éléments restent côte à côte */
     }
     .conversations-list {
         width: 100%;
-        flex: 1 1 auto;
-        height: calc(100vh - 100px); /* Prend toute la hauteur disponible */
+        height: calc(100vh - 100px);
     }
     .chat-window {
         position: absolute;
         width: 100%;
         height: 100%;
         top: 0;
-        left: 100%;
+        left: 0;
+        transform: translateX(100%); /* Commence hors de l'écran à droite */
         transition: transform 0.3s ease-in-out;
         margin: 0;
         border-radius: 0;
-        transform: translateX(0);
-    }
-    .messaging-container.chat-active {
-        overflow: visible;
-    }
-    .messaging-container.chat-active .conversations-list {
-        display: none;
     }
     .messaging-container.chat-active .chat-window {
-        transform: translateX(-100%);
-        left: 0;
+        transform: translateX(0); /* Glisse pour se mettre à l'écran */
     }
     .back-btn {
         display: inline-block;
