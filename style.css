@@ -441,6 +441,15 @@ input:focus, select:focus {
     margin-bottom: 5px;
 }
 
+.clickable-pseudo {
+    text-decoration: underline;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.clickable-pseudo:hover {
+    color: var(--text-accent);
+}
+
 .suggestion-box {
     padding: 8px;
     margin-top: -10px;
@@ -670,8 +679,9 @@ input:focus, select:focus {
     padding: 6px 10px;
 }
 
+
 /* ====================================
-9. MESSAGING STYLES (NOUVEAU)
+9. MESSAGING STYLES
 ====================================
 */
 .messaging-container {
