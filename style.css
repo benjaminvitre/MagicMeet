@@ -528,12 +528,11 @@ input:focus, select:focus {
     /* CORRECTION POUR L'AFFICHAGE MOBILE DE LA MESSAGERIE */
     .messaging-container {
         position: relative;
-        overflow: hidden;
-        /* On retire flex-direction: column pour que les éléments restent côte à côte */
+        overflow-x: hidden;
     }
     .conversations-list {
         width: 100%;
-        height: calc(100vh - 100px);
+        flex-shrink: 0;
     }
     .chat-window {
         position: absolute;
@@ -544,7 +543,7 @@ input:focus, select:focus {
         transform: translateX(100%); /* Commence hors de l'écran à droite */
         transition: transform 0.3s ease-in-out;
         margin: 0;
-        border-radius: 0;
+        border-radius: 0; /* Prend tout l'écran */
     }
     .messaging-container.chat-active .chat-window {
         transform: translateX(0); /* Glisse pour se mettre à l'écran */
